@@ -4,7 +4,7 @@ start_time = timer
 
 'LOADING ROUTINE FUNCTIONS----------------------------------------------------------------------------------------------------
 Set run_another_script_fso = CreateObject("Scripting.FileSystemObject")
-Set fso_command = run_another_script_fso.OpenTextFile("H:\VKC dev directory\Script Files\FUNCTIONS FILE.vbs")
+Set fso_command = run_another_script_fso.OpenTextFile("C:\MAXIS-BZ-Scripts-County-Beta\Script Files\FUNCTIONS FILE.vbs")
 text_from_the_other_script = fso_command.ReadAll
 fso_command.Close
 Execute text_from_the_other_script
@@ -50,6 +50,11 @@ EndDialog
 
 'Connects to BlueZone
 EMConnect ""
+
+'Resets variables in case this is run from docs received.
+SNAP_check = 0
+cash_check = 0
+HC_check = 0
 
 'Autofills case number
 call find_variable("Case Nbr: ", case_number, 8)
@@ -148,9 +153,8 @@ End if
 call write_new_line_in_case_note("---")
 call write_new_line_in_case_note(worker_signature)
 
+'Runs denied progs if selected
+If denied_progs_check = 1 then run_another_script("C:\MAXIS-BZ-Scripts-County-Beta\Script Files\NOTE - denied progs.vbs")
+
 script_end_procedure("")
-
-
-
-
 

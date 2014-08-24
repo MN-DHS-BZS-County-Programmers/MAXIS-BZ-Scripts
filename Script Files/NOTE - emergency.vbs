@@ -4,7 +4,7 @@ start_time = timer
 
 'LOADING ROUTINE FUNCTIONS----------------------------------------------------------------------------------------------------
 Set run_another_script_fso = CreateObject("Scripting.FileSystemObject")
-Set fso_command = run_another_script_fso.OpenTextFile("H:\VKC dev directory\Script Files\FUNCTIONS FILE.vbs")
+Set fso_command = run_another_script_fso.OpenTextFile("C:\MAXIS-BZ-Scripts-County-Beta\Script Files\FUNCTIONS FILE.vbs")
 text_from_the_other_script = fso_command.ReadAll
 fso_command.Close
 Execute text_from_the_other_script
@@ -152,8 +152,10 @@ If MAXIS_check <> "MAXIS" and MAXIS_check <> "AXIS " then script_end_procedure("
 
 'Jumping into STAT
 call navigate_to_screen("stat", "hcre")
-EMReadScreen HCRE_check, 4, 2, 50
-If HCRE_check <> "HCRE" then transmit
+EMReadScreen STAT_check, 4, 20, 21
+If STAT_check <> "STAT" then script_end_procedure("Can't get in to STAT. This case may be in background. Wait a few seconds and try again. If the case is not in background contact a Support Team member.")
+EMReadScreen ERRR_check, 4, 2, 52
+If ERRR_check = "ERRR" then transmit 'For error prone cases.
 
 'Creating a custom dialog for determining who the HH members are
 call HH_member_custom_dialog(HH_member_array)
@@ -267,8 +269,5 @@ End if
 call write_new_line_in_case_note(worker_signature)
 
 script_end_procedure("")
-
-
-
 
 

@@ -5,7 +5,7 @@ start_time = timer
 
 'LOADING ROUTINE FUNCTIONS----------------------------------------------------------------------------------------------------
 Set run_another_script_fso = CreateObject("Scripting.FileSystemObject")
-Set fso_command = run_another_script_fso.OpenTextFile("H:\VKC dev directory\Script Files\FUNCTIONS FILE.vbs")
+Set fso_command = run_another_script_fso.OpenTextFile("C:\MAXIS-BZ-Scripts-County-Beta\Script Files\FUNCTIONS FILE.vbs")
 text_from_the_other_script = fso_command.ReadAll
 fso_command.Close
 Execute text_from_the_other_script
@@ -72,8 +72,8 @@ If phone_check = 0 and electric_check = 0 and heat_AC_check = 0 then utilities =
 
 
 'Calculates expedited status based on above numbers
-If (cint(income) < 150 and cint(assets) < 100) or ((cint(income) + cint(assets)) < (cint(rent) + cint(utilities))) then expedited_status = "client appears expedited"
-If (cint(income) + cint(assets) >= cint(rent) + cint(utilities)) and (cint(income) >= 150 or cint(assets) >= 100) then expedited_status = "client does not appear expedited"
+If (cint(income) < 150 and cint(assets) <= 100) or ((cint(income) + cint(assets)) < (cint(rent) + cint(utilities))) then expedited_status = "client appears expedited"
+If (cint(income) + cint(assets) >= cint(rent) + cint(utilities)) and (cint(income) >= 150 or cint(assets) > 100) then expedited_status = "client does not appear expedited"
 
 'SECTION 03
 'This jumps back to SELF
@@ -138,6 +138,7 @@ If expedited_status = "client does not appear expedited" then
 End if
 
 script_end_procedure("")
+
 
 
 
