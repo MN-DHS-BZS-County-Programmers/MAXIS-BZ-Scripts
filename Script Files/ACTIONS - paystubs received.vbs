@@ -1,4 +1,4 @@
-'GATHERING STATS----------------------------------------------------------------------------------------------------
+ 'GATHERING STATS----------------------------------------------------------------------------------------------------
 name_of_script = "ACTIONS - paystubs received"
 start_time = timer
 
@@ -121,10 +121,11 @@ BeginDialog paystubs_received_case_number_dialog, 0, 0, 376, 170, "Case number"
   EditBox 70, 25, 25, 15, footer_month
   EditBox 125, 25, 25, 15, footer_year
   EditBox 110, 45, 25, 15, HH_member
-  CheckBox 15, 75, 110, 10, "Update and case note the PIC?", update_PIC_check
-  CheckBox 15, 90, 75, 10, "Update HC popup?", update_HC_popup_check
-  CheckBox 15, 105, 140, 10, "Check here to have the script update all", future_months_check
-  CheckBox 15, 130, 135, 10, "Case note info about paystubs?", case_note_check
+  EditBox 105, 65, 55, 15, document_datestamp
+  CheckBox 15, 100, 110, 10, "Update and case note the PIC?", update_PIC_check
+  CheckBox 15, 110, 75, 10, "Update HC popup?", update_HC_popup_check
+  CheckBox 15, 120, 140, 10, "Check here to have the script update all", future_months_check
+  CheckBox 15, 140, 135, 10, "Case note info about paystubs?", case_note_check
   ButtonGroup ButtonPressed
     OkButton 265, 150, 50, 15
     CancelButton 320, 150, 50, 15
@@ -136,8 +137,10 @@ BeginDialog paystubs_received_case_number_dialog, 0, 0, 376, 170, "Case number"
   Text 20, 30, 50, 10, "Footer month:"
   Text 100, 30, 20, 10, "Year:"
   Text 35, 50, 75, 10, "HH memb # for JOBS:"
-  GroupBox 10, 65, 150, 80, "Options"
-  Text 30, 115, 120, 10, "future months and send through BG."
+  Text 20, 65, 85, 10, "Document(s) date stamp:"
+
+  GroupBox 10, 85, 150, 80, "Options"
+  Text 30, 130, 120, 10, "future months and send through BG."
 EndDialog
 
 
@@ -516,7 +519,9 @@ If update_PIC_check = 1 then
     EMSendKey "---" & "<newline>"
     call write_editbox_in_case_note("How income was calculated", explanation_of_income, 6)
   End if
+  
   call write_editbox_in_case_note("Employer name", employer_name, 6)
+  call write_editbox_in_case_note ("Date Doucments Received", document_datestamp, 6)
   call write_new_line_in_case_note("---")
   call write_new_line_in_case_note(worker_signature)
   PF3
@@ -537,7 +542,9 @@ If case_note_check = 1 then
     EMSendKey "---" & "<newline>"
     call write_editbox_in_case_note("How income was calculated", explanation_of_income, 6)
   End if
+
   call write_editbox_in_case_note("Employer name", employer_name, 6)
+  call write_editbox_in_case_note ("Date Doucments Received", document_datestamp, 6)
   call write_new_line_in_case_note("---")
   call write_new_line_in_case_note(worker_signature)
   PF3
@@ -546,4 +553,3 @@ End if
 
 MsgBox "Success! Your JOBS panel has been updated with the paystubs you've entered in. Send your case through background, review the results, and take action as appropriate. Don't forget to case note!" 
 script_end_procedure("")
-
