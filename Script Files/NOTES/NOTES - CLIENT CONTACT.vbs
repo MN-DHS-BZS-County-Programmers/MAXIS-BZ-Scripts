@@ -123,9 +123,9 @@ DO
 Loop until (mode_check = "Mode: A" or mode_check = "Mode: E") or (MMIS_edit_mode_check = "'''''") 
 
 If isnumeric(case_number) = True then
-	EMSendKey contact_type & " " & contact_direction & " " & who_contacted
-	If regarding <> "" then EMSendKey " re: " & regarding 
-	EMSendKey "<newline>"
+	EMSendKey(magic_escape_string(contact_type & " " & contact_direction & " " & who_contacted))
+	If regarding <> "" then EMSendKey(magic_escape_string(" re: " & regarding))
+	EMSendKey(magic_escape_string("<newline>"))
 	If when_voicemail_was_left <> "" then Call write_editbox_in_case_note("Contact made", when_voicemail_was_left, 6)
 	If phone_number <> "" then Call write_editbox_in_case_note("Phone number", phone_number, 6)
 	If contact_reason <> "" then Call write_editbox_in_case_note("Reason for Contact", contact_reason, 6)
@@ -143,26 +143,26 @@ If isnumeric(case_number) = True then
 	MsgBox "The script will now navigate to a TIKL."
 	call navigate_to_screen("dail", "writ")
 Else
-	EMSendKey contact_type & " " & contact_direction & " " & who_contacted
-	If regarding <> "" then EMSendKey " re: " & regarding 
+	EMSendKey(magic_escape_string(contact_type & " " & contact_direction & " " & who_contacted))
+	If regarding <> "" then EMSendKey(magic_escape_string(" re: " & regarding))
 	PF11
-	If when_voicemail_was_left <> "" then EMSendKey "* Contact made: " & when_voicemail_was_left
+	If when_voicemail_was_left <> "" then EMSendKey(magic_escape_string("* Contact made: " & when_voicemail_was_left))
 	PF11
-	If phone_number <> "" then EMSendKey "* Phone number: " & phone_number
+	If phone_number <> "" then EMSendKey(magic_escape_string("* Phone number: " & phone_number))
 	PF11
-	If issue <> "" then EMSendKey "* Reason for Contact: " & issue
+	If issue <> "" then EMSendKey(magic_escape_string("* Reason for Contact: " & issue))
 	PF11
-	If actions_taken <> "" then EMSendKey "* Actions taken: " & actions_taken
+	If actions_taken <> "" then EMSendKey(magic_escape_string("* Actions taken: " & actions_taken))
 	PF11
-	If cl_instructions <> "" then EMSendKey "* Instructions/Message for CL: " & cl_instructions
+	If cl_instructions <> "" then EMSendKey(magic_escape_string("* Instructions/Message for CL: " & cl_instructions))
 	PF11
-	If verifs_needed <> "" then EMSendKey "* Verifs Needed: " & verifs_needed
+	If verifs_needed <> "" then EMSendKey(magic_escape_string("* Verifs Needed: " & verifs_needed))
 	PF11
-	EMSendKey "---"
+	EMSendKey(magic_escape_string("---"))
 	PF11
-	EMSendKey worker_signature
+	EMSendKey(magic_escape_string(worker_signature))
 	PF11
-	EMSendKey "************************************************************************"
+	EMSendKey(magic_escape_string("************************************************************************"))
 	If TIKL_check = 1 then script_end_procedure("Unable to TIKL for MCRE case. Find the MAXIS case and TIKL manually.")
 End if
 
