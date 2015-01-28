@@ -32,35 +32,35 @@ END IF
 'SPECIAL FUNCTIONS JUST FOR THIS SCRIPT
 Function write_editbox_in_person_note(x, y, z) 'x is the header, y is the variable for the edit box which will be put in the case note, z is the length of spaces for the indent.
   variable_array = split(y, " ")
-  EMSendKey "* " & x & ": "
+  EMSendKey magic_escape_string("* " & x & ": ")
   For each x in variable_array 
     EMGetCursor row, col 
     If (row = 18 and col + (len(x)) >= 80) or (row = 5 and col = 3) then
-      EMSendKey "<PF8>"
+      EMSendKey magic_escape_string("<PF8>")
       EMWaitReady 0, 0
     End if
     EMReadScreen max_check, 51, 24, 2
     If max_check = "A MAXIMUM OF 4 PAGES ARE ALLOWED FOR EACH CASE NOTE" then exit for
     EMGetCursor row, col 
-    If (row < 18 and col + (len(x)) >= 80) then EMSendKey "<newline>" & space(z)
-    If (row = 5 and col = 3) then EMSendKey space(z)
-    EMSendKey x & " "
+    If (row < 18 and col + (len(x)) >= 80) then EMSendKey magic_escape_string("<newline>" & space(z))
+    If (row = 5 and col = 3) then EMSendKey magic_escape_string(space(z))
+    EMSendKey magic_escape_string(x & " ")
     If right(x, 1) = ";" then 
-      EMSendKey "<backspace>" & "<backspace>" 
+      EMSendKey magic_escape_string("<backspace>" & "<backspace>")
       EMGetCursor row, col 
       If row = 18 then
-        EMSendKey "<PF8>"
+        EMSendKey magic_escape_string("<PF8>")
         EMWaitReady 0, 0
-        EMSendKey space(z)
+        EMSendKey magic_escape_string(space(z))
       Else
-        EMSendKey "<newline>" & space(z)
+        EMSendKey magic_escape_string("<newline>" & space(z))
       End if
     End if
   Next
-  EMSendKey "<newline>"
+  EMSendKey magic_escape_string("<newline>")
   EMGetCursor row, col 
   If (row = 18 and col + (len(x)) >= 80) or (row = 5 and col = 3) then
-    EMSendKey "<PF8>"
+    EMSendKey magic_escape_string("<PF8>")
     EMWaitReady 0, 0
   End if
 End function
@@ -68,14 +68,14 @@ End function
 Function write_new_line_in_person_note(x)
   EMGetCursor row, col 
   If (row = 18 and col + (len(x)) >= 80 + 1 ) or (row = 5 and col = 3) then
-    EMSendKey "<PF8>"
+    EMSendKey magic_escape_string("<PF8>")
     EMWaitReady 0, 0
   End if
   EMReadScreen max_check, 51, 24, 2
-  EMSendKey x & "<newline>"
+  EMSendKey magic_escape_string(x & "<newline>")
   EMGetCursor row, col 
   If (row = 18 and col + (len(x)) >= 80) or (row = 5 and col = 3) then
-    EMSendKey "<PF8>"
+    EMSendKey magic_escape_string("<PF8>")
     EMWaitReady 0, 0
   End if
 End function
@@ -241,7 +241,7 @@ Loop until mode_check = "Mode: A"
 If sent_3340B_check = 1 then actions_taken = "Sent 3340-B. " & actions_taken
 If sent_3340A_check = 1 then actions_taken = "Sent 3340-A. " & actions_taken
 
-EMSendKey "***" & asset_assessment_type & " ASSET ASSESSMENT***" & "<newline>"
+EMSendKey magic_escape_string("***" & asset_assessment_type & " ASSET ASSESSMENT***" & "<newline>")
 call write_editbox_in_person_note("Effective date", effective_date, 5) 'x is the header, y is the variable for the edit box which will be put in the case note, z is the length of spaces for the indent.
 If MA_LTC_first_month_of_documented_need <> "" then call write_editbox_in_person_note("MA-LTC first month of documented need", MA_LTC_first_month_of_documented_need, 5)
 If month_MA_LTC_rules_applied <> "" then call write_editbox_in_person_note("Month MA-LTC rules applied", month_MA_LTC_rules_applied, 5)
@@ -258,11 +258,11 @@ If worker_signature <> "" then call write_new_line_in_person_note(worker_signatu
 Do
   EMGetCursor row, col
   If row < 18 then 
-    EMSendKey "."
-    EMSendKey "<newline>"
+    EMSendKey magic_escape_string(".")
+    EMSendKey magic_escape_string("<newline>")
   End if
 Loop until row = 18
-EMSendKey ">>>>SPAA PASTED ON NEXT PAGE>>>>"
+EMSendKey magic_escape_string(">>>>SPAA PASTED ON NEXT PAGE>>>>")
 PF8
 call write_new_line_in_person_note(SPAA_line_01)
 call write_new_line_in_person_note(SPAA_line_02)
@@ -279,11 +279,11 @@ call write_new_line_in_person_note(SPAA_line_15)
 Do
   EMGetCursor row, col
   If row < 18 then 
-    EMSendKey "."
-    EMSendKey "<newline>"
+    EMSendKey magic_escape_string(".")
+    EMSendKey magic_escape_string("<newline>")
   End if
 Loop until row = 18
-EMSendKey ">>>>TOTAL MARITAL ASSET LIST PASTED ON NEXT PAGE>>>>"
+EMSendKey magic_escape_string(">>>>TOTAL MARITAL ASSET LIST PASTED ON NEXT PAGE>>>>")
 PF8
 call write_new_line_in_person_note(total_marital_asset_list_line_17)
 call write_new_line_in_person_note(total_marital_asset_list_line_03)
@@ -305,7 +305,7 @@ If write_MAXIS_case_note_check = 0 then script_end_procedure("")
 
 call navigate_to_screen("case", "note")
 PF9
-EMSendKey "***" & asset_assessment_type & " ASSET ASSESSMENT***" & "<newline>"
+EMSendKey magic_escape_string("***" & asset_assessment_type & " ASSET ASSESSMENT***" & "<newline>")
 call write_editbox_in_case_note("Effective date", effective_date, 5) 'x is the header, y is the variable for the edit box which will be put in the case note, z is the length of spaces for the indent.
 If MA_LTC_first_month_of_documented_need <> "" then call write_editbox_in_case_note("MA-LTC first month of documented need", MA_LTC_first_month_of_documented_need, 5)
 If month_MA_LTC_rules_applied <> "" then call write_editbox_in_case_note("Month MA-LTC rules applied", month_MA_LTC_rules_applied, 5)
@@ -322,11 +322,11 @@ If worker_signature <> "" then call write_new_line_in_case_note(worker_signature
 Do
   EMGetCursor row, col
   If row < 17 then 
-    EMSendKey "."
-    EMSendKey "<newline>"
+    EMSendKey magic_escape_string(".")
+    EMSendKey magic_escape_string("<newline>")
   End if
 Loop until row = 17
-EMSendKey ">>>>SPAA PASTED ON NEXT PAGE>>>>"
+EMSendKey magic_escape_string(">>>>SPAA PASTED ON NEXT PAGE>>>>")
 PF8
 call write_new_line_in_case_note(SPAA_line_01)
 call write_new_line_in_case_note(SPAA_line_02)
@@ -343,11 +343,11 @@ call write_new_line_in_case_note(SPAA_line_15)
 Do
   EMGetCursor row, col
   If row < 17 then 
-    EMSendKey "."
-    EMSendKey "<newline>"
+    EMSendKey magic_escape_string(".")
+    EMSendKey magic_escape_string("<newline>")
   End if
 Loop until row = 17
-EMSendKey ">>>>TOTAL MARITAL ASSET LIST PASTED ON NEXT PAGE>>>>"
+EMSendKey magic_escape_string(">>>>TOTAL MARITAL ASSET LIST PASTED ON NEXT PAGE>>>>")
 PF8
 call write_new_line_in_case_note(total_marital_asset_list_line_17)
 call write_new_line_in_case_note(total_marital_asset_list_line_03)
