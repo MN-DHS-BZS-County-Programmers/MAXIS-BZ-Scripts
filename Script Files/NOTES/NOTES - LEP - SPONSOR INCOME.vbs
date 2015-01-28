@@ -123,7 +123,7 @@ If sponsor_deeming_amount_other_programs < 0 then sponsor_deeming_amount_other_p
 'Case note the findings
 call navigate_to_screen("case", "note")
 PF9
-EMSendKey "~~~Sponsor deeming income calculation~~~" & "<newline>"
+EMSendKey magic_escape_string("~~~Sponsor deeming income calculation~~~" & "<newline>")
 If primary_sponsor_earned_income <> 0 then call write_editbox_in_case_note("Primary sponsor earned income", "$" & primary_sponsor_earned_income, 6)
 If spousal_sponsor_earned_income <> 0 then call write_editbox_in_case_note("Spousal sponsor earned income", "$" & spousal_sponsor_earned_income, 6)
 If primary_sponsor_unearned_income <> 0 then call write_editbox_in_case_note("Primary sponsor unearned income", "$" & primary_sponsor_unearned_income, 6)
