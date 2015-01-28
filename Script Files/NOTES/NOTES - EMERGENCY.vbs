@@ -265,7 +265,7 @@ Else
 End if
 
 'Writing the case note
-EMSendKey "<home>" & "***Emergency app: "& replace(crisis, ".", "") & "***" & "<newline>"
+EMSendKey(magic_escape_string("<home>" & "***Emergency app: "& replace(crisis, ".", "") & "***" & "<newline>"))
 If interview_date <> "" then call write_editbox_in_case_note("Interview date", interview_date, 6)
 If HH_comp <> "" then call write_editbox_in_case_note("HH comp", HH_comp, 6)
 If crisis <> "" then call write_editbox_in_case_note("Crisis", crisis, 6)
