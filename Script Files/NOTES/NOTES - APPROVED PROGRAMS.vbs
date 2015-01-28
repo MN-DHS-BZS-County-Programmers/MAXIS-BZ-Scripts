@@ -427,8 +427,7 @@ IF snap_approved_check = checked THEN approved_programs = approved_programs & "S
 IF hc_approved_check = checked THEN approved_programs = approved_programs & "HC/"
 IF cash_approved_check = checked THEN approved_programs = approved_programs & "CASH/"
 IF emer_approved_check = checked THEN approved_programs = approved_programs & "EMER/"
-note_header = magic_escape_string("---Approved " & approved_programs & "<backspace>" & " " & type_of_approval & "---" & "<newline>")
-EMSendKey note_header
+EMSendKey(magic_escape_string("---Approved " & approved_programs & "<backspace>" & " " & type_of_approval & "---" & "<newline>"))
 IF benefit_breakdown <> "" THEN call write_editbox_in_case_note("Benefit Breakdown", benefit_breakdown, 6)
 IF autofill_snap_check = checked THEN
 	FOR EACH snap_approval_result in snap_approval_array
