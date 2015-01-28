@@ -183,7 +183,7 @@ EMReadScreen edit_mode_check, 1, 20, 09
 If edit_mode_check <> "A" then script_end_procedure("Unable to get to edit mode in this case note. Are you in inquiry? Is the case out of county? Resolve these issues and try the script again.")
 
 'Writing the case note
-EMSendKey "***LTC intake***" + "<newline>"
+EMSendKey magic_escape_string("***LTC intake***" + "<newline>")
 If appl_date <> "" then call write_editbox_in_case_note("Application date", appl_date, 6)
 If appl_type <> "" then call write_editbox_in_case_note("Application type received", appl_type, 6)
 If forms_needed <> "" then call write_editbox_in_case_note("Forms Needed", forms_needed, 6)
