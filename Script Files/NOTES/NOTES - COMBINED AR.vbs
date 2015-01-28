@@ -252,7 +252,7 @@ Do
 Loop until case_note_check = "Case Notes (NOTE)" and mode_check = "A"
 
 'The case note
-EMSendKey "<home>" & "***Combined AR received " & recert_datestamp & " for " & recert_month & ": " & review_status & "***" & "<newline>"
+EMSendKey(magic_escape_string("<home>" & "***Combined AR received " & recert_datestamp & " for " & recert_month & ": " & review_status & "***" & "<newline>"))
 If HH_comp <> "" then call write_editbox_in_case_note("HH comp", HH_comp, 6)
 If US_citizen <> "" then call write_editbox_in_case_note("Citizenship", US_citizen, 6)
 If AREP <> "" then call write_editbox_in_case_note("AREP", AREP, 6)

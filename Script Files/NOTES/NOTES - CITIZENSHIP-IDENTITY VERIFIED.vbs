@@ -124,9 +124,9 @@ Do
 Loop until mode_check = "Mode: A" or mode_check = "Mode: E"
 
 'Case noting
-EMSendKey "***CITIZENSHIP/IDENTITY***" & "<newline>"
-EMSendKey string(77, "-") 
-EMSendKey "    HH MEMB         EXEMPT REASON            CIT PROOF         ID PROOF" & "<newline>"
+EMSendKey(magic_escape_string("***CITIZENSHIP/IDENTITY***" & "<newline>"))
+EMSendKey(magic_escape_string(string(77, "-"))) 
+EMSendKey(magic_escape_string("    HH MEMB         EXEMPT REASON            CIT PROOF         ID PROOF" & "<newline>"))
 If HH_memb_01 <> "" then 
 	EMWriteScreen string(76, " "), 7, 3
 	EMWriteScreen HH_memb_01, 7, 5
@@ -184,7 +184,7 @@ If HH_memb_08 <> "" then
 	IF ID_proof_08 <> "(select or type here)" then EMWriteScreen ID_proof_08, 14, 63
 End if
 EMSetCursor 15, 3
-EMSendKey string(77, "-") & "<newline>"
+EMSendKey(magic_escape_string(string(77, "-") & "<newline>"))
 Call write_new_line_in_case_note(worker_sig)
 
 'End the script

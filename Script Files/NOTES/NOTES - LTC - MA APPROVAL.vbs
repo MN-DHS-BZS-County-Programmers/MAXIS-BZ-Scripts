@@ -11,7 +11,7 @@ req.send													'Sends request
 IF req.Status = 200 THEN									'200 means great success
 	Set fso = CreateObject("Scripting.FileSystemObject")	'Creates an FSO
 	Execute req.responseText								'Executes the script code
-ELSE														'Error message, tells user to try to reach github.com, otherwise instructs to contact Veronica with details (and stops script).
+ELSE		 												'Error message, tells user to try to reach github.com, otherwise instructs to contact Veronica with details (and stops script).
 	MsgBox 	"Something has gone wrong. The code stored on GitHub was not able to be reached." & vbCr &_ 
 			vbCr & _
 			"Before contacting Veronica Cary, please check to make sure you can load the main page at www.GitHub.com." & vbCr &_
@@ -292,17 +292,17 @@ call navigate_to_screen("case", "note")
 PF9
 
 'Enters the case note info
-EMSendKey "<home>"
-EMSendKey "**Approved " & elig_type & "-" & budget_type & " for " & footer_month & "/" & footer_year
+EMSendKey magic_escape_string("<home>")
+EMSendKey magic_escape_string("**Approved " & elig_type & "-" & budget_type & " for " & footer_month & "/" & footer_year)
 If elig_type <> "DP" then 
-  EMSendKey ", " & recipient_amt
-  If budget_type = "L" then EMSendKey " LTC sd**"
-  If budget_type = "S" then EMSendKey " SISEW waiver obl**"
-  If budget_type = "B" then EMSendKey " recip amt**"
+  EMSendKey (", " & recipient_amt)
+  If budget_type = "L" then EMSendKey magic_escape_string(" LTC sd**")
+  If budget_type = "S" then EMSendKey magic_escape_string(" SISEW waiver obl**")
+  If budget_type = "B" then EMSendKey magic_escape_string(" recip amt**")
 Else
-  EMSendKey "**"
+  EMSendKey magic_escape_string("**")
 End if
-EMSendKey "<newline>"
+EMSendKey magic_escape_string("<newline>")
 call write_editbox_in_case_note ("Income", income, 6)
 call write_editbox_in_case_note ("Deductions", deductions, 6)
 call write_new_line_in_case_note ("---")

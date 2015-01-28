@@ -86,7 +86,7 @@ Do
   find_case_note
 Loop until case_note_ready = "Case Notes (NOTE)" and case_note_mode = "Mode: A" or case_note_mode = "Mode: E"
 
-EMSendKey "<enter>"
+EMSendKey magic_escape_string("<enter>")
 Do
   EMReadScreen password_prompt, 38, 2, 23
   IF password_prompt = "ACF2/CICS PASSWORD VERIFICATION PROMPT" then MsgBox "You are locked out of your case note. Type your password then try again."
@@ -95,33 +95,33 @@ Do
 Loop until password_prompt <> "ACF2/CICS PASSWORD VERIFICATION PROMPT"
 
 IF SAVE_1 = 1 then 
-  EMSendKey "**SAVE 1**" & "<newline>"
-  EMSendKey "* Current status: " & current_status & "<newline>"
-  EMSendKey "* LPR adjusted from: " & LPR_adjusted_from & "<newline>"
-  EMSendKey "* Date of entry: " & date_of_entry & "<newline>"
-  EMSendKey "* Country of origin: " & country_of_origin & "<newline>"
+  EMSendKey magic_escape_string("**SAVE 1**" & "<newline>")
+  EMSendKey magic_escape_string("* Current status: " & current_status & "<newline>")
+  EMSendKey magic_escape_string("* LPR adjusted from: " & LPR_adjusted_from & "<newline>")
+  EMSendKey magic_escape_string("* Date of entry: " & date_of_entry & "<newline>")
+  EMSendKey magic_escape_string("* Country of origin: " & country_of_origin & "<newline>")
 End if
 IF SAVE_2 = 1 then 
-  EMSendKey "**SAVE 2**" & "<newline>"
-  If not_sponsored = 1 then EMSendKey "* No sponsor indicated on SAVE." & "<newline>"
-  If sponsored = 1 then EMSendKey "* Client is sponsored. Sponsor is indicated as " & sponsor & "." & "<newline>"
+  EMSendKey magic_escape_string("**SAVE 2**" & "<newline>")
+  If not_sponsored = 1 then EMSendKey magic_escape_string("* No sponsor indicated on SAVE." & "<newline>")
+  If sponsored = 1 then EMSendKey magic_escape_string("* Client is sponsored. Sponsor is indicated as " & sponsor & "." & "<newline>")
 End if
 
-EMSendKey "* Immigration document received: " & imig_doc_received & "<newline>"
-EMSendKey "* Exp date: " + exp_date 
-If TIKL_check = 1 then EMSendKey ", TIKLed to re-request " & dateadd("d", -90, exp_date) & "."
-EMSendKey "<newline>"
-If SAVE_2_requested_check = 1 then EMSendKey "* SAVE 2 requested." & "<newline>"
-If notes <> "" then EMSendKey "* Notes: " + notes + "<newline>"
-EMSendKey "---" + "<newline>"
-EMSendKey worker_sig
+EMSendKey magic_escape_string("* Immigration document received: " & imig_doc_received & "<newline>")
+EMSendKey magic_escape_string("* Exp date: " + exp_date)
+If TIKL_check = 1 then EMSendKey magic_escape_string(", TIKLed to re-request " & dateadd("d", -90, exp_date) & ".")
+EMSendKey magic_escape_string("<newline>")
+If SAVE_2_requested_check = 1 then EMSendKey magic_escape_string("* SAVE 2 requested." & "<newline>")
+If notes <> "" then EMSendKey magic_escape_string("* Notes: " + notes + "<newline>")
+EMSendKey magic_escape_string("---" + "<newline>")
+EMSendKey magic_escape_string(worker_sig)
 
 If TIKL_check <> 1 then stopscript
 
 EMReadScreen case_number, 8, 20, 38
 
 Do
-  EMSendKey "<PF3>"
+  EMSendKey magic_escape_string("<PF3>")
   EMWaitReady 1, 1
   EMReadScreen SELF_check, 4, 2, 50
 Loop until SELF_check = "SELF"
@@ -145,10 +145,10 @@ EMWriteScreen TIKL_day, 5, 21
 EMWriteScreen TIKL_year, 5, 24
 
 EMSetCursor 9, 3
-EMSendKey "Check on immigration documentation. If it hasn't been updated, request updated info, as what we have expires " & exp_date & ". TIKL generated via script."
-EMSendKey "<enter>"
+EMSendKey magic_escape_string("Check on immigration documentation. If it hasn't been updated, request updated info, as what we have expires " & exp_date & ". TIKL generated via script.")
+EMSendKey magic_escape_string("<enter>")
 EMWaitReady 1, 1
-EMSendKey "<PF3>"
+EMSendKey magic_escape_string("<PF3>")
 EMWaitReady 1, 1
 MsgBox "TIKL sent for " & TIKL_date & ", 90 days prior to document expiration."
 script_end_procedure("")

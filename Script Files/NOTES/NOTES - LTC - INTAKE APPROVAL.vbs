@@ -534,12 +534,12 @@ End if
 
 'THE CASE NOTE-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-EMSendKey "***MA effective " & header_date & "***" & "<newline>"
+EMSendKey magic_escape_string("***MA effective " & header_date & "***" & "<newline>")
 If elig_type <> "DP" then 
-  If budget_type = "L" then EMSendKey "* LTC spenddown: "
-  If budget_type = "S" then EMSendKey "* SISEW waiver obligation: "
-  If budget_type = "B" then EMSendKey "* Recipient amount: "
-  EMSendKey recipient_amt & "<newline>"
+  If budget_type = "L" then EMSendKey magic_escape_string("* LTC spenddown: ")
+  If budget_type = "S" then EMSendKey magic_escape_string("* SISEW waiver obligation: ")
+  If budget_type = "B" then EMSendKey magic_escape_string("* Recipient amount: ")
+  EMSendKey magic_escape_string(recipient_amt & "<newline>")
 End if
 If elig_date_01 <> "" then call write_new_line_in_case_note("* Elig type/std for " & elig_date_01 & ": " & replace(elig_type_std_01, "/_", "") & ", method " & elig_method_01 & replace(", waiver type " & elig_waiver_type_01, ", waiver type _", "") & ".")
 If elig_date_02 <> "" then call write_new_line_in_case_note("* Elig type/std for " & elig_date_02 & ": " & replace(elig_type_std_02, "/_", "") & ", method " & elig_method_02 & replace(", waiver type " & elig_waiver_type_02, ", waiver type _", "") & ".")

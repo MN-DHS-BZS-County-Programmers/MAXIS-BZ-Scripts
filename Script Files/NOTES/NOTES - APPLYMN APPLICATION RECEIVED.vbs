@@ -83,7 +83,7 @@ Do
 Loop until mode_check = "Mode: A" or mode_check = "Mode: E"
 
 'Case notes information
-EMSendKey "ApplyMN app rec'd on " & app_date & " at " & app_time & " " & AM_PM & "<newline>"
+EMSendKey magic_escape_string("ApplyMN app rec'd on " & app_date & " at " & app_time & " " & AM_PM & "<newline>")
 call write_editbox_in_case_note("Confirmation #", confirmation_number, 6) 'x is the header, y is the variable for the edit box which will be put in the case note.
 call write_editbox_in_case_note("Applying for", progs_applied_for, 6) 'x is the header, y is the variable for the edit box which will be put in the case note.
 If EBT_status <> "N/A" then call write_new_line_in_case_note("* Client is " & EBT_status & ".")

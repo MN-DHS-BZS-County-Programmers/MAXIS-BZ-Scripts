@@ -242,7 +242,7 @@ Do
 Loop until case_note_check = "Case Notes (NOTE)" and mode_check = "A"
 
 'Enters the case note
-EMSendKey "<home>" & "***" & HRF_month & " HRF received " & HRF_datestamp & ": " & HRF_status & "***" & "<newline>"
+EMSendKey(magic_escape_string("<home>" & "***" & HRF_month & " HRF received " & HRF_datestamp & ": " & HRF_status & "***" & "<newline>"))
 call write_editbox_in_case_note("Earned income", earned_income, 6)
 If unearned_income <> "" then call write_editbox_in_case_note("Unearned income", unearned_income, 6)
 If YTD <> "" then call write_editbox_in_case_note("YTD", YTD, 6)

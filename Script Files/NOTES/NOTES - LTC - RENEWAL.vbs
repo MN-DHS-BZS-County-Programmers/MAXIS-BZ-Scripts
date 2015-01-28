@@ -408,7 +408,7 @@ If budget_type = "B" then recipient_amt_name = "recipient amt: "
 If MEDI_reimbursement_prog <> "" then MEDI_reimbursement_prog = "/" & MEDI_reimbursement_prog
 
 'Writing the case note
-EMSendKey "<home>" & "***" & recert_month & " ER " & review_status & ": " & MA_type & MEDI_reimbursement_prog & ", " & recipient_amt_name & recipient_amt & "***" & "<newline>"
+EMSendKey magic_escape_string("<home>" & "***" & recert_month & " ER " & review_status & ": " & MA_type & MEDI_reimbursement_prog & ", " & recipient_amt_name & recipient_amt & "***" & "<newline>")
 call write_editbox_in_case_note("HH comp", HH_comp, 6)
 call write_editbox_in_case_note("Citizenship", US_citizen, 6)
 call write_editbox_in_case_note("AREP", AREP, 6)

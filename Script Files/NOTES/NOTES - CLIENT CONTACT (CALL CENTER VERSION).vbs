@@ -98,9 +98,9 @@ Do
 Loop until mode_check = "Mode: A" or mode_check = "Mode: E"
 
 'Case noting
-EMSendKey "Call center received phone call from " & who_contacted
-If regarding <> "" then EMSendKey " re: " & regarding 
-EMSendKey "<newline>"
+EMSendKey(magic_escape_string("Call center received phone call from " & who_contacted))
+If regarding <> "" then EMSendKey(magic_escape_string(" re: " & regarding))
+EMSendKey(magic_escape_string("<newline>"))
 If when_contact_was_made <> "" then Call write_editbox_in_case_note("Contact made", when_contact_was_made, 6)
 If phone_number <> "" then Call write_editbox_in_case_note("Phone number", phone_number, 6)
 If issue <> "" then Call write_editbox_in_case_note("Issue/subject", issue, 6)

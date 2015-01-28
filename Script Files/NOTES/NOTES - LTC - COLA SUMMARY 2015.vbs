@@ -332,23 +332,23 @@ EndDialog
   
   PF9
   
-  EMSendKey "<home>"
-  EMSendKey "**Approved COLA updates 01/15: " & elig_type & "-" & budget_type & " " & recipient_amt
-  If budget_type = "L" then EMSendKey " LTC sd**"
-  If budget_type = "S" then EMSendKey " SISEW waiver obl**"
-  If budget_type = "B" then EMSendKey " recip amt**"
-  EMSendKey "<newline>"
-  EMSendKey "* Income: " & income & "<newline>"
-  EMSendKey "* Deductions: " & deductions & "<newline>"
+  EMSendKey magic_escape_string("<home>")
+  EMSendKey magic_escape_string("**Approved COLA updates 01/15: " & elig_type & "-" & budget_type & " " & recipient_amt)
+  If budget_type = "L" then EMSendKey magic_escape_string(" LTC sd**")
+  If budget_type = "S" then EMSendKey magic_escape_string(" SISEW waiver obl**")
+  If budget_type = "B" then EMSendKey magic_escape_string(" recip amt**")
+  EMSendKey magic_escape_string("<newline>")
+  EMSendKey magic_escape_string("* Income: " & income & "<newline>")
+  EMSendKey magic_escape_string("* Deductions: " & deductions & "<newline>")
   If designated_provider <> "" then call write_editbox_in_case_note("Designated Provider", designated_provider, 6)
-  EMSendKey "---" & "<newline>"
-  If updated_RSPL_check = 1 then EMSendKey "* Updated RSPL in MMIS." & "<newline>"
-  If designated_provider_check = 1 then EMSendKey "* Client has designated provider." & "<newline>"
-  If approved_check = 1 then EMSendKey "* Approved new MAXIS results." & "<newline>"
-  If DHS_3050_check = 1 then EMSendKey "* Sent DHS-3050 LTC communication form to facility." & "<newline>"
-  If other <> "" then EMSendKey "* Other: " & other & "<newline>"
-  EMSendKey "---" & "<newline>"
-  EMSendKey worker_sig
+  EMSendKey magic_escape_string("---" & "<newline>")
+  If updated_RSPL_check = 1 then EMSendKey magic_escape_string("* Updated RSPL in MMIS." & "<newline>")
+  If designated_provider_check = 1 then EMSendKey magic_escape_string("* Client has designated provider." & "<newline>")
+  If approved_check = 1 then EMSendKey magic_escape_string("* Approved new MAXIS results." & "<newline>")
+  If DHS_3050_check = 1 then EMSendKey magic_escape_string("* Sent DHS-3050 LTC communication form to facility." & "<newline>")
+  If other <> "" then EMSendKey magic_escape_string("* Other: " & other & "<newline>")
+  EMSendKey magic_escape_string("---" & "<newline>")
+  EMSendKey magic_escape_string(worker_sig)
 End sub
 
 ' Function for script--------------------------------------------------------------------------------------------------------
@@ -621,8 +621,8 @@ Loop until case_note_check = "Case Notes (NOTE)" and mode_check = "A"
 
 'THE CASE NOTE-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-EMSendKey "===COLA 2015 INCOME SUMMARY==="
-EMSendKey "<newline>"
+EMSendKey magic_escape_string("===COLA 2015 INCOME SUMMARY===")
+EMSendKey magic_escape_string("<newline>")
 If unearned_income <> "" then call write_editbox_in_case_note("Unearned income", unearned_income, 6)
 If earned_income <> "" then call write_editbox_in_case_note("Earned income", earned_income, 6)
 If medicare_part_B <> "" then call write_editbox_in_case_note("Medicare Part B premium", medicare_part_B, 6)
