@@ -292,17 +292,17 @@ call navigate_to_screen("case", "note")
 PF9
 
 'Enters the case note info
-EMSendKey "<home>"
-EMSendKey "**Approved " & elig_type & "-" & budget_type & " for " & footer_month & "/" & footer_year
+EMSendKey magic_escape_string("<home>")
+EMSendKey magic_escape_string("**Approved " & elig_type & "-" & budget_type & " for " & footer_month & "/" & footer_year)
 If elig_type <> "DP" then 
-  EMSendKey ", " & recipient_amt
-  If budget_type = "L" then EMSendKey " LTC sd**"
-  If budget_type = "S" then EMSendKey " SISEW waiver obl**"
-  If budget_type = "B" then EMSendKey " recip amt**"
+  EMSendKey (", " & recipient_amt)
+  If budget_type = "L" then EMSendKey magic_escape_string(" LTC sd**")
+  If budget_type = "S" then EMSendKey magic_escape_string(" SISEW waiver obl**")
+  If budget_type = "B" then EMSendKey magic_escape_string(" recip amt**")
 Else
-  EMSendKey "**"
+  EMSendKey magic_escape_string("**")
 End if
-EMSendKey "<newline>"
+EMSendKey magic_escape_string("<newline>")
 call write_editbox_in_case_note ("Income", income, 6)
 call write_editbox_in_case_note ("Deductions", deductions, 6)
 call write_new_line_in_case_note ("---")
