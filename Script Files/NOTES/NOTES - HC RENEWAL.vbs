@@ -249,7 +249,7 @@ Do
 Loop until case_note_check = "Case Notes (NOTE)" and mode_check = "A"
 
 'The case note
-EMSendKey "<home>" & "***" & recert_month & " HC ER received " & recert_datestamp & ": " & recert_status & "***" & "<newline>"
+EMSendKey(magic_escape_string("<home>" & "***" & recert_month & " HC ER received " & recert_datestamp & ": " & recert_status & "***" & "<newline>"))
 If SNAP_CSR_check = 1 then call write_new_line_in_case_note("* Used HC ER as SNAP CSR.")
 If HH_comp <> "" then call write_editbox_in_case_note("HH comp", HH_comp, 6)
 If earned_income <> "" then call write_editbox_in_case_note("Earned income", earned_income, 6)
