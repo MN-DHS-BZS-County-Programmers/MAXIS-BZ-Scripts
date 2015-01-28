@@ -11,7 +11,7 @@ req.send													'Sends request
 IF req.Status = 200 THEN									'200 means great success
 	Set fso = CreateObject("Scripting.FileSystemObject")	'Creates an FSO
 	Execute req.responseText								'Executes the script code
-ELSE														'Error message, tells user to try to reach github.com, otherwise instructs to contact Veronica with details (and stops script).
+ELSE		 												'Error message, tells user to try to reach github.com, otherwise instructs to contact Veronica with details (and stops script).
 	MsgBox 	"Something has gone wrong. The code stored on GitHub was not able to be reached." & vbCr &_ 
 			vbCr & _
 			"Before contacting Veronica Cary, please check to make sure you can load the main page at www.GitHub.com." & vbCr &_
