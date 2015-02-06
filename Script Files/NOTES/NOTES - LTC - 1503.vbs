@@ -154,9 +154,9 @@ End if
 
 
 If processed_1503_check = 1 then 
-  EMSendKey magic_escape_string("***Processed 1503 from " & FACI & "***" & "<newline>")
+  EMSendKey "***Processed 1503 from " & FACI & "***" & "<newline>"
 Else
-  EMSendKey magic_escape_string("***Rec'd 1503 from " & FACI & ", DID NOT PROCESS***" & "<newline>")
+  EMSendKey "***Rec'd 1503 from " & FACI & ", DID NOT PROCESS***" & "<newline>"
 End if
 Call write_editbox_in_case_note("Length of stay", length_of_stay, 6)
 Call write_editbox_in_case_note("Recommended level of care", level_of_care, 6)
@@ -191,7 +191,7 @@ If TIKL_check = 1 then
   EMWriteScreen TIKL_date_DD, 5, 21
   EMWriteScreen TIKL_date_YY, 5, 24
   EMSetCursor 9, 3
-  EMSendKey magic_escape_string("Have " & worker_sig & " call " & FACI & " re: length of stay. " & TIKL_multiplier & " days expired.")
+  EMSendKey "Have " & worker_sig & " call " & FACI & " re: length of stay. " & TIKL_multiplier & " days expired."
   transmit
   PF3
 End if

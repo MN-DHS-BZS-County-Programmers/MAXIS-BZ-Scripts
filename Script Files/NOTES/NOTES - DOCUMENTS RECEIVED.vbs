@@ -83,7 +83,7 @@ Do
 Loop until mode_check = "Mode: A" or mode_check = "Mode: E"
 
 'Case notes
-EMSendKey(magic_escape_string("Docs rec'd: "))
+EMSendKey "Docs rec'd: "
 call write_new_line_in_case_note(docs_received)
 If document_datestamp <> "" then call write_editbox_in_case_note("Document datestamp", document_datestamp, 6)
 If verif_notes <> "" then call write_editbox_in_case_note("Notes", verif_notes, 6) 

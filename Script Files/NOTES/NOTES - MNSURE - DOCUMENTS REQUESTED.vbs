@@ -86,7 +86,7 @@ Do
 Loop until mode_check = "Mode: A" or mode_check = "Mode: E"
 
 'Case notes
-EMSendKey magic_escape_string(">>>>>MNSURE DOCS REQ'D<<<<<" & "<newline>")
+EMSendKey ">>>>>MNSURE DOCS REQ'D<<<<<" & "<newline>"
 If MNsure_app_date <> "" then call write_editbox_in_case_note("MNsure application date", MNsure_app_date, 6)
 If MNsure_ID <> "" then call write_editbox_in_case_note("MNsure ID", MNsure_ID, 6)
 If application_case_number <> "" then call write_editbox_in_case_note("Application case number", application_case_number, 6)

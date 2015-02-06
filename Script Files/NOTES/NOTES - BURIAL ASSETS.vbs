@@ -259,10 +259,10 @@ function case_note_page_four
     PF7
     PF7
     EMsetcursor 4, 3
-    EMSendKey(magic_escape_string(line_one_for_part_one))
+    EMSendKey line_one_for_part_one
     PF3
     PF9
-    EMSendKey(magic_escape_string(line_one_for_part_two))
+    EMSendKey line_one_for_part_two
     EMsetcursor 5, 3
   END IF
 END function
@@ -498,34 +498,32 @@ dim MAXIS_col
 
 
 'NOTE: "Other" sections need to be included in correct sections. 
-EMSendKey(magic_escape_string("**BURIAL ASSETS -- Memb " + hh_member + "<newline>"))
+EMSendKey "**BURIAL ASSETS -- Memb " + hh_member + "<newline>"
 IF type_of_designated_account <> "None" then
 	call write_new_line_in_case_note("---Designated Account----")
-	call write_editbox_in_case_note("Type of designated account", type_of_designated_account, 3)
-	call write_editbox_in_case_note("Account Identified", account_identifier, 3)
-	call write_editbox_in_case_note("Reasons funds could not be separated", why_not_separated, 3)
-	call write_editbox_in_case_note("Date account created", account_create_date, 3)
-	call write_editbox_in_case_note("Counted Value", counted_value_designated, 3)
-	call write_editbox_in_case_note("Info on BFE", BFE_information_designated, 3)
+	call write_bullet_and_variable_in_case_note("Type of designated account", type_of_designated_account)
+	call write_bullet_and_variable_in_case_note("Account Identified", account_identifier)
+	call write_bullet_and_variable_in_case_note("Reasons funds could not be separated", why_not_separated)
+	call write_bullet_and_variable_in_case_note("Date account created", account_create_date)
+	call write_bullet_and_variable_in_case_note("Counted Value", counted_value_designated)
+	call write_bullet_and_variable_in_case_note("Info on BFE", BFE_information_designated)
 END IF
 IF insurance_policy_number <> "none" THEN
 	call write_new_line_in_case_note("---Non-Term Life Insurance----")
-	call write_editbox_in_case_note("Policy Number", insurance_policy_number, 3)
-	call write_editbox_in_case_note("Insurance Company", insurance_company, 3)
-	call write_editbox_in_case_note("Date policy created", insurance_create_date, 3)
-	call write_editbox_in_case_note("CSV/FV designated to BFE", insurance_csv, 3)
-	call write_editbox_in_case_note("Counted Value", insurance_counted_value, 3)
-	call write_editbox_in_case_note("Info on BFE", insurance_BFE_steps_info, 3)
+	call write_bullet_and_variable_in_case_note("Policy Number", insurance_policy_number)
+	call write_bullet_and_variable_in_case_note("Insurance Company", insurance_company)
+	call write_bullet_and_variable_in_case_note("Date policy created", insurance_create_date)
+	call write_bullet_and_variable_in_case_note("CSV/FV designated to BFE", insurance_csv)
+	call write_bullet_and_variable_in_case_note("Counted Value", insurance_counted_value)
+	call write_bullet_and_variable_in_case_note("Info on BFE", insurance_BFE_steps_info)
 END IF
 IF type_of_burial_agreement <> "None" THEN
-	If applied_BFE_check = 1 then 
-	EMSendKey(magic_escape_string("* Applied $1500 of burial services to BFE." & "<newline>"))
-	EMSendKey(magic_escape_string("* Type: " & type_of_burial_agreement & ". Purchase date: " & purchase_date & "." & "<newline>"))
-	EMSendKey(magic_escape_string("* Issuer: " & issuer_name & ". Policy #: " & policy_number & "." & "<newline>"))
-	EMSendKey(magic_escape_string("* Face value: " & face_value & "<newline>"))
-	EMSendKey(magic_escape_string("* Funeral home: " & funeral_home & "<newline>"))
-	EMSendKey(magic_escape_string("--------------SERVICE--------------------AMOUNT----------STATUS--------------" & "<newline>"))
-	new_page_check
+	If applied_BFE_check = 1 then CALL write_variable_in_case_note("* Applied $1500 of burial services to BFE.")
+	CALL write_variable_in_case_note("* Type: " & type_of_burial_agreement & ". Purchase date: " & purchase_date & ".")
+	CALL write_variable_in_case_note("* Issuer: " & issuer_name & ". Policy #: " & policy_number & ".")
+	CALL write_bullet_and_variable_in_case_note("Face value", face_value)
+	CALL write_bullet_and_variable_in_case_note("Funeral home", funeral_home)
+	CALL write_variable_in_case_note("--------------SERVICE--------------------AMOUNT----------STATUS------------")
 	case_note_page_four
 	If basic_service_funeral_director_check = 1 then 
 	  new_service_heading
@@ -641,8 +639,7 @@ IF type_of_burial_agreement <> "None" THEN
 	End if
 	new_page_check
 	case_note_page_four
-	EMSendKey(magic_escape_string("--------BURIAL SPACE/ITEMS---------------AMOUNT----------STATUS--------------" & "<newline>"))
-	new_page_check
+	CALL write_variable_in_case_note("--------BURIAL SPACE/ITEMS---------------AMOUNT----------STATUS------------")
 	case_note_page_four
 	If markers_headstone_check = 1 then 
 	  new_BS_BSI_heading
@@ -723,8 +720,7 @@ IF type_of_burial_agreement <> "None" THEN
 	End if
 	new_page_check
 	case_note_page_four
-	EMSendKey(magic_escape_string("--------CASH ADVANCE ITEMS---------------AMOUNT----------STATUS--------------" & "<newline>"))
-	new_page_check
+	CALL write_variable_in_case_note("--------CASH ADVANCE ITEMS---------------AMOUNT----------STATUS------------")
 	case_note_page_four
 	If certified_death_certificate_check = 1 then 
 	  new_CAI_heading
@@ -798,36 +794,35 @@ IF type_of_burial_agreement <> "None" THEN
 	End if
 	new_page_check
 	case_note_page_four
-	EMSendKey(magic_escape_string("-----------------------------------------------------------------------------" & "<newline>"))
+	EMSendKey "---------------------------------------------------------------------------" & "<newline>"
 	new_page_check
 	case_note_page_four
-	EMSendKey(magic_escape_string("* Total service amount: $" & total_service_amount & "<newline>"))
+	EMSendKey "* Total service amount: $" & total_service_amount & "<newline>"
 	new_page_check
 	case_note_page_four
-	EMSendKey(magic_escape_string("* Total BS/BSI excluded amount: $" & total_BS_BSI_excluded_amount & "<newline>"))
+	EMSendKey "* Total BS/BSI excluded amount: $" & total_BS_BSI_excluded_amount & "<newline>"
 	new_page_check
 	case_note_page_four
-	EMSendKey(magic_escape_string("* Total unavailable CAI: $" & total_unavailable_CAI_amount & "<newline>"))
+	EMSendKey "* Total unavailable CAI: $" & total_unavailable_CAI_amount & "<newline>"
 END IF
 
 new_page_check
 case_note_page_four	
-EMSendKey(magic_escape_string("-----------------------------------------------------------------------------" & "<newline>"))
+EMSendKey "---------------------------------------------------------------------------" & "<newline>"
 new_page_check
 case_note_page_four
-EMSendKey(magic_escape_string("* Total counted amount: $" & total_counted_amount & "<newline>"))
+EMSendKey "* Total counted amount: $" & total_counted_amount & "<newline>"
 new_page_check
 case_note_page_four
-EMSendKey(magic_escape_string("* Actions taken: " & case_action & "<newline>"))
+EMSendKey "* Actions taken: " & case_action & "<newline>"
 new_page_check
 case_note_page_four
-EMSendKey(magic_escape_string("---" & "<newline>"))
+EMSendKey "---" & "<newline>"
 new_page_check
 case_note_page_four
-EMSendKey(magic_escape_string(worker_sig & "<newline>"))
+EMSendKey worker_sig & "<newline>"
 
 script_end_procedure("")
-
 
 
 

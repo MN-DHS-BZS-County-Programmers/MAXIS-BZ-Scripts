@@ -109,7 +109,7 @@ PF9
 
 
 'Writes case note
-EMSENDKEY magic_escape_string("***" & Sanction_Percentage & " " & ucase(Type_Sanction) & " SANCTION " & "MEMBER " & HH_Member_Number & " EFF " & Date_Sanction & "***" & "<NEWLINE>")
+EMSENDKEY "***" & Sanction_Percentage & " " & ucase(Type_Sanction) & " SANCTION " & "MEMBER " & HH_Member_Number & " EFF " & Date_Sanction & "***" & "<NEWLINE>"
 
 IF HH_Member_Number <> "" THEN CALL write_bullet_and_variable_in_case_note("HH Member's Number", HH_Member_Number)
 IF Type_Sanction <> "" THEN CALL write_bullet_and_variable_in_case_note("Type of Sanction", Type_Sanction)

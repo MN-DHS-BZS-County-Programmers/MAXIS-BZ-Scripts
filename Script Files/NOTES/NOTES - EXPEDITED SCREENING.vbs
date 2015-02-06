@@ -154,8 +154,8 @@ EMReadScreen read_only_check, 41, 24, 2
 If read_only_check = "YOU HAVE 'READ ONLY' ACCESS FOR THIS CASE" then script_end_procedure("You have read-only access to this case! You may be in inquiry, or this may be out of county. Expedited status is indicated as: " & expedited_status & ". Try again or process/track manually.")
 
 'Enters data into the case note
-EMSendKey(magic_escape_string("<home>" 'To get to the top of the case note.))
-EMSendKey(magic_escape_string("Received " & application_type & ", " & expedited_status & "<newline>"))
+EMSendKey "<home>" 'To get to the top of the case note.
+EMSendKey "Received " & application_type & ", " & expedited_status & "<newline>"
 call write_new_line_in_case_note("---")
 call write_new_line_in_case_note("     CAF 1 income claimed this month: $" & income)
 call write_new_line_in_case_note("         CAF 1 liquid assets claimed: $" & assets)

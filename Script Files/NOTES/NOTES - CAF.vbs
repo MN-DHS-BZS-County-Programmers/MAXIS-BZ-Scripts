@@ -29,9 +29,11 @@ ELSE														'Error message, tells user to try to reach github.com, otherwi
 END IF
 
 'DATE CALCULATIONS----------------------------------------------------------------------------------------------------
-footer_month = datepart("m", date)
+next_month = dateadd("m", + 1, date)
+footer_month = datepart("m", next_month)
 If len(footer_month) = 1 then footer_month = "0" & footer_month
-footer_year = "" & datepart("yyyy", date) - 2000
+footer_year = datepart("yyyy", next_month)
+footer_year = "" & footer_year - 2000
 
 'DIALOGS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BeginDialog case_number_dialog, 0, 0, 181, 120, "Case number dialog"
@@ -444,10 +446,10 @@ Do
         call navigate_to_screen("dail", "writ")
         call create_MAXIS_friendly_date(CAF_datestamp, 30, 5, 18) 
         EMSetCursor 9, 3
-        If cash_checkbox = checked then EMSendKey(magic_escape_string("cash/"))
-        If SNAP_checkbox = checked then EMSendKey(magic_escape_string("SNAP/"))
-        If EMER_checkbox = checked then EMSendKey(magic_escape_string("EMER/"))
-        EMSendKey(magic_escape_string("<backspace>" & " pending 30 days. Evaluate for possible denial."))
+        If cash_checkbox = checked then EMSendKey "cash/"
+        If SNAP_checkbox = checked then EMSendKey "SNAP/"
+        If EMER_checkbox = checked then EMSendKey "EMER/"
+        EMSendKey "<backspace>" & " pending 30 days. Evaluate for possible denial."
         transmit
         PF3
       End if
@@ -455,7 +457,7 @@ Do
         call navigate_to_screen("dail", "writ")
         call create_MAXIS_friendly_date(CAF_datestamp, 45, 5, 18) 
         EMSetCursor 9, 3
-        EMSendKey(magic_escape_string("HC pending 45 days. Evaluate for possible denial. If any members are elderly/disabled, allow an additional 15 days and reTIKL out."))
+        EMSendKey "HC pending 45 days. Evaluate for possible denial. If any members are elderly/disabled, allow an additional 15 days and reTIKL out."
         transmit
         PF3
       End if
@@ -464,7 +466,7 @@ Do
       call navigate_to_screen("dail", "writ")
       call create_MAXIS_friendly_date(date, 10, 5, 18) 
       EMSetCursor 9, 3
-      EMSendKey(magic_escape_string(">>>UPDATE PND2 FOR CLIENT DELAY IF APPROPRIATE<<<"))
+      EMSendKey ">>>UPDATE PND2 FOR CLIENT DELAY IF APPROPRIATE<<<"
       transmit
       PF3
     End if
@@ -486,7 +488,7 @@ If CAF_type = "Recertification" then CAF_type = footer_month & "/" & footer_year
 
 'THE CASE NOTE-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-EMSendKey(magic_escape_string("<home>" & "***" & CAF_type & CAF_status & "***" & "<newline>"))
+EMSendKey "<home>" & "***" & CAF_type & CAF_status & "***" & "<newline>"
 If move_verifs_needed = True and verifs_needed <> "" then call write_bullet_and_variable_in_case_note("Verifs needed", verifs_needed)		'If global variable move_verifs_needed = True (on FUNCTIONS FILE), it'll case note at the top.
 call write_bullet_and_variable_in_case_note("CAF datestamp", CAF_datestamp)
 If interview_type <> "" and interview_type <> " " then call write_bullet_and_variable_in_case_note("Interview type", interview_type)

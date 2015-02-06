@@ -81,7 +81,7 @@ Do
 Loop until mode_check = "Mode: A" or mode_check = "Mode: E"
 
 'Case notes
-EMSendKey magic_escape_string(">>>>>MILEAGE REIMBURSEMENT REQUEST - ACTIONS TAKEN<<<<<" & "<newline>")
+EMSendKey ">>>>>MILEAGE REIMBURSEMENT REQUEST - ACTIONS TAKEN<<<<<" & "<newline>"
 If date_docs_recd <> "" then call write_editbox_in_case_note("Date received", date_docs_recd, 6)
 If total_reimbursement <> "" then call write_editbox_in_case_note("Total Amount", "$" & total_reimbursement, 6)
 If date_to_accounting <> "" then call write_editbox_in_case_note("Date Sent to Accounting", date_to_accounting, 6)

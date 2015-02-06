@@ -289,7 +289,7 @@ If emer_intake_date > intake_date and emer_check = 1 then intake_date = emer_int
 
 
 'NOW IT CASE NOTES THE DATA.
-EMSendKey(magic_escape_string("---Denied " & progs_denied & "<backspace>" & "---" & "<newline>"))
+EMSendKey "---Denied " & progs_denied & "<backspace>" & "---" & "<newline>"
 If SNAP_denial_date <> "" then call write_editbox_in_case_note("SNAP denial date", SNAP_denial_date, 6)
 If HC_denial_date <> "" then call write_editbox_in_case_note("HC denial date", HC_denial_date, 6)
 If cash_denial_date <> "" then call write_editbox_in_case_note("cash denial date", cash_denial_date, 6)
@@ -345,7 +345,7 @@ EMWriteScreen TIKL_month, 5, 18
 EMWriteScreen TIKL_day, 5, 21
 EMWriteScreen TIKL_year, 5, 24
 EMSetCursor 9, 3
-EMSendKey(magic_escape_string("Case was denied " & denial_date & ". If required proofs have not been received, send to CLS per policy. TIKL auto-generated via script."))
+EMSendKey "Case was denied " & denial_date & ". If required proofs have not been received, send to CLS per policy. TIKL auto-generated via script."
 
 'SAVES THE TIKL
 PF3

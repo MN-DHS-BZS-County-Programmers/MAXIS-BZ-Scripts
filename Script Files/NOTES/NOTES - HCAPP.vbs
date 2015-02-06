@@ -370,7 +370,7 @@ Do
       call navigate_to_screen("dail", "writ")
       call create_MAXIS_friendly_date(HCAPP_datestamp, 45, 5, 18) 
       EMSetCursor 9, 3
-      EMSendKey magic_escape_string("HC pending 45 days. Evaluate for possible denial. If any members are elderly/disabled, allow an additional 15 days and reTIKL out.")
+      EMSendKey "HC pending 45 days. Evaluate for possible denial. If any members are elderly/disabled, allow an additional 15 days and reTIKL out."
       transmit
       PF3
     End if
@@ -387,7 +387,7 @@ If HCAPP_status <> "" then HCAPP_status = ": " & HCAPP_status
 
 'SECTION 08: THE CASE NOTE-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-EMSendKey magic_escape_string("<home>" & "***HCAPP received " & HCAPP_datestamp & HCAPP_status & "***" & "<newline>")
+EMSendKey "<home>" & "***HCAPP received " & HCAPP_datestamp & HCAPP_status & "***" & "<newline>"
 If HH_comp <> "" then call write_editbox_in_case_note("HH comp", HH_comp, 6)
 If cit_id <> "" then call write_editbox_in_case_note("Cit/ID", cit_id, 6)
 If AREP <> "" then call write_editbox_in_case_note("AREP", AREP, 6)
