@@ -1085,9 +1085,9 @@ FUNCTION write_panel_to_MAXIS_FMED(FMED_medical_mileage, FMED_1_type, FMED_1_ver
 	transmit
 END FUNCTION
 
-Function write_panel_to_MAXIS_HCRE(appl_date, hcre_appl_addnd_date_input, hcre_retro_months_input, hcre_recvd_by_service_date_input)
-	call navigate_to_screen("STAT","HCRE")
-	PF9
+Function write_panel_to_MAXIS_HCRE(appl_date, hcre_appl_addnd_date_input, hcre_retro_months, hcre_recvd_by_service_date_input)
+'	call navigate_to_screen("STAT","HCRE")
+'	PF9
 	
 	row = 1
 	col = 1
@@ -1095,8 +1095,8 @@ Function write_panel_to_MAXIS_HCRE(appl_date, hcre_appl_addnd_date_input, hcre_r
 		'Appl Addendum Request Date
 	'IF hcre_appl_addnd_date_input <> "" THEN CALL create_MAXIS_friendly_date(hcre_appl_addnd_date_output, 0, row, 51)			'Enhancement request. Krabappel is not capable of adding a HC program at this point.
 		'Coverage Request Date
-	IF hcre_retro_months_input <> "" AND hcre_retro_months_input <> 0 THEN
-		retro_begin = DateAdd("M", (-1 * hcre_retro_months_input), appl_date)
+	IF hcre_retro_months <> "" AND hcre_retro_months <> 0 THEN
+		retro_begin = DateAdd("M", (-1 * hcre_retro_months), appl_date)
 		retro_month = DatePart("M", retro_begin)
 		IF len(retro_month) <> 2 THEN retro_month = "0" & retro_month
 		EMWriteScreen retro_month, row, 64
@@ -1104,7 +1104,6 @@ Function write_panel_to_MAXIS_HCRE(appl_date, hcre_appl_addnd_date_input, hcre_r
 	END IF
 		
 	IF hcre_recvd_by_service_date_input <> "" THEN CALL create_MAXIS_friendly_date(hcre_recvd_by_service_date_input, 0, row, 73)
-	msgbox "pause"
 	transmit
 End Function
 
@@ -1130,10 +1129,20 @@ FUNCTION write_panel_to_MAXIS_HEST(HEST_FS_choice_date, HEST_first_month, HEST_h
 	transmit
 End function
 
-Function write_panel_to_MAXIS_IMIG(IMIG_imigration_status, IMIG_entry_date, IMIG_status_date, IMIG_status_ver, IMIG_status_LPR_adj_from, IMIG_nationality)
+Function write_panel_to_MAXIS_IMIG(IMIG_imigration_status, IMIG_entry_date, IMIG_status_date, IMIG_status_ver, IMIG_status_LPR_adj_from, IMIG_nationality, IMIG_40_soc_sec, IMIG_40_soc_sec_verif, IMIG_battered_spouse_child, IMIG_battered_spouse_child_verif, IMIG_military_status, IMIG_military_status_verif, IMIG_hmong_lao_nat_amer, IMIG_st_prog_esl_ctzn_coop, IMIG_st_prog_esl_ctzn_coop_verif, IMIG_fss_esl_skills_training)
 	call navigate_to_screen("STAT", "IMIG")
-	call ERRR_screen_check
-	call create_panel_if_nonexistent
+	PF10
+	EMWriteScreen reference_number, 20, 76
+	transmit
+	
+	EMReadScreen num_of_IMIG, 1, 2, 78
+	IF num_of_IMIG = "0" THEN 
+		EMWriteScreen "NN", 20, 79
+		transmit
+	ELSE
+		PF9
+	END IF
+	
 	call create_MAXIS_friendly_date(date, 0, 5, 45)						'Writes actual date, needs to add 2000 as this is weirdly a 4 digit year
 	EMWriteScreen datepart("yyyy", date), 5, 51
 	EMWriteScreen IMIG_imigration_status, 6, 45							'Writes imig status
@@ -1148,6 +1157,16 @@ Function write_panel_to_MAXIS_IMIG(IMIG_imigration_status, IMIG_entry_date, IMIG
 	EMWriteScreen IMIG_status_ver, 8, 45								'Enters status ver
 	EMWriteScreen IMIG_status_LPR_adj_from, 9, 45						'Enters status LPR adj from
 	EMWriteScreen IMIG_nationality, 10, 45								'Enters nationality
+	EMWriteScreen IMIG_40_soc_sec, 13, 56
+	EMWriteScreen IMIG_40_soc_sec_verif, 13, 71
+	EMWriteScreen IMIG_battered_spouse_child, 14, 56
+	EMWriteScreen IMIG_battered_spouse_child_verif, 14, 71
+	EMWriteScreen IMIG_military_status, 15, 56
+	EMWriteScreen IMIG_military_status_verif, 15, 71
+	EMWriteScreen IMIG_hmong_lao_nat_amer, 16, 56
+	EMWriteScreen IMIG_st_prog_esl_ctzn_coop, 17, 56
+	EMWriteScreen IMIG_st_prog_esl_ctzn_coop_verif, 17, 71
+	EMWriteScreen IMIG_fss_esl_skills_training, 18, 56
 	transmit
 	transmit
 End function
@@ -1460,110 +1479,46 @@ Function write_panel_to_MAXIS_PBEN(pben_referal_date, pben_type, pben_appl_date,
 	transmit
 End Function
 
-Function write_panel_to_MAXIS_PDED(PDED_wid_deduction, PDED_adult_child_disregard, PDED_wid_disregard, PDED_unea_income_deduction_reason, PDED_unea_income_deduction_value, PDED_earned_income_deduction_reason, PDED_earned_income_deduction_value, PDED_ma_epd_inc_asset_limit, PDED_guard_fee, PDED_rep_payee_fee, PDED_other_expense, PDED_shel_spcl_needs, PDED_excess_need, PDED_restaurant_meals)
+Function write_panel_to_MAXIS_PDED(PDED_wid_deduction, PDED_dac, PDED_wid_disregard, PDED_unea_income_deduction_reason, PDED_unea_income_deduction_value, PDED_earned_income_deduction_reason, PDED_earned_income_deduction_value, PDED_ma_epd_inc_asset_limit, PDED_guard_fee, PDED_rep_payee_fee, PDED_other_expense, PDED_shel_spcl_needs, PDED_excess_need, PDED_restaurant_meals)
 	call navigate_to_screen("STAT","PDED")
-	call create_panel_if_nonexistent
+	EMWriteScreen reference_number, 20, 76
+	transmit
 	
-	'====================== FIX LATER ============================
-	
-	'Pickle Disregard
-		'ADD ME LATER
+	EMReadScreen num_of_PDED, 1, 2, 78
+	IF num_of_PDED = "0" THEN 
+		EMWriteScreen "NN", 20, 79
+		transmit
 		
-	'=============================================================
-		
-	'Disa Widow/ers Deductionpded_shel_spcl_needs
-	If pded_wid_deduction <> "" then
-		pded_wid_deduction = ucase(pded_wid_deduction)
-		pded_wid_deduction = left(pded_wid_deduction,1)
-		EMWriteScreen pded_wid_deduction, 7, 60
-	End If
-	
-	'Disa Adult Child Disregard
-	If pded_adult_child_disregard <> "" then
-		pded_adult_child_disregard = ucase(pded_adult_child_disregard)
-		pded_adult_child_disregard = left(pded_adult_child_disregard,1)
-		EMWriteScreen pded_adult_child_disregard, 8, 60
-	End If
-	
-	'Widow/ers Disregard
-	If pded_wid_disregard <> "" then
-		pded_wid_disregard = ucase(pded_wid_disregard)
-		pded_wid_disregard = left(pded_wid_disregard,1)
-		EMWriteScreen pded_wid_disregard, 9, 60
-	End If
-
-	'Other Unearned Income Deduction
-	If pded_unea_income_deduction_reason <> "" and pded_unea_income_deduction_value <> "" then
-		EMWriteScreen pded_unea_income_deduction_value, 10, 62
-		EMWriteScreen "X", 10, 25
-		Transmit
-		EMWriteScreen pded_unea_income_deduction_reason, 10, 51
-		Transmit
-		PF3
-	End If
-
-	'Other Earned Income Deduction
-	If pded_earned_income_deduction_reason <> "" and pded_earned_income_deduction_value <> "" then
-		EMWriteScreen pded_earned_income_deduction_value, 11, 62
-		EMWriteScreen "X", 11, 27
-		Transmit
-		EMWriteScreen pded_earned_income_deduction_reason, 10, 51
-		Transmit
-		PF3
-	End If
-	
-	'Extend MA-EPD Income/Asset Limits
-	If pded_ma_epd_inc_asset_limit <> "" then
-		pded_ma_epd_inc_asset_limit = ucase(pded_ma_epd_inc_asset_limit)
-		pded_ma_epd_inc_asset_limit = left(pded_ma_epd_inc_asset_limit,1)
-		EMWriteScreen pded_ma_epd_inc_asset_limit, 12, 65
-	End If
-	
-	'====================== FIX LATER ============================
-	
-	'Blind/Disa Student Child Disregard
-	'If  <> "" then
-		'ADD LOGIC LATER
-	'End If
-	
-	'=============================================================
-	
-	'Guardianship Fee
-	If pded_guard_fee <> "" then
-		EMWriteScreen pded_guard_fee, 15, 44
-	End If
-	
-	'Rep Payee Fee
-	If pded_rep_payee_fee <> "" then
-		EMWriteScreen pded_guard_fee, 15, 70
-	End If
-	
-	'Other Expense
-	If pded_other_expense <> "" then
-		EMWriteScreen pded_other_expense, 18, 41
-	End If
-	
-	'Shelter Special Needs
-	If pded_shel_spcl_needs <> "" then
-		pded_shel_spcl_needs = ucase(pded_shel_spcl_needs)
-		pded_shel_spcl_needs = left(pded_shel_spcl_needs,1)
-		EMWriteScreen pded_shel_spcl_needs, 18, 78
-	End If
-	
-	'Excess Need
-	If pded_excess_need <> "" then
-		EMWriteScreen pded_excess_need, 19, 41
-	End If
-	
-	'Restaurant Meals
-	If pded_restaurant_meals <> "" then
-		pded_restaurant_meals = ucase(pded_restaurant_meals)
-		pded_restaurant_meals = left(pded_restaurant_meals,1)
-		EMWriteScreen pded_restaurant_meals, 19, 78
-	End If
-		
-	Transmit
-	
+		EMWriteScreen PDED_wid_deduction, 7, 60
+		EMWriteScreen PDED_dac, 8, 60
+		EMWriteScreen PDED_wid_disregard, 9, 60
+		IF PDED_unea_income_deduction_reason <> "" THEN 
+			EMWriteScreen "X", 10, 25
+			transmit
+			
+			EMWriteScreen PDED_unea_income_deduction_reason, 10, 51
+			transmit
+			PF3
+		END IF
+		EMWriteScreen PDED_unea_income_deduction_value, 10, 62
+		IF PDED_earned_income_deduction_reason <> "" THEN 
+			EMWriteScreen "X", 11, 27
+			transmit
+			
+			EMWriteScreen PDED_earned_income_deduction_reason, 10, 51
+			transmit
+			PF3
+		END IF
+		EMWriteScreen PDED_earned_income_deduction_value, 11, 62
+		EMWriteScreen PDED_ma_epd_inc_asset_limit, 12, 65
+		EMWriteScreen PDED_guard_fee, 15, 44
+		EMWriteScreen PDED_rep_payee_fee, 15, 70
+		EMWriteScreen PDED_other_expense, 18, 41
+		EMWriteScreen PDED_shel_spcl_needs, 18, 78
+		EMWriteScreen PDED_excess_need, 19, 41
+		EMWriteScreen PDED_restaurant_meals, 19, 78
+		transmit
+	END IF	
 End Function
 
 FUNCTION write_panel_to_MAXIS_PREG(PREG_conception_date, PREG_conception_date_ver, PREG_third_trimester_ver, PREG_due_date, PREG_multiple_birth)
@@ -1584,7 +1539,15 @@ end function
 '---This function writes using the variables read off of the specialized excel template to the rbic panel in MAXIS
 Function write_panel_to_MAXIS_RBIC(rbic_type, rbic_start_date, rbic_end_date, rbic_group_1, rbic_retro_income_group_1, rbic_prosp_income_group_1, rbic_ver_income_group_1, rbic_group_2, rbic_retro_income_group_2, rbic_prosp_income_group_2, rbic_ver_income_group_2, rbic_group_3, rbic_retro_income_group_3, rbic_prosp_income_group_3, rbic_ver_income_group_3, rbic_retro_hours, rbic_prosp_hours, rbic_exp_type_1, rbic_exp_retro_1, rbic_exp_prosp_1, rbic_exp_ver_1, rbic_exp_type_2, rbic_exp_retro_2, rbic_exp_prosp_2, rbic_exp_ver_2)
 	call navigate_to_screen("STAT", "RBIC")  'navigates to the stat panel
-	call create_panel_if_nonexistent
+	EMWriteScreen reference_number, 20, 76
+	transmit
+	
+	EMReadScreen num_of_RBIC, 1, 2, 78
+	IF num_of_RBIC = "0" THEN
+		EMWriteScreen "NN", 20, 79
+		transmit
+	END IF
+	
 	EMwritescreen rbic_type, 5, 44  'enters rbic type code
 	call create_MAXIS_friendly_date(rbic_start_date, 0, 6, 44)  'creates and enters a MAXIS friend date in the format mm/dd/yy for rbic start date
 	IF rbic_end_date <> "" THEN call create_MAXIS_friendly_date(rbic_end_date, 6, 68)  'creates and enters a MAXIS friend date in the format mm/dd/yy for rbic end date
@@ -1628,6 +1591,7 @@ Function write_panel_to_MAXIS_RBIC(rbic_type, rbic_start_date, rbic_end_date, rb
 	EMwritescreen rbic_exp_retro_2, 16, 47  'enters the expenses retro for group 2
 	EMwritescreen rbic_exp_prosp_2, 16, 62  'enters the expenses prospective for group 2
 	EMwritescreen rbic_exp_ver_2, 16, 76    'enters the expenses verification code for group 2
+	transmit
 end function
 
 '---This function writes using the variables read off of the specialized excel template to the rest panel in MAXIS
