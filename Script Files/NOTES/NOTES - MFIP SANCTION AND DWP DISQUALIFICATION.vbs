@@ -48,41 +48,47 @@ END IF
 
 'DIALOGS-------------------------------
 'MFIP Sanction/DWP Disqualification Dialog Box
-BeginDialog MFIP_Sanction_DWP_Disq_Dialog, 0, 0, 296, 285, "MFIP Sanction - DWP Disqualification"
-  Text 5, 10, 70, 10, "MAXIS Case Number:"
-  EditBox 75, 5, 90, 15, case_number
-  Text 170, 10, 80, 10, "HH Member's Number:"
-  EditBox 255, 5, 35, 15, HH_Member_Number
-  Text 5, 30, 95, 10, "Type of Sanction (ES or CS):"
-  EditBox 110, 25, 85, 15, Type_Sanction
-  Text 5, 50, 140, 10, "Effective Date of Sanction/Disqualification:"
-  EditBox 150, 45, 90, 15, Date_Sanction
-  Text 5, 70, 75, 10, "Number of occurences:"
-  EditBox 90, 65, 30, 15, Number_Occurrences
-  Text 155, 70, 70, 10, "Sanction Percentage:"
-  DropListBox 230, 65, 60, 15, "Select One:"+chr(9)+"10%"+chr(9)+"30%"+chr(9)+"100%", Sanction_Percentage
-  Text 5, 90, 145, 10, "Sanction information received from and how:"
-  EditBox 150, 85, 140, 15, Sanction_Notification_Received
-  Text 5, 110, 170, 10, "Last day to cure (10 day cutoff or last day of month):"
-  EditBox 180, 105, 70, 15, Last_Day_Cure
-  Text 5, 130, 80, 10, "Reason for the sanction:"
-  EditBox 90, 125, 200, 15, Reason_for_Sanction
-  Text 5, 150, 85, 10, "Impact to other programs:"
-  EditBox 95, 145, 195, 15, Impact_Other_Programs
-  Text 5, 165, 145, 20, "Communicated with client to cure santion by sending (i.e., SPEC/MEMO):"
-  EditBox 155, 165, 135, 15, Memo_to_Client
-  Text 5, 190, 105, 25, "Vendor information (if vendoring due to the sanction, vendor #, etc.):"
-  EditBox 115, 190, 175, 15, Vendor_Information
-  CheckBox 5, 220, 225, 10, "Check here if you sent a status update to Employment Services.", Update_Sent_ES_Checkbox
-  CheckBox 5, 235, 220, 10, "Check here if you sent a status update to Child Care Assistance.", Update_Sent_CCA_Checkbox
-  CheckBox 5, 250, 125, 10, "Check here if you FIATed this case.", Fiat_Checkbox
-  Text 5, 270, 70, 10, "Sign your case note:"
-  EditBox 80, 265, 90, 15, worker_signature
+BeginDialog MFIP_Sanction_DWP_Disq_Dialog, 0, 0, 341, 275, "MFIP Sanction - DWP Disqualification"
+  EditBox 55, 5, 60, 15, case_number
+  EditBox 180, 5, 20, 15, HH_Member_Number
+  DropListBox 265, 5, 65, 15, "Select one..."+chr(9)+"imposed"+chr(9)+"pending", sanction_status_droplist
+  DropListBox 65, 25, 110, 15, "Select one..."+chr(9)+"CS"+chr(9)+"ES"+chr(9)+"No show to orientation"+chr(9)+"Minor mom truancy", sanction_type_droplist
+  DropListBox 265, 25, 65, 15, "Select one..."+chr(9)+"1"+chr(9)+"2"+chr(9)+"3"+chr(9)+"4"+chr(9)+"5"+chr(9)+"6"+chr(9)+"7"+chr(9)+"7+", number_occurances_droplist
+  DropListBox 50, 45, 65, 15, "Select one..."+chr(9)+"10%"+chr(9)+"30%"+chr(9)+"100%", Sanction_Percentage_droplist
+  EditBox 265, 45, 65, 15, Date_Sanction
+  DropListBox 90, 65, 240, 15, "Select one..."+chr(9)+"Failed to attend ES overview"+chr(9)+"Failed to develop employment plan"+chr(9)+"Non-compliance with employment plan"+chr(9)+"< 20, failed education requirement"+chr(9)+"Failed to accept suitable employment"+chr(9)+"Quit suitable employment w/o good cause"+chr(9)+"Failure to attend MFIP orientation"+chr(9)+"Non-cooperation with child support", sanction_reason_droplist
+  EditBox 90, 85, 240, 15, sanction_information
+  EditBox 90, 105, 240, 15, other_sanction_notes
+  EditBox 90, 125, 240, 15, Impact_Other_Programs
+  EditBox 90, 145, 240, 15, Vendor_Information
+  EditBox 175, 165, 60, 15, Last_Day_Cure
+  CheckBox 5, 190, 130, 10, "Update sent to Employment Services", Update_Sent_ES_Checkbox
+  CheckBox 5, 205, 130, 10, "Update sent to Child Care Assistance", Update_Sent_CCA_Checkbox
+  CheckBox 5, 220, 130, 10, "TIKL to change sanction status ", TIKL_next_month
+  CheckBox 145, 190, 80, 10, "Case has been FIAT'd", Fiat_check
+  CheckBox 145, 205, 140, 10, "Mandatory vendor form mailed to client", mandatory_vendor_check
+  CheckBox 145, 220, 190, 10, "Sent MFIP sanction for future closed month SPEC/LETR", Sent_SPEC_MEMO
+  EditBox 150, 255, 75, 15, worker_signature
   ButtonGroup ButtonPressed
-    OkButton 185, 265, 50, 15
-    CancelButton 240, 265, 50, 15
+    OkButton 230, 255, 50, 15
+    CancelButton 285, 255, 50, 15
+  Text 5, 70, 80, 10, "Reason for the sanction:"
+  Text 85, 260, 60, 10, "Worker signature:"
+  Text 5, 170, 170, 10, "Last day to cure (10 day cutoff or last day of month):"
+  Text 185, 30, 75, 10, "Number of occurences:"
+  Text 5, 150, 65, 10, "Vendor information:"
+  Text 5, 130, 85, 10, "Impact to other programs:"
+  Text 5, 90, 80, 10, "Sanction info from/how:"
+  Text 5, 50, 40, 10, "Sanction %:"
+  Text 210, 10, 55, 10, "Sanction status:"
+  Text 5, 10, 45, 10, "Case number:"
+  Text 125, 50, 140, 10, "Effective Date of Sanction/Disqualification:"
+  Text 130, 10, 50, 10, "HH Member #:"
+  Text 5, 30, 60, 10, "Type of sanction:"
+  Text 5, 110, 70, 10, "Other sanction notes:"
+  Text 155, 230, 160, 10, "(See TE10.20 for info on when to use this notice)"
+  GroupBox 0, 185, 335, 60, ""
 EndDialog
-
 
 
 
