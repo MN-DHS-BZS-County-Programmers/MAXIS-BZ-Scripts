@@ -1,6 +1,3 @@
-time_array_30_min = "7:00"+chr(9)+"7:30"+chr(9)+"8:00"+chr(9)+"8:30"+chr(9)+"9:00"+chr(9)+"9:30"+chr(9)+"10:00"+chr(9)+"10:30"+chr(9)+"11:00"+chr(9)+"11:30"+chr(9)+"12:00"+chr(9)+"12:30"+chr(9)+"1:00"+chr(9)+"1:30"+chr(9)+"2:00"+chr(9)+"2:30"+chr(9)+"3:00"+chr(9)+"3:30"+chr(9)+"4:00"+chr(9)+"4:30"+chr(9)+"5:00"+chr(9)+"5:30"+chr(9)+"6:00"
-appt_time_list = "15 mins"+chr(9)+"30 mins"+chr(9)+"45 mins"+chr(9)+"60 mins"
-
 'STATS GATHERING----------------------------------------------------------------------------------------------------
 name_of_script = "BULK - pull cases into Excel-revised"
 start_time = timer
@@ -32,6 +29,9 @@ ELSE	'Error message, tells user to try to reach github.com, otherwise instructs 
 	"URL: " & url
 	script_end_procedure("Script ended due to error connecting to GitHub.")
 END IF
+
+time_array_30_min = "7:00"+chr(9)+"7:30"+chr(9)+"8:00"+chr(9)+"8:30"+chr(9)+"9:00"+chr(9)+"9:30"+chr(9)+"10:00"+chr(9)+"10:30"+chr(9)+"11:00"+chr(9)+"11:30"+chr(9)+"12:00"+chr(9)+"12:30"+chr(9)+"1:00"+chr(9)+"1:30"+chr(9)+"2:00"+chr(9)+"2:30"+chr(9)+"3:00"+chr(9)+"3:30"+chr(9)+"4:00"+chr(9)+"4:30"+chr(9)+"5:00"+chr(9)+"5:30"+chr(9)+"6:00"
+appt_time_list = "15 mins"+chr(9)+"30 mins"+chr(9)+"45 mins"+chr(9)+"60 mins"
 
 FUNCTION create_calendar(month_to_use, month_array)
 	'Generating a calendar
@@ -77,7 +77,7 @@ EndDialog
 BeginDialog REVS_scrubber_time_dialog, 0, 0, 141, 130, "REVS scrubber time dialog"
   DropListBox 70, 5, 60, 15, "Select one..."+chr(9)+time_array_30_min, first_appointment_listbox
   DropListBox 70, 25, 60, 15, "Select one..."+chr(9)+time_array_30_min, last_appointment_listbox
-  DropListBox 80, 45, 50, 15, "Select one..."+chr(9)+appt_time_list, List3
+  DropListBox 80, 45, 50, 15, "Select one..."+chr(9)+appt_time_list, appointment_length_listbox
   CheckBox 5, 70, 135, 10, "Duplicate appointments per time slot?", duplicate_appt_times
   EditBox 100, 85, 35, 15, appointments_per_time_slot
   ButtonGroup ButtonPressed
@@ -99,17 +99,17 @@ IF day_of_month < 16 THEN script_end_procedure("You cannot run this script befor
 
 'Opening the Excel file
 Set objExcel = CreateObject("Excel.Application")
-objExcel.Visible = False
+objExcel.Visible = True
 Set objWorkbook = objExcel.Workbooks.Add() 
 objExcel.DisplayAlerts = True
 
 'formatting excel file
 objExcel.cells(1, 1).Value = "CASE NUMBER"
 objExcel.Cells(1, 1).Font.Bold = TRUE
-objExcel.Cells(1, 2).Value = "Interview Date"
+objExcel.Cells(1, 2).Value = "Interview Date & Time"
 objExcel.cells(1, 2).Font.Bold = TRUE
-objExcel.Cells(1, 3).Value = "Interview Time"
-objExcel.cells(1, 3).Font.Bold = TRUE
+'objExcel.Cells(1, 3).Value = "Interview Time"
+'objExcel.cells(1, 3).Font.Bold = TRUE
 
 'creating month plus 1 and plus 2
 cm_plus_1 = dateadd("M", 1, date)
@@ -124,19 +124,25 @@ CALL find_variable("User: ", worker_number, 7)
 DIALOG REVS_scrubber_initial_dialog
 	IF ButtonPressed = 0 THEN stopscript
 
-revs_month = DateAdd("M", 2, date)
-next_month = DateAdd("M", 1, revs_month)
+calendar_month = DateAdd("M", 1, date)
+appt_month = DatePart("M", calendar_month)
+appt_year = DatePart("YYYY", calendar_month)
+next_month = DateAdd("M", 1, calendar_month)
 next_month = DatePart("M", next_month) & "/01/" & DatePart("YYYY", next_month)
 num_of_days = DatePart("D", (DateAdd("D", -1, next_month)))
 
 'Generating the calendar
 ReDim month_array(num_of_days, 0)
-CALL create_calendar(revs_month, month_array)
+CALL create_calendar(calendar_month, month_array)
 
 'Determining the appropriate times to set appointments.
 DIALOG REVS_scrubber_time_dialog
 	IF ButtonPressed = 0 THEN stopscript
-
+	IF appointments_per_time_slot = "" THEN 
+		msgbox "blank"
+		appointments_per_time_slot = 1
+	END IF
+	
 CALL check_for_MAXIS(false)
 back_to_SELF
 current_month = DatePart("M", date)
@@ -204,23 +210,59 @@ Loop until last_page_check = "THIS IS THE LAST PAGE"
 'FOR EACH day that is not checked, start assigning appointments according to DatePart("N", appointment) because DatePart"N" is minutes. Once datepart("N") = last_appointment_time THEN the script needs to jump to the next day.
 '
 
+'Going back to the top of the Excel to insert the appointment date and time in the list, yo
+appointment_length_listbox = left(appointment_length_listbox, 2)	'Hacking the "mins" off the end of the appointment_length_listbox variable
+excel_row = 2
 FOR i = 1 to num_of_days
 	IF month_array(i, 0) = 0 THEN		'These are the dates that the user has determined the agency/unit/worker
-		appointment_time = revs_month & "/" & i & "/" & revs_year 
-	
-	'do stuff
-	
+		appointment_time = appt_month & "/" & i & "/" & appt_year & " " & first_appointment_listbox		'putting together the date and time values.
+		DO
+			appointment_time = DateAdd("N", 0, appointment_time)	'Putting the date in a MM/DD/YYYY HH:MM format. It just looks nicer.
+			appointment_time_for_viewing = appointment_time			'creating a new variable to handle the display of time to get it out of military time.
+			IF DatePart("H", appointment_time_for_viewing) >= 13 THEN appointment_time_for_viewing = DateAdd("H", -12, appointment_time_for_viewing)
+			FOR j = 1 TO appointments_per_time_slot					'Having the script create appointments_per_time_slot for each day and time.
+				objExcel.Cells(excel_row, 2).Value = appointment_time_for_viewing
+				excel_row = excel_row + 1
+				IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT FOR
+			NEXT
+			IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT DO
+			appointment_time = DateAdd("N", appointment_length_listbox, appointment_time)
+			appointment_time = DateAdd("N", 0, appointment_time) 'Putting the date in a MM/DD/YYYY HH:MM format. Otherwise, the format is M/D/YYYY. It just looks nicer.
+			
+			'The variables "last_appointment_listbox_for_comparison" and "appointment_time_for_comparison" are used for the DO-LOOP. Because the script
+			'handles time in military time, but clients do not, we need a way of handling the display of the date/time and the comparison of appointment times
+			'against last appointment time variable.
+			IF DatePart("H", last_appointment_listbox) < 7 THEN 
+				last_appointment_listbox_for_comparison = DateAdd("H", 12, last_appointment_listbox)
+			ELSE
+				last_appointment_listbox_for_comparison = last_appointment_listbox
+			END IF
+			IF DatePart("H", appointment_time) < 7 THEN 
+				appointment_time_for_comparison = DateAdd("H", 12, appointment_time)
+			ELSE
+				appointment_time_for_comparison = appointment_time
+			END IF
+		LOOP UNTIL (DatePart("H", appointment_time_for_comparison) > DatePart("H", last_appointment_listbox_for_comparison)) OR ((DatePart("H", appointment_time_for_comparison) >= DatePart("H", last_appointment_listbox_for_comparison)) AND DatePart("N", appointment_time_for_comparison) > DatePart("N", last_appointment_listbox_for_comparison))
+		IF objExcel.Cells(excel_row, 1) = "" THEN EXIT FOR
 	END IF
 NEXT
 
-
-'This is the bit that Charles wrote that 
+'stopscript
 
 all_case_numbers_array = ""   'resetting array
 excel_row = 2					'resetting excel row to start reading at the top 
 DO 								'looping until it meets a blank excel cell without a case number
 	recert_status = ""			'resetting recert status for each run through the loop/case number
 	case_number = objExcel.cells(excel_row, 1).value
+	interview_time = objExcel.Cells(excel_row, 2).Value
+	IF DatePart("H", interview_time) < 7 OR DatePart("H", interview_time) = 12 THEN 
+		am_pm = "PM"
+	ELSE	
+		am_pm = "AM"
+	END IF
+	appt_minute_place_holder = DatePart("N", interview_time)
+	IF appt_minute_place_holder_because_reasons = 0 THEN appt_minute_place_holder_because_reasons = "00"
+	interview_time = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time) & " " & DatePart("H", interview_time) & ":" & appt_minute_place_holder_because_reasons & " " & am_pm
 	IF case_number = "" THEN EXIT DO      'exiting do if it finds a blank cell on the case number column
 	
 	back_to_self
@@ -253,14 +295,16 @@ DO 								'looping until it meets a blank excel cell without a case number
 	EMReadScreen remaining_digits, 9, 17, 50
 	phone_number = area_code & remaining_digits
 	
+	'*** THE LINES OF CODE BELOW ARE COMMENTED OUT TO TEST THE MEMO AND CASE NOTING FUNCTION. WHEN NOT COMMENTED OUT ***
+	'*** THE LINES OF CODE WILL DELETE CASES THAT ARE AT CSR LEAVING ONLY THE CASES THAT ARE AT ANNUAL RENEWAL.      ***
 	'If the case is up for a CSR in CM+2 then it will delete the row from the excel file.
-	IF RECERT_STATUS = "NO" THEN
-		SET objRange = objExcel.Cells(excel_row, 1).EntireRow
-		objRange.Delete
-		excel_row = excel_row - 1
-	END If
-	
-	IF RECERT_STATUS = "YES" Then
+	'IF RECERT_STATUS = "NO" THEN
+	'	SET objRange = objExcel.Cells(excel_row, 1).EntireRow
+	'	objRange.Delete
+	'	excel_row = excel_row - 1
+	'END If
+	'
+	'IF RECERT_STATUS = "YES" Then
 		back_to_self
 		CALL navigate_to_screen("SPEC", "MEMO")
 		PF5
@@ -296,7 +340,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 		EMSendKey("************************************************************")
 		CALL write_new_line_in_SPEC_MEMO("Your SNAP case is set to recertify on " & Left(cm_plus_2, 2) & "/" & Right(cm_plus_2, 2) & ". An interview is required to process your application.")
 		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("Your phone interview is scheduled on " & interview_date & " at " & interview_time & ".")
+		CALL write_new_line_in_SPEC_MEMO("Your phone interview is scheduled for " & interview_time & ".")
 		CALL write_new_line_in_SPEC_MEMO("We will be calling you at this number " & phone_number & ".")
 		CALL write_new_line_in_SPEC_MEMO("If this date and/or time does not work, or if you would prefer an in-person interview, please call our office.")
 		CALL write_new_line_in_SPEC_MEMO("")
@@ -319,13 +363,13 @@ DO 								'looping until it meets a blank excel cell without a case number
 		PF9
 		
 		EMSendKey "***SNAP Recertification Interview Scheduled***"
-		CALL write_variable_in_case_note("* A phone interview has been scheduled for " & interview_date & " at " & interview_time & ".")
+		CALL write_variable_in_case_note("* A phone interview has been scheduled for " & interview_time & ".")
 		CALL write_variable_in_case_note("* Client phone: " & phone_number)
 		If forms_to_arep = "Y" then call write_variable_in_case_note("* Copy of notice sent to AREP.")
 		If forms_to_swkr = "Y" then call write_variable_in_case_note("* Copy of notice sent to Social Worker.")
 		call write_variable_in_case_note("---")
 		call write_variable_in_case_note(worker_signature)
-	END IF
+	'END IF
 	
 	
 	excel_row = excel_row + 1
@@ -342,3 +386,6 @@ objExcel.Columns(4).autofit()
 script_end_procedure("Success, the excel file now has all of the cases that have had interviews scheduled.")
 
 
+'Things the script needs to do:
+'	(1) TIKL to the appointment date to remind the worker to "send NOMI if client missed interview" -- combine it with the DAIL scrubber, yo!!!
+'	(2) Update Outlook to assign appointments
