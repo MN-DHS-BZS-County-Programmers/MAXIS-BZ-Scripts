@@ -91,7 +91,6 @@ FUNCTION create_outlook_appointment(appt_date, appt_start_time, appt_end_time, a
 
 END FUNCTION
 
-
 BeginDialog REVS_scrubber_initial_dialog, 0, 0, 136, 65, "REVS scrubber initial dialog"
   EditBox 65, 5, 60, 15, worker_number
   EditBox 65, 25, 60, 15, worker_signature
@@ -102,28 +101,29 @@ BeginDialog REVS_scrubber_initial_dialog, 0, 0, 136, 65, "REVS scrubber initial 
   Text 5, 30, 60, 10, "Worker signature:"
 EndDialog
 
-BeginDialog REVS_scrubber_time_dialog, 0, 0, 141, 130, "REVS scrubber time dialog"
+BeginDialog REVS_scrubber_time_dialog, 0, 0, 286, 120, "REVS scrubber time dialog"
   DropListBox 70, 5, 60, 15, "Select one..."+chr(9)+time_array_30_min, first_appointment_listbox
-  DropListBox 70, 25, 60, 15, "Select one..."+chr(9)+time_array_30_min, last_appointment_listbox
-  DropListBox 80, 45, 50, 15, "Select one..."+chr(9)+appt_time_list, appointment_length_listbox
-  CheckBox 5, 70, 135, 10, "Duplicate appointments per time slot?", duplicate_appt_times
-  EditBox 100, 85, 35, 15, appointments_per_time_slot
+  DropListBox 210, 5, 60, 15, "Select one..."+chr(9)+time_array_30_min, last_appointment_listbox
+  DropListBox 110, 30, 50, 15, "Select one..."+chr(9)+appt_time_list, appointment_length_listbox
+  CheckBox 5, 55, 135, 10, "Duplicate appointments per time slot?", duplicate_appt_times
+  EditBox 245, 50, 35, 15, appointments_per_time_slot
+  CheckBox 5, 75, 200, 10, "Check here to add appointments to your Outlook calendar.", outlook_calendar_check
   ButtonGroup ButtonPressed
-    OkButton 25, 105, 50, 15
-    CancelButton 80, 105, 50, 15
-  Text 5, 90, 90, 10, "Appointments per time slot:"
+    OkButton 175, 100, 50, 15
+    CancelButton 230, 100, 50, 15
+  Text 150, 55, 90, 10, "Appointments per time slot:"
   Text 5, 10, 60, 10, "First appointment:"
-  Text 5, 50, 65, 10, "Appointment Time:"
-  Text 5, 30, 60, 10, "Last appointment:"
+  Text 5, 30, 95, 10, "Time between Appointments:"
+  Text 145, 10, 60, 10, "Last appointment:"
 EndDialog
-
 
 '-----THE SCRIPT, dawg
 EMConnect ""
 
 'Stopping the script is the user is running it before the 16th of the month.
 day_of_month = DatePart("D", date)
-IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.")
+'IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.")
+'The line above is commented out for development. When the script is live, the line needs to be active to boot the user before the script tries to access a blank REPT/REVS.
 
 'Opening the Excel file
 Set objExcel = CreateObject("Excel.Application")
@@ -166,10 +166,7 @@ CALL create_calendar(calendar_month, month_array)
 'Determining the appropriate times to set appointments.
 DIALOG REVS_scrubber_time_dialog
 	IF ButtonPressed = 0 THEN stopscript
-	IF appointments_per_time_slot = "" THEN 
-		msgbox "blank"
-		appointments_per_time_slot = 1
-	END IF
+	IF appointments_per_time_slot = "" THEN appointments_per_time_slot = 1
 	
 CALL check_for_MAXIS(false)
 back_to_SELF
@@ -177,8 +174,11 @@ current_month = DatePart("M", date)
 	IF len(current_month) = 1 THEN current_month = "0" & current_month
 current_year = DatePart("YYYY", date)
 	current_year = right(current_year, 2)
-	
-revs_month = DateAdd("M", 2, date)
+
+'Determining the month that the script will access REPT/REVS.
+'Currently the script is set to check CM + 1. This is for testing.
+'The script should ALWAYS be set to CM + 2 for production.	
+revs_month = DateAdd("M", 1, date)
 revs_year = DatePart("YYYY", revs_month)
 	revs_year = right(revs_year, 2)
 revs_month = DatePart("M", revs_month)
@@ -275,9 +275,11 @@ FOR i = 1 to num_of_days
 	END IF
 NEXT
 
+'***** THIS stopscript IS IN PLACE FOR DEVELOPMENT. THE SCRIPT UP TO THIS POINT DOES NOT ADD ANYTHING TO MAXIS. THE SCRIPT AFTER THIS POINT ADDS INFORMATION TO MAXIS IN THE FORM OF A SPEC/MEMO, A CASE NOTE, AND A TIKL. *****
+'***** IF YOU ARE TESTING THIS SCRIPT, YOU NEED TO USE THIS stopscript. WHEN THIS SCRIPT GOES LIVE, COMMENT-OUT THE stopscript.
 'stopscript
 
-all_case_numbers_array = ""   'resetting array
+all_case_numbers_array = ""     'resetting array
 excel_row = 2					'resetting excel row to start reading at the top 
 DO 								'looping until it meets a blank excel cell without a case number
 	recert_status = ""			'resetting recert status for each run through the loop/case number
@@ -326,13 +328,14 @@ DO 								'looping until it meets a blank excel cell without a case number
 	'*** THE LINES OF CODE BELOW ARE COMMENTED OUT TO TEST THE MEMO AND CASE NOTING FUNCTION. WHEN NOT COMMENTED OUT ***
 	'*** THE LINES OF CODE WILL DELETE CASES THAT ARE AT CSR LEAVING ONLY THE CASES THAT ARE AT ANNUAL RENEWAL.      ***
 	'If the case is up for a CSR in CM+2 then it will delete the row from the excel file.
-	'IF RECERT_STATUS = "NO" THEN
-	'	SET objRange = objExcel.Cells(excel_row, 1).EntireRow
-	'	objRange.Delete
-	'	excel_row = excel_row - 1
-	'END If
-	'
-	'IF RECERT_STATUS = "YES" Then
+	
+	IF RECERT_STATUS = "NO" THEN
+		SET objRange = objExcel.Cells(excel_row, 1).EntireRow
+		objRange.Delete
+		excel_row = excel_row - 1
+	END If
+	
+	IF RECERT_STATUS = "YES" Then
 		back_to_self
 		CALL navigate_to_screen("SPEC", "MEMO")
 		PF5
@@ -397,8 +400,15 @@ DO 								'looping until it meets a blank excel cell without a case number
 		If forms_to_swkr = "Y" then call write_variable_in_case_note("* Copy of notice sent to Social Worker.")
 		call write_variable_in_case_note("---")
 		call write_variable_in_case_note(worker_signature)
-	'END IF
-	
+		
+		'TIKLing to remind the worker to send NOMI if appointment is missed.
+		CALL navigate_to_MAXIS_screen("DAIL", "WRIT")
+		tikl_date = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
+		CALL create_MAXIS_friendly_date(tikl_date, 0, 5, 18)
+		EMWriteScreen "~*~*~CLIENT HAD RECERT INTERVIEW APPOINTMENT. IF MISSED SEND NOMI.", 9, 3
+		transmit
+		PF3
+	END IF
 	
 	excel_row = excel_row + 1
 		
@@ -415,5 +425,5 @@ script_end_procedure("Success, the excel file now has all of the cases that have
 
 
 'Things the script needs to do:
-'	(1) TIKL to the appointment date to remind the worker to "send NOMI if client missed interview" -- combine it with the DAIL scrubber, yo!!!
-'	(2) Update Outlook to assign appointments
+'	(1) Update Outlook to assign appointments
+
