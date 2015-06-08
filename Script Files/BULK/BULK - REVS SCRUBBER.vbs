@@ -325,6 +325,14 @@ DO 								'looping until it meets a blank excel cell without a case number
 	CALL navigate_to_screen("STAT", "ADDR")
 	EMReadScreen area_code, 3, 17, 45
 	EMReadScreen remaining_digits, 9, 17, 50
+	IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
+		EMReadScreen area_code, 3, 18, 45
+		EMReadScreen remaining_digits, 9, 18, 50
+	END IF
+	IF area_code = "   " THEN 
+		EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
+		EMReadScreen remaining_digits, 9, 19, 50
+	END IF
 	phone_number = area_code & remaining_digits
 	
 	'*** THE LINES OF CODE BELOW ARE COMMENTED OUT TO TEST THE MEMO AND CASE NOTING FUNCTION. WHEN NOT COMMENTED OUT ***
