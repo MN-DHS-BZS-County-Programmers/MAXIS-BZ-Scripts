@@ -372,21 +372,27 @@ DO 								'looping until it meets a blank excel cell without a case number
 		CALL write_new_line_in_SPEC_MEMO("Your SNAP case is set to recertify on " & Left(cm_plus_2, 2) & "/" & Right(cm_plus_2, 2) & ". An interview is required to process your application.")
 		CALL write_new_line_in_SPEC_MEMO("")
 		CALL write_new_line_in_SPEC_MEMO("Your phone interview is scheduled for " & interview_time & ".")
-		CALL write_new_line_in_SPEC_MEMO("We will be calling you at this number " & phone_number & ".")
-		CALL write_new_line_in_SPEC_MEMO("If this date and/or time does not work, or if you would prefer an in-person interview, please call our office.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("If we do not hear from you by " & last_day_of_recert & " your SNAP case will close.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("A recertification packet has been sent to you, containing an application form. Please complete, sign, and date the form, and return it along with any required verifications by the date of your interview.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("Income examples: paystubs, pension, unemployment, sponsor income etc.")
-		CALL write_new_line_in_SPEC_MEMO("     Note: the agency will verify social security income.")
-		CALL write_new_line_in_SPEC_MEMO("* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc.")
-		CALL write_new_line_in_SPEC_MEMO("* Medical cost examples (if changed): prescription and medical bills, etc.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("Please contact the agency with any questions. Thank you.")
+		IF phone_number <> "            " THEN
+			CALL write_new_line_in_SPEC_MEMO("We will be calling you at this number " & phone_number & ".")
+			CALL write_new_line_in_SPEC_MEMO("If this date and/or time does not work, or if you would prefer an in-person interview, please call our office.")
+		else
+			CALL write_new_line_in_SPEC_MEMO("We currently do not have a phone number on file for you.")
+			CALL write_new_line_in_SPEC_MEMO("Please call our office to update your phone number, or if you would prefer an in-person interview.")
+		end if
+			CALL write_new_line_in_SPEC_MEMO("")
+			CALL write_new_line_in_SPEC_MEMO("If we do not hear from you by " & last_day_of_recert & " your SNAP case will close.")
+			CALL write_new_line_in_SPEC_MEMO("")
+			CALL write_new_line_in_SPEC_MEMO("A recertification packet has been sent to you, containing an application form. Please complete, sign, and date the form, and return it along with any required verifications by the date of your interview.")
+			CALL write_new_line_in_SPEC_MEMO("")
+			CALL write_new_line_in_SPEC_MEMO("Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below.")
+			CALL write_new_line_in_SPEC_MEMO("")
+			CALL write_new_line_in_SPEC_MEMO("Income examples: paystubs, pension, unemployment, sponsor income etc.")
+			CALL write_new_line_in_SPEC_MEMO(" Note: the agency will verify social security income.")
+			CALL write_new_line_in_SPEC_MEMO("* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc.")
+			CALL write_new_line_in_SPEC_MEMO("* Medical cost examples (if changed): prescription and medical bills, etc.")
+			CALL write_new_line_in_SPEC_MEMO("")
+			CALL write_new_line_in_SPEC_MEMO("Please contact the agency with any questions. Thank you.")
+		stopscript
 		PF4
 		back_to_self
 		
@@ -400,25 +406,6 @@ DO 								'looping until it meets a blank excel cell without a case number
 		If forms_to_swkr = "Y" then call write_variable_in_case_note("* Copy of notice sent to Social Worker.")
 		call write_variable_in_case_note("---")
 		call write_variable_in_case_note(worker_signature)
-		
-		IF outlook_calendar_check = 1 THEN 
-			appt_date_for_outlook = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
-			appt_time_for_outlook = DatePart("H", interview_time) & ":" & DatePart("N", interview_time)
-			IF DatePart("N", interview_time) = 0 THEN appt_time_for_outlook = DatePart("H", interview_time) & ":00"
-			appt_end_time_for_outlook = DateAdd("N", appointment_length_listbox)
-			appt_end_time_for_outlook = DatePart("H", appt_end_time_for_outlook) & ":" & DatePart("N", appt_end_time_for_outlook)
-			IF DatePart("N", interview_time) = 0 THEN appt_end_time_for_outlook = DatePart("H", appt_end_time_for_outlook) & ":00"
-			appointment_subject = "SNAP RECERT"
-			appointment_body = "Case Number: " & case_number
-			IF phone_number = "            " THEN 
-				appointment_location = "No phone number in MAXIS as of " & date "."
-			ELSE
-				appointment_location = "Phone: " & phone_number
-			END IF
-			appointment_reminder = True
-			appointment_category = "Recertification Interview"
-			CALL create_outlook_appointment(appt_date_for_outlook, appt_time_for_outlook, appt_end_time_for_outlook, appointment_subject, appointment_body, appointment_location, appointment_reminder, appointment_category)
-		END IF
 		
 		'TIKLing to remind the worker to send NOMI if appointment is missed.
 		CALL navigate_to_MAXIS_screen("DAIL", "WRIT")
