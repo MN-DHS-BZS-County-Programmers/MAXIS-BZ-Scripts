@@ -176,8 +176,29 @@ ReDim month_array(num_of_days, 0)
 CALL create_calendar(calendar_month, month_array)
 
 'Determining the appropriate times to set appointments.
-DIALOG REVS_scrubber_time_dialog
+
+DO		
+	err_msg = ""
+	DIALOG REVS_scrubber_time_dialog
 	IF ButtonPressed = 0 THEN stopscript
+	IF first_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "You must choose an initial appointment time."				
+	IF first_appointment_listbox <> "Select one..." AND last_appointment_listbox <> "Select one..." THEN 
+		IF DateDiff("N", first_appointment_listbox, last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & " The last appointment may not be earlier than the first appointment."
+	END IF
+	IF alt_first_appointment_listbox <> "Select one..." AND alt_last_appointment_listbox <> "Select one..." THEN
+		IF DateDiff("N", alt_first_appointment_listbox, alt_last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & " The last appointment may not be earlier than the first appointment."
+	END IF
+	IF last_appointment_listbox <> "Select one..." AND alt_first_appointment_listbox <> "Select one..." THEN
+		IF DateDiff("N", last_appointment_listbox, alt_first_appointment_listbox) <= 0 THEN err_msg = err_msg & VbCr & "The additional appointment block may not begin prior or equal to the first appointment block ending."
+	END IF
+	IF last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "You must choose a final appointment time."
+	IF alt_first_appointment_listbox <> "Select one..." and alt_last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "You have selected an initial appointment time for the additional appointment block, you must select a final appointment time."
+	IF alt_last_appointment_listbox <> "Select one..." and alt_first_appointment_listbox = "Select one.." THEN err_msg = err_msg & VbCr & "You have selected a final appointment time for the additional appointment block, you must select an initial appointment time."
+	IF appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "You must select an appointment length."
+	IF alt_first_appointment_listbox <> "Select one..." and alt_appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "Please choose an appointment length for the additional appointment block."
+	IF err_msg <> "" THEN msgbox "NOTICE:" & err_msg & VbCr & "Please try again."
+LOOP UNTIL err_msg = ""
+
 	IF appointments_per_time_slot = "" THEN appointments_per_time_slot = 1
 	IF alt_appointments_per_time_slot = "" THEN alt_appointments_per_time_slot = 1
 	
@@ -345,9 +366,8 @@ DO 								'looping until it meets a blank excel cell without a case number
 	IF case_number = "" THEN EXIT DO      'exiting do if it finds a blank cell on the case number column
 	
 	back_to_self
-	
-	EMwritescreen left(date, 2), 20, 43			'writing current month
-	EMwritescreen right(date, 2), 20, 46		'writing current year
+	IF len(datepart("m", date)) = 1 THEN EMwritescreen "0" & datepart("m", date), 20, 43			'writing current month
+	EMwritescreen right(datepart("YYYY", date), 2), 20, 46		'writing current year
 	transmit
 	call navigate_to_screen("STAT", "REVW")
 	
@@ -457,7 +477,11 @@ DO 								'looping until it meets a blank excel cell without a case number
 		
 		EMSendKey "***SNAP Recertification Interview Scheduled***"
 		CALL write_variable_in_case_note("* A phone interview has been scheduled for " & interview_time & ".")
-		CALL write_variable_in_case_note("* Client phone: " & phone_number)
+		IF phone_number = "            " THEN 
+				CALL write_variable_in_case_note("No phone number in MAXIS as of " & date & ".")
+			ELSE
+				CALL write_variable_in_case_note("* Client phone: " & phone_number)
+		END IF
 		If forms_to_arep = "Y" then call write_variable_in_case_note("* Copy of notice sent to AREP.")
 		If forms_to_swkr = "Y" then call write_variable_in_case_note("* Copy of notice sent to Social Worker.")
 		call write_variable_in_case_note("---")
@@ -473,7 +497,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 			appointment_subject = "SNAP RECERT"
 			appointment_body = "Case Number: " & case_number
 			IF phone_number = "            " THEN 
-				appointment_location = "No phone number in MAXIS as of " & date "."
+				appointment_location = "No phone number in MAXIS as of " & date & "."
 			ELSE
 				appointment_location = "Phone: " & phone_number
 			END IF
