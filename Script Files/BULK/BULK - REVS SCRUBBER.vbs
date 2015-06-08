@@ -407,6 +407,33 @@ DO 								'looping until it meets a blank excel cell without a case number
 		call write_variable_in_case_note("---")
 		call write_variable_in_case_note(worker_signature)
 		
+				EMSendKey "***SNAP Recertification Interview Scheduled***"
+		CALL write_variable_in_case_note("* A phone interview has been scheduled for " & interview_time & ".")
+		CALL write_variable_in_case_note("* Client phone: " & phone_number)
+		If forms_to_arep = "Y" then call write_variable_in_case_note("* Copy of notice sent to AREP.")
+		If forms_to_swkr = "Y" then call write_variable_in_case_note("* Copy of notice sent to Social Worker.")
+		call write_variable_in_case_note("---")
+		call write_variable_in_case_note(worker_signature)
+		
+		IF outlook_calendar_check = 1 THEN 
+			appt_date_for_outlook = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
+			appt_time_for_outlook = DatePart("H", interview_time) & ":" & DatePart("N", interview_time)
+			IF DatePart("N", interview_time) = 0 THEN appt_time_for_outlook = DatePart("H", interview_time) & ":00"
+			appt_end_time_for_outlook = DateAdd("N", appointment_length_listbox)
+			appt_end_time_for_outlook = DatePart("H", appt_end_time_for_outlook) & ":" & DatePart("N", appt_end_time_for_outlook)
+			IF DatePart("N", interview_time) = 0 THEN appt_end_time_for_outlook = DatePart("H", appt_end_time_for_outlook) & ":00"
+			appointment_subject = "SNAP RECERT"
+			appointment_body = "Case Number: " & case_number
+			IF phone_number = "            " THEN 
+				appointment_location = "No phone number in MAXIS as of " & date "."
+			ELSE
+				appointment_location = "Phone: " & phone_number
+			END IF
+			appointment_reminder = True
+			appointment_category = "Recertification Interview"
+			CALL create_outlook_appointment(appt_date_for_outlook, appt_time_for_outlook, appt_end_time_for_outlook, appointment_subject, appointment_body, appointment_location, appointment_reminder, appointment_category)
+		END IF
+		
 		'TIKLing to remind the worker to send NOMI if appointment is missed.
 		CALL navigate_to_MAXIS_screen("DAIL", "WRIT")
 		tikl_date = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
