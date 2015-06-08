@@ -1,5 +1,5 @@
 'STATS GATHERING----------------------------------------------------------------------------------------------------
-name_of_script = "BULK - pull cases into Excel-revised"
+name_of_script = "BULK - REVS SCRUBBER.vbs"
 start_time = timer
 
 'LOADING ROUTINE FUNCTIONS FROM GITHUB REPOSITORY---------------------------------------------------------------------------
@@ -91,14 +91,16 @@ FUNCTION create_outlook_appointment(appt_date, appt_start_time, appt_end_time, a
 
 END FUNCTION
 
-BeginDialog REVS_scrubber_initial_dialog, 0, 0, 136, 65, "REVS scrubber initial dialog"
-  EditBox 65, 5, 60, 15, worker_number
-  EditBox 65, 25, 60, 15, worker_signature
+BeginDialog REVS_scrubber_initial_dialog, 0, 0, 136, 130, "REVS scrubber initial dialog"
+  EditBox 65, 5, 65, 15, worker_number
+  EditBox 65, 25, 65, 15, worker_signature
+  EditBox 70, 45, 60, 15, contact_phone_number
   ButtonGroup ButtonPressed
-    OkButton 25, 45, 50, 15
-    CancelButton 80, 45, 50, 15
+    OkButton 25, 110, 50, 15
+    CancelButton 80, 110, 50, 15
   Text 5, 10, 55, 10, "Worker number:"
   Text 5, 30, 60, 10, "Worker signature:"
+  Text 5, 45, 60, 60, "Please enter a phone number client can call to report a change in phone number (Include area code)"
 EndDialog
 
 BeginDialog REVS_scrubber_time_dialog, 0, 0, 286, 120, "REVS scrubber time dialog"
@@ -372,8 +374,13 @@ DO 								'looping until it meets a blank excel cell without a case number
 		CALL write_new_line_in_SPEC_MEMO("Your SNAP case is set to recertify on " & Left(cm_plus_2, 2) & "/" & Right(cm_plus_2, 2) & ". An interview is required to process your application.")
 		CALL write_new_line_in_SPEC_MEMO("")
 		CALL write_new_line_in_SPEC_MEMO("Your phone interview is scheduled for " & interview_time & ".")
-		CALL write_new_line_in_SPEC_MEMO("We will be calling you at this number " & phone_number & ".")
-		CALL write_new_line_in_SPEC_MEMO("If this date and/or time does not work, or if you would prefer an in-person interview, please call our office.")
+		IF phone_number <> "            " THEN
+			CALL write_new_line_in_SPEC_MEMO("We will be calling you at this number " & phone_number & ".")
+			CALL write_new_line_in_SPEC_MEMO("If this date and/or time does not work, or if you would prefer an in-person interview, please call our office.")
+		else
+			CALL write_new_line_in_SPEC_MEMO("We currently do not have a phone number on file for you.")
+			CALL write_new_line_in_SPEC_MEMO("Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview.")
+		end if
 		CALL write_new_line_in_SPEC_MEMO("")
 		CALL write_new_line_in_SPEC_MEMO("If we do not hear from you by " & last_day_of_recert & " your SNAP case will close.")
 		CALL write_new_line_in_SPEC_MEMO("")
@@ -382,7 +389,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 		CALL write_new_line_in_SPEC_MEMO("Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below.")
 		CALL write_new_line_in_SPEC_MEMO("")
 		CALL write_new_line_in_SPEC_MEMO("Income examples: paystubs, pension, unemployment, sponsor income etc.")
-		CALL write_new_line_in_SPEC_MEMO("     Note: the agency will verify social security income.")
+		CALL write_new_line_in_SPEC_MEMO(" Note: the agency will verify social security income.")
 		CALL write_new_line_in_SPEC_MEMO("* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc.")
 		CALL write_new_line_in_SPEC_MEMO("* Medical cost examples (if changed): prescription and medical bills, etc.")
 		CALL write_new_line_in_SPEC_MEMO("")
