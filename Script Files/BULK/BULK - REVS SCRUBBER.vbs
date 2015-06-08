@@ -381,19 +381,19 @@ DO 								'looping until it meets a blank excel cell without a case number
 			CALL write_new_line_in_SPEC_MEMO("We currently do not have a phone number on file for you.")
 			CALL write_new_line_in_SPEC_MEMO("Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview.")
 		end if
-			CALL write_new_line_in_SPEC_MEMO("")
-			CALL write_new_line_in_SPEC_MEMO("If we do not hear from you by " & last_day_of_recert & " your SNAP case will close.")
-			CALL write_new_line_in_SPEC_MEMO("")
-			CALL write_new_line_in_SPEC_MEMO("A recertification packet has been sent to you, containing an application form. Please complete, sign, and date the form, and return it along with any required verifications by the date of your interview.")
-			CALL write_new_line_in_SPEC_MEMO("")
-			CALL write_new_line_in_SPEC_MEMO("Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below.")
-			CALL write_new_line_in_SPEC_MEMO("")
-			CALL write_new_line_in_SPEC_MEMO("Income examples: paystubs, pension, unemployment, sponsor income etc.")
-			CALL write_new_line_in_SPEC_MEMO(" Note: the agency will verify social security income.")
-			CALL write_new_line_in_SPEC_MEMO("* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc.")
-			CALL write_new_line_in_SPEC_MEMO("* Medical cost examples (if changed): prescription and medical bills, etc.")
-			CALL write_new_line_in_SPEC_MEMO("")
-			CALL write_new_line_in_SPEC_MEMO("Please contact the agency with any questions. Thank you.")
+		CALL write_new_line_in_SPEC_MEMO("")
+		CALL write_new_line_in_SPEC_MEMO("If we do not hear from you by " & last_day_of_recert & " your SNAP case will close.")
+		CALL write_new_line_in_SPEC_MEMO("")
+		CALL write_new_line_in_SPEC_MEMO("A recertification packet has been sent to you, containing an application form. Please complete, sign, and date the form, and return it along with any required verifications by the date of your interview.")
+		CALL write_new_line_in_SPEC_MEMO("")
+		CALL write_new_line_in_SPEC_MEMO("Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below.")
+		CALL write_new_line_in_SPEC_MEMO("")
+		CALL write_new_line_in_SPEC_MEMO("Income examples: paystubs, pension, unemployment, sponsor income etc.")
+		CALL write_new_line_in_SPEC_MEMO(" Note: the agency will verify social security income.")
+		CALL write_new_line_in_SPEC_MEMO("* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc.")
+		CALL write_new_line_in_SPEC_MEMO("* Medical cost examples (if changed): prescription and medical bills, etc.")
+		CALL write_new_line_in_SPEC_MEMO("")
+		CALL write_new_line_in_SPEC_MEMO("Please contact the agency with any questions. Thank you.")
 		PF4
 		back_to_self
 		
@@ -401,14 +401,6 @@ DO 								'looping until it meets a blank excel cell without a case number
 		PF9
 		
 		EMSendKey "***SNAP Recertification Interview Scheduled***"
-		CALL write_variable_in_case_note("* A phone interview has been scheduled for " & interview_time & ".")
-		CALL write_variable_in_case_note("* Client phone: " & phone_number)
-		If forms_to_arep = "Y" then call write_variable_in_case_note("* Copy of notice sent to AREP.")
-		If forms_to_swkr = "Y" then call write_variable_in_case_note("* Copy of notice sent to Social Worker.")
-		call write_variable_in_case_note("---")
-		call write_variable_in_case_note(worker_signature)
-		
-				EMSendKey "***SNAP Recertification Interview Scheduled***"
 		CALL write_variable_in_case_note("* A phone interview has been scheduled for " & interview_time & ".")
 		CALL write_variable_in_case_note("* Client phone: " & phone_number)
 		If forms_to_arep = "Y" then call write_variable_in_case_note("* Copy of notice sent to AREP.")
