@@ -103,20 +103,32 @@ BeginDialog REVS_scrubber_initial_dialog, 0, 0, 136, 130, "REVS scrubber initial
   Text 5, 45, 60, 60, "Please enter a phone number client can call to report a change in phone number (Include area code)"
 EndDialog
 
-BeginDialog REVS_scrubber_time_dialog, 0, 0, 286, 120, "REVS scrubber time dialog"
-  DropListBox 70, 5, 60, 15, "Select one..."+chr(9)+time_array_30_min, first_appointment_listbox
-  DropListBox 210, 5, 60, 15, "Select one..."+chr(9)+time_array_30_min, last_appointment_listbox
-  DropListBox 110, 30, 50, 15, "Select one..."+chr(9)+appt_time_list, appointment_length_listbox
-  CheckBox 5, 55, 135, 10, "Duplicate appointments per time slot?", duplicate_appt_times
-  EditBox 245, 50, 35, 15, appointments_per_time_slot
-  CheckBox 5, 75, 200, 10, "Check here to add appointments to your Outlook calendar.", outlook_calendar_check
+BeginDialog REVS_scrubber_time_dialog, 0, 0, 286, 280, "REVS Scrubber Time Dialog"
+  DropListBox 75, 15, 60, 15, "Select one..."+chr(9)+time_array_30_min, first_appointment_listbox
+  DropListBox 210, 15, 60, 15, "Select one..."+chr(9)+time_array_30_min, last_appointment_listbox
+  DropListBox 115, 35, 50, 15, "Select one..."+chr(9)+appt_time_list, appointment_length_listbox
+  CheckBox 10, 55, 135, 10, "Duplicate appointments per time slot?", duplicate_appt_times
+  EditBox 110, 70, 35, 15, appointments_per_time_slot
+  DropListBox 75, 135, 60, 15, "Select one..."+chr(9)+time_array_30_min, alt_first_appointment_listbox
+  DropListBox 210, 135, 60, 15, "Select one..."+chr(9)+time_array_30_min, alt_last_appointment_listbox
+  DropListBox 115, 155, 50, 15, "Select one..."+chr(9)+appt_time_list, alt_appointment_length_listbox
+  CheckBox 10, 175, 135, 10, "Duplicate appointments per time slot?", alt_duplicate_appt_times
+  EditBox 110, 190, 35, 15, alt_appointments_per_time_slot
+  CheckBox 10, 235, 200, 10, "Check here to add appointments to your Outlook calendar.", outlook_calendar_check
   ButtonGroup ButtonPressed
-    OkButton 175, 100, 50, 15
-    CancelButton 230, 100, 50, 15
-  Text 150, 55, 90, 10, "Appointments per time slot:"
-  Text 5, 10, 60, 10, "First appointment:"
-  Text 5, 30, 95, 10, "Time between Appointments:"
-  Text 145, 10, 60, 10, "Last appointment:"
+    OkButton 180, 260, 50, 15
+    CancelButton 230, 260, 50, 15
+  Text 10, 20, 60, 10, "First appointment:"
+  Text 145, 20, 60, 10, "Last appointment:"
+  Text 10, 35, 95, 10, "Time between Appointments:"
+  Text 10, 140, 60, 10, "First appointment:"
+  Text 145, 140, 60, 10, "Last appointment:"
+  Text 10, 155, 95, 10, "Time between Appointments:"
+  Text 15, 75, 90, 10, "Appointments per time slot:"
+  GroupBox 5, 5, 275, 85, "Main Appointment Block"
+  GroupBox 5, 105, 275, 110, "Additional Appointment Block"
+  Text 10, 120, 260, 10, "*NOTE: Use this block for scheduling appointments around your lunch break."
+  Text 15, 195, 90, 10, "Appointments per time slot:"
 EndDialog
 
 '-----THE SCRIPT, dawg
@@ -138,14 +150,12 @@ objExcel.cells(1, 1).Value = "CASE NUMBER"
 objExcel.Cells(1, 1).Font.Bold = TRUE
 objExcel.Cells(1, 2).Value = "Interview Date & Time"
 objExcel.cells(1, 2).Font.Bold = TRUE
-'objExcel.Cells(1, 3).Value = "Interview Time"
-'objExcel.cells(1, 3).Font.Bold = TRUE
 
 'creating month plus 1 and plus 2
 cm_plus_1 = dateadd("M", 1, date)
 cm_plus_2 = dateadd("M", 2, date)
 'creating a last day of recert variable
-last_day_of_recert = Left(cm_plus_2, 2) & "/01/" & Right(cm_plus_2, 2)
+last_day_of_recert = DatePart("M", cm_plus_2) & "/01/" & DatePart("YYYY", cm_plus_2)
 last_day_of_recert = dateadd("D", -1, last_day_of_recert)
 
 'Grabbing the worker's X number.
@@ -169,6 +179,7 @@ CALL create_calendar(calendar_month, month_array)
 DIALOG REVS_scrubber_time_dialog
 	IF ButtonPressed = 0 THEN stopscript
 	IF appointments_per_time_slot = "" THEN appointments_per_time_slot = 1
+	IF alt_appointments_per_time_slot = "" THEN alt_appointments_per_time_slot = 1
 	
 CALL check_for_MAXIS(false)
 back_to_SELF
@@ -238,10 +249,10 @@ Loop until last_page_check = "THIS IS THE LAST PAGE"
 
 'Now the script needs to go back to the start of the Excel file and start assigning appointments.
 'FOR EACH day that is not checked, start assigning appointments according to DatePart("N", appointment) because DatePart"N" is minutes. Once datepart("N") = last_appointment_time THEN the script needs to jump to the next day.
-'
 
 'Going back to the top of the Excel to insert the appointment date and time in the list, yo
 appointment_length_listbox = left(appointment_length_listbox, 2)	'Hacking the "mins" off the end of the appointment_length_listbox variable
+alt_appointment_length_listbox = left(alt_appointment_length_listbox, 2)
 excel_row = 2
 FOR i = 1 to num_of_days
 	IF month_array(i, 0) = 0 THEN		'These are the dates that the user has determined the agency/unit/worker
@@ -256,6 +267,8 @@ FOR i = 1 to num_of_days
 				IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT FOR
 			NEXT
 			IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT DO
+			
+			'This is where the script adds minutes for the next appointment.
 			appointment_time = DateAdd("N", appointment_length_listbox, appointment_time)
 			appointment_time = DateAdd("N", 0, appointment_time) 'Putting the date in a MM/DD/YYYY HH:MM format. Otherwise, the format is M/D/YYYY. It just looks nicer.
 			
@@ -273,6 +286,40 @@ FOR i = 1 to num_of_days
 				appointment_time_for_comparison = appointment_time
 			END IF
 		LOOP UNTIL (DatePart("H", appointment_time_for_comparison) > DatePart("H", last_appointment_listbox_for_comparison)) OR ((DatePart("H", appointment_time_for_comparison) >= DatePart("H", last_appointment_listbox_for_comparison)) AND DatePart("N", appointment_time_for_comparison) > DatePart("N", last_appointment_listbox_for_comparison))
+		IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT FOR
+		
+		IF alt_first_appointment_listbox <> "Select one..." THEN 	
+			appointment_time = appt_month & "/" & i & "/" & appt_year & " " & alt_first_appointment_listbox
+			DO
+				appointment_time = DateAdd("N", 0, appointment_time)	'Putting the date in a MM/DD/YYYY HH:MM format. It just looks nicer.
+				appointment_time_for_viewing = appointment_time			'creating a new variable to handle the display of time to get it out of military time.
+				IF DatePart("H", appointment_time_for_viewing) >= 13 THEN appointment_time_for_viewing = DateAdd("H", -12, appointment_time_for_viewing)
+				FOR k = 1 TO alt_appointments_per_time_slot					'Having the script create appointments_per_time_slot for each day and time.
+					objExcel.Cells(excel_row, 2).Value = appointment_time_for_viewing
+					excel_row = excel_row + 1
+					IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT FOR
+				NEXT
+				IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT DO
+				
+				'This is where the script adds minutes for the next appointment.
+				appointment_time = DateAdd("N", alt_appointment_length_listbox, appointment_time)
+				appointment_time = DateAdd("N", 0, appointment_time) 'Putting the date in a MM/DD/YYYY HH:MM format. Otherwise, the format is M/D/YYYY. It just looks nicer.
+				
+				'The variables "last_appointment_listbox_for_comparison" and "appointment_time_for_comparison" are used for the DO-LOOP. Because the script
+				'handles time in military time, but clients do not, we need a way of handling the display of the date/time and the comparison of appointment times
+				'against last appointment time variable.
+				IF DatePart("H", alt_last_appointment_listbox) < 7 THEN 
+					last_appointment_listbox_for_comparison = DateAdd("H", 12, alt_last_appointment_listbox)
+				ELSE
+					last_appointment_listbox_for_comparison = alt_last_appointment_listbox
+				END IF
+				IF DatePart("H", appointment_time) < 7 THEN 
+					appointment_time_for_comparison = DateAdd("H", 12, appointment_time)
+				ELSE
+					appointment_time_for_comparison = appointment_time
+				END IF
+			LOOP UNTIL (DatePart("H", appointment_time_for_comparison) > DatePart("H", last_appointment_listbox_for_comparison)) OR ((DatePart("H", appointment_time_for_comparison) >= DatePart("H", last_appointment_listbox_for_comparison)) AND DatePart("N", appointment_time_for_comparison) > DatePart("N", last_appointment_listbox_for_comparison))		
+		END IF	
 		IF objExcel.Cells(excel_row, 1) = "" THEN EXIT FOR
 	END IF
 NEXT
@@ -452,4 +499,3 @@ script_end_procedure("Success, the excel file now has all of the cases that have
 
 'Things the script needs to do:
 '	(1) Update Outlook to assign appointments
-
