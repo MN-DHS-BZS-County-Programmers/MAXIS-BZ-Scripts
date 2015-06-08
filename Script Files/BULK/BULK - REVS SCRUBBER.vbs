@@ -389,7 +389,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 		CALL write_new_line_in_SPEC_MEMO("Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below.")
 		CALL write_new_line_in_SPEC_MEMO("")
 		CALL write_new_line_in_SPEC_MEMO("Income examples: paystubs, pension, unemployment, sponsor income etc.")
-		CALL write_new_line_in_SPEC_MEMO(" Note: the agency will verify social security income.")
+		CALL write_new_line_in_SPEC_MEMO("     Note: the agency will verify social security income.")
 		CALL write_new_line_in_SPEC_MEMO("* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc.")
 		CALL write_new_line_in_SPEC_MEMO("* Medical cost examples (if changed): prescription and medical bills, etc.")
 		CALL write_new_line_in_SPEC_MEMO("")
