@@ -477,7 +477,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 			CALL write_new_line_in_SPEC_MEMO("Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview.")
 		end if
 		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("If we do not hear from you by " & last_day_of_recert & " your SNAP case will close.")
+		CALL write_new_line_in_SPEC_MEMO("If we do not hear from you by " & last_day_of_recert & " your case will auto-close.")
 		CALL write_new_line_in_SPEC_MEMO("")
 		CALL write_new_line_in_SPEC_MEMO("A recertification packet has been sent to you, containing an application form. Please complete, sign, and date the form, and return it along with any required verifications by the date of your interview.")
 		CALL write_new_line_in_SPEC_MEMO("")
