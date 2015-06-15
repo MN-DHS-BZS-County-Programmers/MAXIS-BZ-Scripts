@@ -49,6 +49,8 @@ END IF
 'Required variables/arrays
 appt_time_list = "15 mins"+chr(9)+"30 mins"+chr(9)+"45 mins"+chr(9)+"60 mins"
 
+'Custom functions (should merge with FuncLib when tested/confirmed to work)---------------------------------------------------
+
 FUNCTION create_calendar(month_to_use, month_array)
 	'Generating a calendar
 	'Determining the number of days in the calendar month.
@@ -80,7 +82,6 @@ FUNCTION create_calendar(month_to_use, month_array)
 END FUNCTION
 
 FUNCTION create_outlook_appointment(appt_date, appt_start_time, appt_end_time, appt_subject, appt_body, appt_location, appt_reminder, appt_category)
-
 	'Assigning needed numbers as variables for readability
 	olAppointmentItem = 1
 	olRecursDaily = 0
@@ -106,6 +107,8 @@ FUNCTION create_outlook_appointment(appt_date, appt_start_time, appt_end_time, a
 	objAppointment.Save												'Saves the appointment
 
 END FUNCTION
+
+'DIALOGS -----------------------------------------------------------------------------------------------
 
 BeginDialog REVS_scrubber_initial_dialog, 0, 0, 136, 130, "REVS scrubber initial dialog"
   EditBox 65, 5, 65, 15, worker_number
@@ -148,6 +151,7 @@ BeginDialog REVS_scrubber_time_dialog, 0, 0, 286, 280, "REVS Scrubber Time Dialo
 EndDialog
 
 '-----THE SCRIPT, dawg
+'Connects to BlueZone
 EMConnect ""
 
 'Stopping the script is the user is running it before the 16th of the month.
@@ -178,7 +182,7 @@ last_day_of_recert = dateadd("D", -1, last_day_of_recert)
 CALL find_variable("User: ", worker_number, 7)
 
 DIALOG REVS_scrubber_initial_dialog
-	IF ButtonPressed = 0 THEN stopscript
+IF ButtonPressed = 0 THEN stopscript
 
 calendar_month = DateAdd("M", 1, date)
 appt_month = DatePart("M", calendar_month)
