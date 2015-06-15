@@ -261,10 +261,6 @@ DO
 		EMReadScreen case_number, 8, MAXIS_row, 6
 		EMReadScreen SNAP_status, 1, MAXIS_row, 45
 		
-		'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-		IF trim(case_number) <> "" and instr(all_case_numbers_array, case_number) <> 0 then exit do 
-		all_case_numbers_array = trim(all_case_numbers_array & " " & case_number)
-		
 		IF case_number = "        " then exit do
 		
 		'For some goofy reason the dash key shows up instead of the space key. No clue why. This will turn them into null variables.
@@ -369,7 +365,6 @@ NEXT
 '***** IF YOU ARE TESTING THIS SCRIPT, YOU NEED TO USE THIS stopscript. WHEN THIS SCRIPT GOES LIVE, COMMENT-OUT THE stopscript.
 'stopscript
 
-all_case_numbers_array = ""     'resetting array
 excel_row = 2					'resetting excel row to start reading at the top 
 DO 								'looping until it meets a blank excel cell without a case number
 	recert_status = ""			'resetting recert status for each run through the loop/case number
