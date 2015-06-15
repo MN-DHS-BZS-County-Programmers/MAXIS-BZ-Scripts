@@ -46,7 +46,7 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
-time_array_30_min = "7:00"+chr(9)+"7:30"+chr(9)+"8:00"+chr(9)+"8:30"+chr(9)+"9:00"+chr(9)+"9:30"+chr(9)+"10:00"+chr(9)+"10:30"+chr(9)+"11:00"+chr(9)+"11:30"+chr(9)+"12:00"+chr(9)+"12:30"+chr(9)+"1:00"+chr(9)+"1:30"+chr(9)+"2:00"+chr(9)+"2:30"+chr(9)+"3:00"+chr(9)+"3:30"+chr(9)+"4:00"+chr(9)+"4:30"+chr(9)+"5:00"+chr(9)+"5:30"+chr(9)+"6:00"
+'Required variables/arrays
 appt_time_list = "15 mins"+chr(9)+"30 mins"+chr(9)+"45 mins"+chr(9)+"60 mins"
 
 FUNCTION create_calendar(month_to_use, month_array)
