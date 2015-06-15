@@ -531,6 +531,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 		tikl_date = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
 		CALL create_MAXIS_friendly_date(tikl_date, 0, 5, 18)
 		EMWriteScreen "~*~*~CLIENT HAD RECERT INTERVIEW APPOINTMENT. IF MISSED SEND NOMI.", 9, 3
+		EMWriteScreen "Appt date: " & appt_date_for_outlook & ", appt time: " & appt_time_for_outlook, 10, 3
 		transmit
 		PF3
 	END IF
