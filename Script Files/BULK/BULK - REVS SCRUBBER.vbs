@@ -48,6 +48,7 @@ END IF
 
 'Required variables/arrays
 appt_time_list = "15 mins"+chr(9)+"30 mins"+chr(9)+"45 mins"+chr(9)+"60 mins"
+call convert_array_to_droplist_items(time_array_30_min, time_array)
 
 'Custom functions (should merge with FuncLib when tested/confirmed to work)---------------------------------------------------
 
@@ -123,13 +124,13 @@ BeginDialog REVS_scrubber_initial_dialog, 0, 0, 136, 130, "REVS scrubber initial
 EndDialog
 
 BeginDialog REVS_scrubber_time_dialog, 0, 0, 286, 280, "REVS Scrubber Time Dialog"
-  DropListBox 75, 15, 60, 15, "Select one..."+chr(9)+time_array_30_min, first_appointment_listbox
-  DropListBox 210, 15, 60, 15, "Select one..."+chr(9)+time_array_30_min, last_appointment_listbox
+  DropListBox 75, 15, 60, 15, "Select one..."+chr(9)+time_array, first_appointment_listbox
+  DropListBox 210, 15, 60, 15, "Select one..."+chr(9)+time_array, last_appointment_listbox
   DropListBox 115, 35, 50, 15, "Select one..."+chr(9)+appt_time_list, appointment_length_listbox
   CheckBox 10, 55, 135, 10, "Duplicate appointments per time slot?", duplicate_appt_times
   EditBox 110, 70, 35, 15, appointments_per_time_slot
-  DropListBox 75, 135, 60, 15, "Select one..."+chr(9)+time_array_30_min, alt_first_appointment_listbox
-  DropListBox 210, 135, 60, 15, "Select one..."+chr(9)+time_array_30_min, alt_last_appointment_listbox
+  DropListBox 75, 135, 60, 15, "Select one..."+chr(9)+time_array, alt_first_appointment_listbox
+  DropListBox 210, 135, 60, 15, "Select one..."+chr(9)+time_array, alt_last_appointment_listbox
   DropListBox 115, 155, 50, 15, "Select one..."+chr(9)+appt_time_list, alt_appointment_length_listbox
   CheckBox 10, 175, 135, 10, "Duplicate appointments per time slot?", alt_duplicate_appt_times
   EditBox 110, 190, 35, 15, alt_appointments_per_time_slot
@@ -184,6 +185,19 @@ CALL find_variable("User: ", worker_number, 7)
 DIALOG REVS_scrubber_initial_dialog
 IF ButtonPressed = 0 THEN stopscript
 
+'Developer mode handling. Asks for developer mode confirmation, then an array of case numbers if we want to go to developer mode.
+If worker_signature = "UUDDLRLRBA" then 
+	developer_mode_check = MsgBox("Enable developer mode? Will allow user to manually enter a list of cases as an array.", vbYesNoCancel)
+	IF developer_mode_check = vbYes THEN
+		developer_case_number_array = InputBox("Enter in your case numbers, separated by commas.")
+		developer_case_number_array = split(developer_case_number_array, ",")
+		developer_mode = TRUE
+	ELSEIF developer_mode_check = vbCancel THEN
+		stopscript
+	END IF
+END IF
+
+
 calendar_month = DateAdd("M", 1, date)
 appt_month = DatePart("M", calendar_month)
 appt_year = DatePart("YYYY", calendar_month)
@@ -219,24 +233,24 @@ DO
 	IF err_msg <> "" THEN msgbox "NOTICE:" & err_msg & VbCr & "Please try again."
 LOOP UNTIL err_msg = ""
 
-	IF appointments_per_time_slot = "" THEN appointments_per_time_slot = 1
-	IF alt_appointments_per_time_slot = "" THEN alt_appointments_per_time_slot = 1
-	
+IF appointments_per_time_slot = "" THEN appointments_per_time_slot = 1
+IF alt_appointments_per_time_slot = "" THEN alt_appointments_per_time_slot = 1
+
 CALL check_for_MAXIS(false)
 back_to_SELF
 current_month = DatePart("M", date)
-	IF len(current_month) = 1 THEN current_month = "0" & current_month
+IF len(current_month) = 1 THEN current_month = "0" & current_month
 current_year = DatePart("YYYY", date)
-	current_year = right(current_year, 2)
+current_year = right(current_year, 2)
 
 'Determining the month that the script will access REPT/REVS.
-'Currently the script is set to check CM + 1. This is for testing.
+'<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Currently the script is set to check CM + 1. This is for testing.
 'The script should ALWAYS be set to CM + 2 for production.	
 revs_month = DateAdd("M", 1, date)
 revs_year = DatePart("YYYY", revs_month)
-	revs_year = right(revs_year, 2)
+revs_year = right(revs_year, 2)
 revs_month = DatePart("M", revs_month)
-	IF len(revs_month) = 1 THEN revs_month = "0" & revs_month
+IF len(revs_month) = 1 THEN revs_month = "0" & revs_month
 	
 EMWriteScreen current_month, 20, 43
 EMWriteScreen current_year, 20, 46
@@ -253,36 +267,44 @@ IF UCASE(current_worker) <> UCASE(worker_number) THEN
 	transmit
 END IF
 
-
+'Declares variable for the following do...loops
 Excel_row = 2
-DO
-	MAXIS_row = 7
-	DO
-		EMReadScreen case_number, 8, MAXIS_row, 6
-		EMReadScreen SNAP_status, 1, MAXIS_row, 45
-		
-		IF case_number = "        " then exit do
-		
-		'For some goofy reason the dash key shows up instead of the space key. No clue why. This will turn them into null variables.
-		If cash_status = "-" then cash_status = ""
-		If SNAP_status = "-" then SNAP_status = ""
-		If HC_status = "-" then HC_status = ""
-		
-				'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
-		If trim(SNAP_status) = "N" or trim(SNAP_status) = "I" or trim(SNAP_status) = "U" then add_case_info_to_Excel = True
-		'Adding the case to Excel
-		If add_case_info_to_Excel = True then 
-			ObjExcel.Cells(excel_row, 1).Value = case_number
-			excel_row = excel_row + 1
-		End if
-		MAXIS_row = MAXIS_row + 1
-		add_case_info_to_Excel = ""	'Blanking out variable
-		case_number = ""			'Blanking out variable
-	Loop until MAXIS_row = 19
-	PF8
-	EMReadScreen last_page_check, 21, 24, 2	'checking to see if we're at the end
-Loop until last_page_check = "THIS IS THE LAST PAGE"
 
+'Developer mode handling: go to REVW for cases for non-developers, or just enter the array from above for developers
+If developer_mode <> TRUE THEN
+	DO
+		MAXIS_row = 7
+		DO
+			EMReadScreen case_number, 8, MAXIS_row, 6
+			EMReadScreen SNAP_status, 1, MAXIS_row, 45
+			
+			IF case_number = "        " then exit do
+			
+			'For some goofy reason the dash key shows up instead of the space key. No clue why. This will turn them into null variables.
+			If cash_status = "-" then cash_status = ""
+			If SNAP_status = "-" then SNAP_status = ""
+			If HC_status = "-" then HC_status = ""
+			
+			'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
+			If trim(SNAP_status) = "N" or trim(SNAP_status) = "I" or trim(SNAP_status) = "U" then add_case_info_to_Excel = True
+			'Adding the case to Excel
+			If add_case_info_to_Excel = True then 
+				ObjExcel.Cells(excel_row, 1).Value = case_number
+				excel_row = excel_row + 1
+			End if
+			MAXIS_row = MAXIS_row + 1
+			add_case_info_to_Excel = ""	'Blanking out variable
+			case_number = ""			'Blanking out variable
+		Loop until MAXIS_row = 19
+		PF8
+		EMReadScreen last_page_check, 21, 24, 2	'checking to see if we're at the end
+	Loop until last_page_check = "THIS IS THE LAST PAGE"
+ELSE
+	FOR each developer_case_number in developer_case_number_array
+		ObjExcel.Cells(excel_row, 1).Value = developer_case_number
+		excel_row = excel_row + 1
+	NEXT
+END IF
 
 'Now the script needs to go back to the start of the Excel file and start assigning appointments.
 'FOR EACH day that is not checked, start assigning appointments according to DatePart("N", appointment) because DatePart"N" is minutes. Once datepart("N") = last_appointment_time THEN the script needs to jump to the next day.
@@ -404,6 +426,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 	'It then compares what it read to the previously established current month plus 2 and determine if it is a recert or not. If it is a recert we need an interview
 	IF CSR_mo = left(cm_plus_2, 2) and CSR_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "NO"
 	IF recert_mo = left(cm_plus_2, 2) and recert_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "YES"
+	IF developer_mode = TRUE then RECERT_STATUS = "YES"				'Always for developers, yo
 	CALL navigate_to_screen("STAT", "ADDR")
 	EMReadScreen area_code, 3, 17, 45
 	EMReadScreen remaining_digits, 9, 17, 50
@@ -506,7 +529,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 			appt_date_for_outlook = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
 			appt_time_for_outlook = DatePart("H", interview_time) & ":" & DatePart("N", interview_time)
 			IF DatePart("N", interview_time) = 0 THEN appt_time_for_outlook = DatePart("H", interview_time) & ":00"
-			appt_end_time_for_outlook = DateAdd("N", appointment_length_listbox)
+			appt_end_time_for_outlook = DateAdd("N", appointment_length_listbox, interview_time)	
 			appt_end_time_for_outlook = DatePart("H", appt_end_time_for_outlook) & ":" & DatePart("N", appt_end_time_for_outlook)
 			IF DatePart("N", interview_time) = 0 THEN appt_end_time_for_outlook = DatePart("H", appt_end_time_for_outlook) & ":00"
 			appointment_subject = "SNAP RECERT"
