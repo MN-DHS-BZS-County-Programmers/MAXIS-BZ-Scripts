@@ -65,7 +65,7 @@ BeginDialog BULK_scripts_main_menu_dialog, 0, 0, 456, 330, "Bulk scripts main me
     PushButton 10, 135, 45, 10, "Bulk TIKLer", BULK_TIKLER_button
     PushButton 10, 150, 95, 10, "CASE/NOTE from Excel list", CASE_NOTE_FROM_EXCEL_LIST_button
     PushButton 10, 175, 70, 10, "CEI premium noter", CEI_PREMIUM_NOTER_button
-    PushButton 10, 190, 110, 10, "COLA auto approved DAIL noter", COLA_AUTO_APPROVED_DAIL_NOTER_button
+    'PushButton 10, 190, 110, 10, "COLA auto approved DAIL noter", COLA_AUTO_APPROVED_DAIL_NOTER_button
     PushButton 10, 215, 55, 10, "INAC scrubber", INAC_SCRUBBER_button
     PushButton 10, 255, 55, 10, "Returned mail", RETURNED_MAIL_button
     PushButton 10, 280, 80, 10, "REVW/MONT closures", REVW_MONT_CLOSURES_button
@@ -81,7 +81,7 @@ BeginDialog BULK_scripts_main_menu_dialog, 0, 0, 456, 330, "Bulk scripts main me
   Text 60, 135, 175, 10, "--- Creates the same TIKL on up to 60 cases at once."
   Text 110, 150, 335, 20, "--- Creates the same CASE/NOTE on potentially hundreds of cases listed on an Excel spreadsheet of your choice."
   Text 85, 175, 240, 10, "--- Case notes recurring CEI premiums on multiple cases simultaneously."
-  Text 125, 190, 320, 20, "--- NEW 06/2015!!! Case notes all cases on DAIL/DAIL that have a message indicating that COLA was auto-approved, copies the messages to an Excel spreadsheet, and deletes the DAIL."
+  'Text 125, 190, 320, 20, "--- NEW 06/2015!!! Case notes all cases on DAIL/DAIL that have a message indicating that COLA was auto-approved, copies the messages to an Excel spreadsheet, and deletes the DAIL."
   Text 70, 215, 375, 35, "--- Checks all cases on REPT/INAC (in the month before the current footer month, or prior) for MMIS discrepancies, active claims, DAIL messages, and ABPS panels in need of update (for Good Cause status), and adds them to a Word document. After that, it case notes all of the cases without DAIL messages or MMIS discrepancies. If your agency uses a closed-file worker number, it will SPEC/XFER the cases from your number into that number."
   Text 70, 255, 375, 20, "--- Case notes that returned mail (without a forwarding address) was received for up to 60 cases simultaneously, and TIKLs for 10-day return of proofs."
   Text 95, 280, 350, 20, "--- Case notes all cases on REPT/REVW or REPT/MONT that are closing for missing or incomplete CAF/HRF/CSR/HC ER. Case notes ''last day of REIN'' as well as ''date case becomes an intake.''"
@@ -123,7 +123,7 @@ If ButtonPressed = SWKR_LIST_GENERATOR_button then call run_from_GitHub(script_r
 If ButtonPressed = BULK_TIKLER_button then call run_from_GitHub(script_repository & "/BULK/BULK - BULK TIKLER.vbs")
 If ButtonPressed = CASE_NOTE_FROM_EXCEL_LIST_button then call run_from_GitHub(script_repository & "/BULK/BULK - CASE NOTE FROM EXCEL LIST.vbs")
 If ButtonPressed = CEI_PREMIUM_NOTER_button then call run_from_GitHub(script_repository & "/BULK/BULK - CEI PREMIUM NOTER.vbs")
-If ButtonPressed = COLA_AUTO_APPROVED_DAIL_NOTER_button then call run_from_GitHub(script_repository & "/BULK/BULK - COLA AUTO APPROVED DAIL NOTER.vbs")
+'If ButtonPressed = COLA_AUTO_APPROVED_DAIL_NOTER_button then call run_from_GitHub(script_repository & "/BULK/BULK - COLA AUTO APPROVED DAIL NOTER.vbs")
 If ButtonPressed = INAC_SCRUBBER_button then call run_from_GitHub(script_repository & "/BULK/BULK - INAC SCRUBBER.vbs")
 If ButtonPressed = RETURNED_MAIL_button then call run_from_GitHub(script_repository & "/BULK/BULK - RETURNED MAIL.vbs")
 If ButtonPressed = REVW_MONT_CLOSURES_button then call run_from_GitHub(script_repository & "/BULK/BULK - REVW-MONT CLOSURES.vbs")
