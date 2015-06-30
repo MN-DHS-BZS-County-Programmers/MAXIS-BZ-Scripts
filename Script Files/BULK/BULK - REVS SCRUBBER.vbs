@@ -52,6 +52,7 @@ call convert_array_to_droplist_items(time_array_30_min, time_array)
 
 'Custom functions (should merge with FuncLib when tested/confirmed to work)---------------------------------------------------
 
+'Function to create dynamic calendar out of checkboxes
 FUNCTION create_calendar(month_to_use, month_array)
 	'Generating a calendar
 	'Determining the number of days in the calendar month.
@@ -70,7 +71,11 @@ FUNCTION create_calendar(month_to_use, month_array)
 			use_date = (DatePart("M", month_to_use) & "/" & i & "/" & DatePart("YYYY", month_to_use))
 			x = 15 + (40 * (WeekDay(use_date) - 1))
 			IF WeekDay(use_date) = 1 AND i <> 1 THEN y = y + 15
-			IF WeekDay(use_date) = 1 OR WeekDay(use_date) = 7 THEN month_array(i, 0) = 1
+			IF WeekDay(use_date) = 1 OR WeekDay(use_date) = 7 THEN
+				month_array(i, 0) = 0 
+			Else
+				month_array(i, 0) = 1
+			End If
 			CheckBox x, y, 30, 10, i, month_array(i, 0)
 		NEXT
 		ButtonGroup ButtonPressed
@@ -157,7 +162,7 @@ EMConnect ""
 
 'Stopping the script is the user is running it before the 16th of the month.
 day_of_month = DatePart("D", date)
-'IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.")
+IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.")
 'The line above is commented out for development. When the script is live, the line needs to be active to boot the user before the script tries to access a blank REPT/REVS.
 
 'Opening the Excel file
@@ -185,19 +190,13 @@ CALL find_variable("User: ", worker_number, 7)
 DIALOG REVS_scrubber_initial_dialog
 IF ButtonPressed = 0 THEN stopscript
 
-'Developer mode handling. Asks for developer mode confirmation, then an array of case numbers if we want to go to developer mode.
-If worker_signature = "UUDDLRLRBA" then 
-	developer_mode_check = MsgBox("Enable developer mode? Will allow user to manually enter a list of cases as an array.", vbYesNoCancel)
-	IF developer_mode_check = vbYes THEN
-		developer_case_number_array = InputBox("Enter in your case numbers, separated by commas.")
-		developer_case_number_array = split(developer_case_number_array, ",")
-		developer_mode = TRUE
-	ELSEIF developer_mode_check = vbCancel THEN
-		stopscript
-	END IF
+'Entering developer mode
+If contact_phone_number = "UUDDLRLRBA" then 
+	developer_mode = true
+	MsgBox "You have enabled Developer Mode." & vbCr & vbCr & "The script will not enter information into MAXIS, but it will navigate, showing you where the script would otherwise have been."
 END IF
 
-
+'Formatting the dates
 calendar_month = DateAdd("M", 1, date)
 appt_month = DatePart("M", calendar_month)
 appt_year = DatePart("YYYY", calendar_month)
@@ -210,101 +209,185 @@ ReDim month_array(num_of_days, 0)
 CALL create_calendar(calendar_month, month_array)
 
 'Determining the appropriate times to set appointments.
-
 DO		
 	err_msg = ""
 	DIALOG REVS_scrubber_time_dialog
-	IF ButtonPressed = 0 THEN stopscript
-	IF first_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "You must choose an initial appointment time."				
-	IF first_appointment_listbox <> "Select one..." AND last_appointment_listbox <> "Select one..." THEN 
-		IF DateDiff("N", first_appointment_listbox, last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & " The last appointment may not be earlier than the first appointment."
-	END IF
-	IF alt_first_appointment_listbox <> "Select one..." AND alt_last_appointment_listbox <> "Select one..." THEN
-		IF DateDiff("N", alt_first_appointment_listbox, alt_last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & " The last appointment may not be earlier than the first appointment."
-	END IF
-	IF last_appointment_listbox <> "Select one..." AND alt_first_appointment_listbox <> "Select one..." THEN
-		IF DateDiff("N", last_appointment_listbox, alt_first_appointment_listbox) <= 0 THEN err_msg = err_msg & VbCr & "The additional appointment block may not begin prior or equal to the first appointment block ending."
-	END IF
-	IF last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "You must choose a final appointment time."
-	IF alt_first_appointment_listbox <> "Select one..." and alt_last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "You have selected an initial appointment time for the additional appointment block, you must select a final appointment time."
-	IF alt_last_appointment_listbox <> "Select one..." and alt_first_appointment_listbox = "Select one.." THEN err_msg = err_msg & VbCr & "You have selected a final appointment time for the additional appointment block, you must select an initial appointment time."
-	IF appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "You must select an appointment length."
-	IF alt_first_appointment_listbox <> "Select one..." and alt_appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "Please choose an appointment length for the additional appointment block."
-	IF err_msg <> "" THEN msgbox "NOTICE:" & err_msg & VbCr & "Please try again."
+		IF ButtonPressed = 0 THEN stopscript
+		IF first_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must choose an initial appointment time."				
+		IF first_appointment_listbox <> "Select one..." AND last_appointment_listbox <> "Select one..." THEN 
+			'Converting the appointment times for comparison. VBS runs in military time.
+			IF DatePart("H", last_appointment_listbox) < 7 THEN 
+				last_appointment_listbox = DateAdd("H", 12, last_appointment_listbox)
+				first_appointment_listbox = DateAdd("H", 0, first_appointment_listbox)
+			END IF
+			IF DatePart("H", first_appointment_listbox) < 7 THEN 
+				first_appointment_listbox = DateAdd("H", 12, first_appointment_listbox)
+				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
+			END IF
+			
+			IF DateDiff("N", first_appointment_listbox, last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & "* The last appointment may not be earlier than the first appointment."
+			
+			'Converting the appointment times back from military time.
+			IF DatePart("H", last_appointment_listbox) > 12 THEN 
+				last_appointment_listbox = DateAdd("H", -12, last_appointment_listbox)
+				first_appointment_listbox = DateAdd("H", 0, first_appointment_listbox)
+			END IF
+			IF DatePart("H", first_appointment_listbox) > 12 THEN 
+				first_appointment_listbox = DateAdd("H", -12, first_appointment_listbox)
+				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
+			END IF
+		END IF
+		IF alt_first_appointment_listbox <> "Select one..." AND alt_last_appointment_listbox <> "Select one..." THEN
+			'Converting the appointment times for comparison. VBS runs in military time.
+			IF DatePart("H", alt_last_appointment_listbox) < 7 THEN 
+				alt_last_appointment_listbox = DateAdd("H", 12, alt_last_appointment_listbox)
+				alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
+			END IF
+			IF DatePart("H", alt_first_appointment_listbox) < 7 THEN 
+				alt_first_appointment_listbox = DateAdd("H", 12, alt_first_appointment_listbox)
+				alt_last_appointment_listbox = DateAdd("H", 0, alt_last_appointment_listbox)
+			END IF
+			
+			IF DateDiff("N", alt_first_appointment_listbox, alt_last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block has an ending earlier than it begins."
+			
+			'Converting the appointment times back from military time.
+			IF DatePart("H", alt_last_appointment_listbox) > 12 THEN 
+				alt_last_appointment_listbox = DateAdd("H", -12, alt_last_appointment_listbox)
+				alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
+			END IF
+			IF DatePart("H", alt_first_appointment_listbox) > 12 THEN 
+				alt_first_appointment_listbox = DateAdd("H", -12, alt_first_appointment_listbox)
+				alt_last_appointment_listbox = DateAdd("H", 0, alt_last_appointment_listbox)
+			END IF
+		END IF
+		IF last_appointment_listbox <> "Select one..." AND alt_first_appointment_listbox <> "Select one..." THEN
+			'Converting the appointment times for comparison. VBS runs in military time.
+			IF DatePart("H", last_appointment_listbox) < 7 THEN 
+				last_appointment_listbox = DateAdd("H", 12, last_appointment_listbox)
+				alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
+			END IF
+			IF DatePart("H", alt_first_appointment_listbox) < 7 THEN 
+				alt_first_appointment_listbox = DateAdd("H", 12, alt_first_appointment_listbox)
+				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
+			END IF
+			MsgBox DateDiff("N", alt_first_appointment_listbox, last_appointment_listbox) 
+			IF DateDiff("N", alt_appointment_length_listbox, last_appointment_listbox) <= 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block may not begin prior or equal to the first appointment block ending."
+			
+			'Converting the appointment times back from military time.
+			IF DatePart("H", last_appointment_listbox) > 12 THEN 
+				last_appointment_listbox = DateAdd("H", -12, last_appointment_listbox)
+				alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
+			END IF
+			IF DatePart("H", alt_first_appointment_listbox) > 12 THEN 
+				alt_first_appointment_listbox = DateAdd("H", -12, alt_first_appointment_listbox)
+				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
+			END IF
+		END IF
+		IF last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must choose a final appointment time."
+		IF alt_first_appointment_listbox <> "Select one..." and alt_last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You have selected an initial appointment time for the additional appointment block, you must select a final appointment time."
+		IF alt_last_appointment_listbox <> "Select one..." and alt_first_appointment_listbox = "Select one.." THEN err_msg = err_msg & VbCr & "* You have selected a final appointment time for the additional appointment block, you must select an initial appointment time."
+		IF appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must select an appointment length."
+		IF alt_first_appointment_listbox <> "Select one..." and alt_appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* Please choose an appointment length for the additional appointment block."
+		IF err_msg <> "" THEN msgbox "*** NOTICE!!! ***" & vbCr & err_msg & vbCr & vbCr & "Please resolve for the script to continue."
 LOOP UNTIL err_msg = ""
 
 IF appointments_per_time_slot = "" THEN appointments_per_time_slot = 1
 IF alt_appointments_per_time_slot = "" THEN alt_appointments_per_time_slot = 1
 
+'Navigating to MAXIS
 CALL check_for_MAXIS(false)
 back_to_SELF
 current_month = DatePart("M", date)
-IF len(current_month) = 1 THEN current_month = "0" & current_month
+	IF len(current_month) = 1 THEN current_month = "0" & current_month
 current_year = DatePart("YYYY", date)
-current_year = right(current_year, 2)
+	current_year = right(current_year, 2)
 
 'Determining the month that the script will access REPT/REVS.
-'<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<Currently the script is set to check CM + 1. This is for testing.
-'The script should ALWAYS be set to CM + 2 for production.	
-revs_month = DateAdd("M", 1, date)
+
+revs_month = DateAdd("M", 2, date)
 revs_year = DatePart("YYYY", revs_month)
-revs_year = right(revs_year, 2)
+	revs_year = right(revs_year, 2)
 revs_month = DatePart("M", revs_month)
-IF len(revs_month) = 1 THEN revs_month = "0" & revs_month
-	
+	IF len(revs_month) = 1 THEN revs_month = "0" & revs_month
+
+'writing current month
 EMWriteScreen current_month, 20, 43
 EMWriteScreen current_year, 20, 46
 transmit
 
+'navigating to REVS and entering REVS Month and year
 CALL navigate_to_MAXIS_screen("REPT", "REVS")
 EMWriteScreen revs_month, 20, 55
 EMWriteScreen revs_year, 20, 58
 transmit
 
+'Checking to see if the worker running the script is the the worker selected, if not it will enter the selected worker's number
 EMReadScreen current_worker, 7, 21, 6
 IF UCASE(current_worker) <> UCASE(worker_number) THEN
-	EMWriteScreen worker_number, 21, 6
+	EMWriteScreen UCASE(worker_number), 21, 6
 	transmit
 END IF
 
-'Declares variable for the following do...loops
+'Grabbing case numbers from REVS for requested worker
 Excel_row = 2
-
-'Developer mode handling: go to REVW for cases for non-developers, or just enter the array from above for developers
-If developer_mode <> TRUE THEN
+DO
+	MAXIS_row = 7
 	DO
-		MAXIS_row = 7
-		DO
-			EMReadScreen case_number, 8, MAXIS_row, 6
-			EMReadScreen SNAP_status, 1, MAXIS_row, 45
-			
-			IF case_number = "        " then exit do
-			
-			'For some goofy reason the dash key shows up instead of the space key. No clue why. This will turn them into null variables.
-			If cash_status = "-" then cash_status = ""
-			If SNAP_status = "-" then SNAP_status = ""
-			If HC_status = "-" then HC_status = ""
-			
-			'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
-			If trim(SNAP_status) = "N" or trim(SNAP_status) = "I" or trim(SNAP_status) = "U" then add_case_info_to_Excel = True
-			'Adding the case to Excel
-			If add_case_info_to_Excel = True then 
-				ObjExcel.Cells(excel_row, 1).Value = case_number
-				excel_row = excel_row + 1
-			End if
-			MAXIS_row = MAXIS_row + 1
-			add_case_info_to_Excel = ""	'Blanking out variable
-			case_number = ""			'Blanking out variable
-		Loop until MAXIS_row = 19
-		PF8
-		EMReadScreen last_page_check, 21, 24, 2	'checking to see if we're at the end
-	Loop until last_page_check = "THIS IS THE LAST PAGE"
-ELSE
-	FOR each developer_case_number in developer_case_number_array
-		ObjExcel.Cells(excel_row, 1).Value = developer_case_number
-		excel_row = excel_row + 1
-	NEXT
-END IF
+		EMReadScreen case_number, 8, MAXIS_row, 6
+		EMReadScreen SNAP_status, 1, MAXIS_row, 45
+		
+		IF case_number = "        " then exit do     'navigates though until it runs out of case numbers to read
+		
+		'For some goofy reason the dash key shows up instead of the space key. No clue why. This will turn them into null variables.
+		If cash_status = "-" then cash_status = ""
+		If SNAP_status = "-" then SNAP_status = ""
+		If HC_status = "-" then HC_status = ""
+		
+				'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
+		If trim(SNAP_status) = "N" or trim(SNAP_status) = "I" or trim(SNAP_status) = "U" then add_case_info_to_Excel = True
+		'Adding the case to Excel
+		If add_case_info_to_Excel = True then 
+			ObjExcel.Cells(excel_row, 1).Value = case_number
+			excel_row = excel_row + 1
+		End if
+		MAXIS_row = MAXIS_row + 1
+		add_case_info_to_Excel = ""	'Blanking out variable
+		case_number = ""			'Blanking out variable
+	Loop until MAXIS_row = 19
+	PF8
+	EMReadScreen last_page_check, 21, 24, 2	'checking to see if we're at the end
+Loop until last_page_check = "THIS IS THE LAST PAGE"
+
+
+'Now the script will go through STAT/REVW for each case and check that the case is at CSR or ER and remove the cases that are at CSR from the list.
+excel_row = 2
+DO
+	case_number = objExcel.cells(excel_row, 1).Value
+	CALL navigate_to_MAXIS_screen("STAT", "REVW")
+	
+	EMwritescreen "x", 5, 58
+	Transmit
+	DO											'looping to check if the SNAP REVW popup is on the screen
+		EMReadScreen SNAP_popup_check, 7, 5, 43
+	LOOP until SNAP_popup_check = "Reports"
+    
+	'The script will now read the CSR MO/YR and the Recert MO/YR
+	EMReadScreen CSR_mo, 2, 9, 26
+	EMReadScreen CSR_yr, 2, 9, 32
+	EMReadScreen recert_mo, 2, 9, 64
+	EMReadScreen recert_yr, 2, 9, 70
+	
+	'It then compares what it read to the previously established current month plus 2 and determine if it is a recert or not. If it is a recert we need an interview
+	IF CSR_mo = left(cm_plus_2, 2) and CSR_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "NO"
+	IF recert_mo = left(cm_plus_2, 2) and recert_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "YES"
+
+	IF RECERT_STATUS = "NO" THEN
+		SET objRange = objExcel.Cells(excel_row, 1).EntireRow
+		objRange.Delete
+		excel_row = excel_row - 1
+	END If
+	excel_row = excel_row + 1
+LOOP UNTIL objExcel.Cells(excel_row, 1).Value = ""
 
 'Now the script needs to go back to the start of the Excel file and start assigning appointments.
 'FOR EACH day that is not checked, start assigning appointments according to DatePart("N", appointment) because DatePart"N" is minutes. Once datepart("N") = last_appointment_time THEN the script needs to jump to the next day.
@@ -314,7 +397,7 @@ appointment_length_listbox = left(appointment_length_listbox, 2)	'Hacking the "m
 alt_appointment_length_listbox = left(alt_appointment_length_listbox, 2)
 excel_row = 2
 FOR i = 1 to num_of_days
-	IF month_array(i, 0) = 0 THEN		'These are the dates that the user has determined the agency/unit/worker
+	IF month_array(i, 0) = 1 THEN		'These are the dates that the user has determined the agency/unit/worker
 		appointment_time = appt_month & "/" & i & "/" & appt_year & " " & first_appointment_listbox		'putting together the date and time values.
 		DO
 			appointment_time = DateAdd("N", 0, appointment_time)	'Putting the date in a MM/DD/YYYY HH:MM format. It just looks nicer.
@@ -386,77 +469,50 @@ NEXT
 '***** THIS stopscript IS IN PLACE FOR DEVELOPMENT. THE SCRIPT UP TO THIS POINT DOES NOT ADD ANYTHING TO MAXIS. THE SCRIPT AFTER THIS POINT ADDS INFORMATION TO MAXIS IN THE FORM OF A SPEC/MEMO, A CASE NOTE, AND A TIKL. *****
 '***** IF YOU ARE TESTING THIS SCRIPT, YOU NEED TO USE THIS stopscript. WHEN THIS SCRIPT GOES LIVE, COMMENT-OUT THE stopscript.
 'stopscript
-
-excel_row = 2					'resetting excel row to start reading at the top 
-DO 								'looping until it meets a blank excel cell without a case number
-	recert_status = ""			'resetting recert status for each run through the loop/case number
-	case_number = objExcel.cells(excel_row, 1).value
-	interview_time = objExcel.Cells(excel_row, 2).Value
-	IF DatePart("H", interview_time) < 7 OR DatePart("H", interview_time) = 12 THEN 
-		am_pm = "PM"
-	ELSE	
-		am_pm = "AM"
-	END IF
-	appt_minute_place_holder = DatePart("N", interview_time)
-	IF appt_minute_place_holder_because_reasons = 0 THEN appt_minute_place_holder_because_reasons = "00"
-	interview_time = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time) & " " & DatePart("H", interview_time) & ":" & appt_minute_place_holder_because_reasons & " " & am_pm
-	IF case_number = "" THEN EXIT DO      'exiting do if it finds a blank cell on the case number column
-	
-	back_to_self
-	IF len(datepart("m", date)) = 1 THEN EMwritescreen "0" & datepart("m", date), 20, 43			'writing current month
-	EMwritescreen right(datepart("YYYY", date), 2), 20, 46		'writing current year
-	transmit
-	call navigate_to_screen("STAT", "REVW")
-	
-	ERRR_screen_check
-
-	EMwritescreen "x", 5, 58
-	Transmit
-	
-	DO											'looping to check if the SNAP REVW popup is on the screen
-		EMReadScreen SNAP_popup_check, 7, 5, 43
-	LOOP until SNAP_popup_check = "Reports"
-
-	'The script will now read the CSR MO/YR and the Recert MO/YR
-	EMReadScreen CSR_mo, 2, 9, 26
-	EMReadScreen CSR_yr, 2, 9, 32
-	EMReadScreen recert_mo, 2, 9, 64
-	EMReadScreen recert_yr, 2, 9, 70
-	
-	'It then compares what it read to the previously established current month plus 2 and determine if it is a recert or not. If it is a recert we need an interview
-	IF CSR_mo = left(cm_plus_2, 2) and CSR_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "NO"
-	IF recert_mo = left(cm_plus_2, 2) and recert_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "YES"
-	IF developer_mode = TRUE then RECERT_STATUS = "YES"				'Always for developers, yo
-	CALL navigate_to_screen("STAT", "ADDR")
-	EMReadScreen area_code, 3, 17, 45
-	EMReadScreen remaining_digits, 9, 17, 50
-	IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
-		EMReadScreen area_code, 3, 18, 45
-		EMReadScreen remaining_digits, 9, 18, 50
-	END IF
-	IF area_code = "   " THEN 
-		EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
-		EMReadScreen remaining_digits, 9, 19, 50
-	END IF
-	phone_number = area_code & remaining_digits
-	
-	'*** THE LINES OF CODE BELOW ARE COMMENTED OUT TO TEST THE MEMO AND CASE NOTING FUNCTION. WHEN NOT COMMENTED OUT ***
-	'*** THE LINES OF CODE WILL DELETE CASES THAT ARE AT CSR LEAVING ONLY THE CASES THAT ARE AT ANNUAL RENEWAL.      ***
-	'If the case is up for a CSR in CM+2 then it will delete the row from the excel file.
-	
-	IF RECERT_STATUS = "NO" THEN
-		SET objRange = objExcel.Cells(excel_row, 1).EntireRow
-		objRange.Delete
-		excel_row = excel_row - 1
-	END If
-	
-	IF RECERT_STATUS = "YES" Then
+If developer_mode = true Then
+	excel_row = 2					'resetting excel row to start reading at the top 
+	DO 								'looping until it meets a blank excel cell without a case number
+		recert_status = ""			'resetting recert status for each run through the loop/case number
+		forms_to_arep = ""
+		forms_to_swkr = ""
+		case_number = objExcel.cells(excel_row, 1).Value
+		interview_time = objExcel.Cells(excel_row, 2).Value
+		IF DatePart("H", interview_time) < 7 OR DatePart("H", interview_time) = 12 THEN    'converting from military time
+			am_pm = "PM"
+		ELSE	
+			am_pm = "AM"
+		END IF
+		appt_minute_place_holder_because_reasons = DatePart("N", interview_time)
+		msgbox len(appt_minute_place_holder_because_reasons)
+		IF appt_minute_place_holder_because_reasons = "0" THEN appt_minute_place_holder_because_reasons = "00"	'This is needed because DatePart("N", 10:00) = 0 and not 00. Times were being displayed 10:0
+		interview_time = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time) & " " & DatePart("H", interview_time) & ":" & appt_minute_place_holder_because_reasons & " " & am_pm
+		IF case_number = "" THEN EXIT DO      'exiting do if it finds a blank cell on the case number column
+		
+		back_to_self
+		IF len(datepart("m", date)) = 1 THEN EMwritescreen "0" & datepart("m", date), 20, 43			'writing current month
+		EMwritescreen right(datepart("YYYY", date), 2), 20, 46		'writing current year
+		transmit
+		
+		'Grabbing the phone number from ADDR
+		CALL navigate_to_screen("STAT", "ADDR")
+		EMReadScreen area_code, 3, 17, 45
+		EMReadScreen remaining_digits, 9, 17, 50
+		IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
+			EMReadScreen area_code, 3, 18, 45
+			EMReadScreen remaining_digits, 9, 18, 50
+		END IF
+		IF area_code = "   " THEN 
+			EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
+			EMReadScreen remaining_digits, 9, 19, 50
+		END IF
+		phone_number = area_code & remaining_digits
+		
 		back_to_self
 		CALL navigate_to_screen("SPEC", "MEMO")
 		PF5
 		EMReadScreen memo_display_check, 12, 2, 33
 		If memo_display_check = "Memo Display" then script_end_procedure("You are not able to go into update mode. Did you enter in inquiry by mistake? Please try again in production.")
-		'Checking for AREP
+		'Checking for AREP if found sending memo to them as well
 		row = 4
 		col = 1
 		EMSearch "ALTREP", row, col
@@ -467,7 +523,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 			call navigate_to_screen("SPEC", "MEMO")
 			PF5
 		END IF
-		'Checking for SWKR
+		'Checking for SWKR if found sending MEMO to them as well
 		row = 4
 		col = 1
 		EMSearch "SOCWKR", row, col
@@ -482,7 +538,126 @@ DO 								'looping until it meets a blank excel cell without a case number
 		IF forms_to_arep = "Y" THEN EMWriteScreen "x", arep_row, 10
 		IF forms_to_swkr = "Y" THEN EMWriteScreen "x", swkr_row, 10
 		transmit
+		'Writing the appointment and letter into a memo
+		Memo_to_display = "MEMO to be written: " & "Your SNAP case is set to recertify on " & Left(cm_plus_2, 2) & "/" & Right(cm_plus_2, 2) & ". An interview is required to process your application." & vbNewLine &_
+			"Your phone interview is scheduled for " & interview_time & "." & vbNewLine
+		IF phone_number <> "            " THEN
+			Memo_to_display = Memo_to_display & "We will be calling you at this number " & phone_number & "." & vbNewLine &_ 
+				"If this date and/or time does not work, or if you would prefer an in-person interview, please call our office." & vbNewLine
+		else
+			Memo_to_display = Memo_to_display & "We currently do not have a phone number on file for you." & vbNewLine &_
+				"Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview." & vbNewLine
+		end if
 		
+		Memo_to_display = Memo_to_display & "If we do not hear from you by " & last_day_of_recert & " your case will auto-close." & vbNewline & vbNewLine &_
+							"A recertification packet has been sent to you, containing an application form. Please complete, sign, and date the form, and return it along with any required verifications by the date of your interview." & vbNewLine &_
+							"Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below." & vbNewline & vbNewLine &_
+							"Income examples: paystubs, pension, unemployment, sponsor income etc." & vbNewLine &_
+							"     Note: the agency will verify social security income." & vbNewLine &_ 
+							"* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc." & vbNewLine &_
+							"* Medical cost examples (if changed): prescription and medical bills, etc." & vbNewLine & vbNewLine &_
+							"Please contact the agency with any questions. Thank you."
+		
+		msgbox Memo_to_display
+		
+		Case_note_to_display = "Case Note: " & "***SNAP Recertification Interview Scheduled***" & vbNewLine
+		Case_note_to_display = Case_note_to_display & "* A phone interview has been scheduled for " & interview_time & "." & vbNewLine
+		IF phone_number = "            " THEN 
+				Case_note_to_display = Case_note_to_display & "No phone number in MAXIS as of " & date & "." & vbNewLine
+			ELSE
+				Case_note_to_display = Case_note_to_display & "* Client phone: " & phone_number & vbNewLine
+		END IF
+		If forms_to_arep = "Y" then Case_note_to_display = Case_note_to_display & "* Copy of notice sent to AREP." & vbNewLine
+		If forms_to_swkr = "Y" then Case_note_to_display = Case_note_to_display & "* Copy of notice sent to Social Worker." & vbNewLine
+		Case_note_to_display = Case_note_to_display & "---" & vbNewLine & worker_signature
+		
+		msgbox Case_note_to_display
+		
+		tikl_date = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
+		
+		MsgBox "Dail: ~*~*~CLIENT HAD RECERT INTERVIEW APPOINTMENT. IF MISSED SEND NOMI." & vbNewLine &_
+				"tikl date: " & tikl_date
+		
+		excel_row = excel_row + 1
+			
+	LOOP until objExcel.cells(excel_row, 1).Value = ""
+	
+		
+	'Formatting the columns to autofit after they are all finished being created. 
+	objExcel.Columns(1).autofit()
+	objExcel.Columns(2).autofit()
+	objExcel.Columns(3).autofit()
+	objExcel.Columns(4).autofit()
+	
+Else    'if worker is actually running the script it will do this
+	excel_row = 2					'resetting excel row to start reading at the top 
+	DO 								'looping until it meets a blank excel cell without a case number
+		recert_status = ""			'resetting recert status for each run through the loop/case number
+		forms_to_arep = ""
+		forms_to_swkr = ""
+		case_number = objExcel.cells(excel_row, 1).Value
+		interview_time = objExcel.Cells(excel_row, 2).Value
+		IF DatePart("H", interview_time) < 7 OR DatePart("H", interview_time) = 12 THEN    'converting from military time
+			am_pm = "PM"
+		ELSE	
+			am_pm = "AM"
+		END IF
+		appt_minute_place_holder_because_reasons = DatePart("N", interview_time)
+		IF appt_minute_place_holder_because_reasons = 0 THEN appt_minute_place_holder_because_reasons = "00"	'This is needed because DatePart("N", 10:00) = 0 and not 00. Times were being displayed 10:0
+		interview_time = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time) & " " & DatePart("H", interview_time) & ":" & appt_minute_place_holder_because_reasons & " " & am_pm
+		IF case_number = "" THEN EXIT DO      'exiting do if it finds a blank cell on the case number column
+		
+		back_to_self
+		IF len(datepart("m", date)) = 1 THEN EMwritescreen "0" & datepart("m", date), 20, 43			'writing current month
+		EMwritescreen right(datepart("YYYY", date), 2), 20, 46		'writing current year
+		transmit
+		
+		'Grabbing the phone number from ADDR
+		CALL navigate_to_screen("STAT", "ADDR")
+		EMReadScreen area_code, 3, 17, 45
+		EMReadScreen remaining_digits, 9, 17, 50
+		IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
+			EMReadScreen area_code, 3, 18, 45
+			EMReadScreen remaining_digits, 9, 18, 50
+		END IF
+		IF area_code = "   " THEN 
+			EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
+			EMReadScreen remaining_digits, 9, 19, 50
+		END IF
+		phone_number = area_code & remaining_digits
+		
+		back_to_self
+		CALL navigate_to_screen("SPEC", "MEMO")
+		PF5
+		EMReadScreen memo_display_check, 12, 2, 33
+		If memo_display_check = "Memo Display" then script_end_procedure("You are not able to go into update mode. Did you enter in inquiry by mistake? Please try again in production.")
+		'Checking for AREP if found sending memo to them as well
+		row = 4
+		col = 1
+		EMSearch "ALTREP", row, col
+		IF row > 4 THEN
+			arep_row = row
+			CALL navigate_to_screen("STAT", "AREP")
+			EMReadscreen forms_to_arep, 1, 10, 45
+			call navigate_to_screen("SPEC", "MEMO")
+			PF5
+		END IF
+		'Checking for SWKR if found sending MEMO to them as well
+		row = 4
+		col = 1
+		EMSearch "SOCWKR", row, col
+		IF row > 4 THEN
+			swkr_row = row
+			call navigate_to_screen("STAT", "SWKR")
+			EMReadscreen forms_to_swkr, 1, 15, 63
+			call navigate_to_screen("SPEC", "MEMO")
+			PF5
+		END IF
+		EMWriteScreen "x", 5, 10
+		IF forms_to_arep = "Y" THEN EMWriteScreen "x", arep_row, 10
+		IF forms_to_swkr = "Y" THEN EMWriteScreen "x", swkr_row, 10
+		transmit
+		'Writing the appointment and letter into a memo
 		EMSendKey("************************************************************")
 		CALL write_new_line_in_SPEC_MEMO("Your SNAP case is set to recertify on " & Left(cm_plus_2, 2) & "/" & Right(cm_plus_2, 2) & ". An interview is required to process your application.")
 		CALL write_new_line_in_SPEC_MEMO("")
@@ -510,6 +685,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 		PF4
 		back_to_self
 		
+		'case noting appointment time and date
 		CALL navigate_to_screen("CASE", "NOTE")
 		PF9
 		
@@ -525,11 +701,12 @@ DO 								'looping until it meets a blank excel cell without a case number
 		call write_variable_in_case_note("---")
 		call write_variable_in_case_note(worker_signature)
 		
+		'adding appointment time and date to outlook calendar if requested by worker
 		IF outlook_calendar_check = 1 THEN 
 			appt_date_for_outlook = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
 			appt_time_for_outlook = DatePart("H", interview_time) & ":" & DatePart("N", interview_time)
 			IF DatePart("N", interview_time) = 0 THEN appt_time_for_outlook = DatePart("H", interview_time) & ":00"
-			appt_end_time_for_outlook = DateAdd("N", appointment_length_listbox, interview_time)	
+			appt_end_time_for_outlook = DateAdd("N", appointment_length_listbox, interview_time)
 			appt_end_time_for_outlook = DatePart("H", appt_end_time_for_outlook) & ":" & DatePart("N", appt_end_time_for_outlook)
 			IF DatePart("N", interview_time) = 0 THEN appt_end_time_for_outlook = DatePart("H", appt_end_time_for_outlook) & ":00"
 			appointment_subject = "SNAP RECERT"
@@ -541,6 +718,7 @@ DO 								'looping until it meets a blank excel cell without a case number
 			END IF
 			appointment_reminder = True
 			appointment_category = "Recertification Interview"
+			'using the variables created above to generate the Outlook Appointment from the custom function.
 			CALL create_outlook_appointment(appt_date_for_outlook, appt_time_for_outlook, appt_end_time_for_outlook, appointment_subject, appointment_body, appointment_location, appointment_reminder, appointment_category)
 		END IF
 		
@@ -549,24 +727,20 @@ DO 								'looping until it meets a blank excel cell without a case number
 		tikl_date = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
 		CALL create_MAXIS_friendly_date(tikl_date, 0, 5, 18)
 		EMWriteScreen "~*~*~CLIENT HAD RECERT INTERVIEW APPOINTMENT. IF MISSED SEND NOMI.", 9, 3
-		EMWriteScreen "Appt date: " & appt_date_for_outlook & ", appt time: " & appt_time_for_outlook, 10, 3
 		transmit
 		PF3
-	END IF
-	
-	excel_row = excel_row + 1
+		'END IF
 		
-LOOP until objExcel.cells(excel_row, 1).Value = ""
-
+		excel_row = excel_row + 1
+			
+	LOOP until objExcel.cells(excel_row, 1).Value = ""
 	
-'Formatting the columns to autofit after they are all finished being created. 
-objExcel.Columns(1).autofit()
-objExcel.Columns(2).autofit()
-objExcel.Columns(3).autofit()
-objExcel.Columns(4).autofit()
+		
+	'Formatting the columns to autofit after they are all finished being created. 
+	objExcel.Columns(1).autofit()
+	objExcel.Columns(2).autofit()
+	objExcel.Columns(3).autofit()
+	objExcel.Columns(4).autofit()
+End IF
 
 script_end_procedure("Success, the excel file now has all of the cases that have had interviews scheduled.")
-
-
-'Things the script needs to do:
-'	(1) Update Outlook to assign appointments
