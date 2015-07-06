@@ -89,7 +89,7 @@ EndDialog
 'Burial Agreement Dialogs----------------------------------------------------------------------------------------------------
 BeginDialog burial_assets_dialog_01, 0, 0, 286, 160, "Burial assets dialog (01)"
   CheckBox 5, 20, 160, 10, "Applied $1500 of burial services to BFE?", applied_BFE_check
-  DropListBox 95, 35, 45, 15, "None"+chr(9)+"AFB"+chr(9)+"CSA"+chr(9)+"IBA"+chr(9)+"IFB"+chr(9)+"RBA", type_of_burial_agreement
+  DropListBox 95, 35, 45, 15, "Select One..."+chr(9)+"None"+chr(9)+"AFB"+chr(9)+"CSA"+chr(9)+"IBA"+chr(9)+"IFB"+chr(9)+"RBA", type_of_burial_agreement
   EditBox 210, 35, 65, 15, purchase_date
   EditBox 55, 55, 125, 15, issuer_name
   EditBox 215, 55, 55, 15, policy_number
@@ -337,13 +337,21 @@ DO
 Do
   IF buttonpressed = previous THEN EXIT DO
   Do
+	Do
       Dialog burial_assets_dialog_01
-      IF buttonpressed = previous THEN EXIT DO
-      If buttonpressed = 0 then 
+	  If buttonpressed = 0 then 
 		confirm_cancel = MsgBox("Are you sure you want to CANCEL? Press YES to cancel, press NO to return to the script.", vbYesNo)
 		IF confirm_cancel = vbYes THEN stopscript
 		IF confirm_cancel = vbNo THEN EXIT DO
-      End if
+	  End IF
+	  If type_of_burial_agreement = "Select One..." Then msgbox "You must select a type of burial agreement. Select none if n/a."
+	Loop until type_of_burial_agreement <> "Select One..."
+      IF buttonpressed = previous THEN EXIT DO
+     ' If buttonpressed = 0 then 
+	'	confirm_cancel = MsgBox("Are you sure you want to CANCEL? Press YES to cancel, press NO to return to the script.", vbYesNo)
+	'	IF confirm_cancel = vbYes THEN stopscript
+	'	IF confirm_cancel = vbNo THEN EXIT DO
+     ' End if
     Do
       Dialog burial_assets_dialog_02
       If buttonpressed = 0 then 
