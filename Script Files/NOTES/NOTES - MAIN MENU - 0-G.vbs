@@ -73,7 +73,7 @@ BeginDialog NOTES_0_G_scripts_main_menu_dialog, 0, 0, 516, 355, "Notes (0-G) scr
     PushButton 5, 330, 45, 10, "GRH - HRF", GRH_HRF_button
     CancelButton 460, 330, 50, 15
   Text 75, 20, 330, 10, "--- Templates that are for use when various documents are received."
-  Text 115, 45, 330, 10, "--- Template for documenting details about an ApplyMN application recevied."
+  Text 115, 45, 330, 10, "--- Template for documenting details about an ApplyMN application received."
   Text 80, 60, 325, 10, "--- Template for when you approve a client's programs."
   Text 55, 75, 270, 10, "--- Template for a baby born and added to household."
   Text 60, 90, 135, 10, "--- Template for burial assets."
