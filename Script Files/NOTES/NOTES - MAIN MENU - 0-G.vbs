@@ -109,6 +109,7 @@ Do
 	If buttonpressed = SIR_instructions_button then CreateObject("WScript.Shell").Run("https://www.dhssir.cty.dhs.state.mn.us/MAXIS/blzn/scriptwiki/Wiki%20Pages/Notes%20scripts.aspx")
 Loop until buttonpressed <> SIR_instructions_button
 
+
 'Connecting to BlueZone
 EMConnect ""
 
