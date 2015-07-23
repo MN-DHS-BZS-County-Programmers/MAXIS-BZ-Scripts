@@ -1,6 +1,7 @@
-'user enter the case number 
+'Option Explicit
+
 'STATS GATHERING----------------------------------------------------------------------------------------------------
-name_of_script = "NOTES - CAF.vbs"
+name_of_script = "NOTES - Send DISA verifs.vbs"
 start_time = timer
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
@@ -47,17 +48,13 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
-'Option Explicit
-
 'This will assign the varibles
-
-Dim Case_number
-Dim Dialog1
-Dim ButtonPressed
+'Dim Case_number
+'Dim Send_DISA_dialog
+'Dim ButtonPressed
 
 'This build the Dialog pop up Box to enter case number and worker signature
-
-BeginDialog Dialog1, 0, 0, 191, 105, "Dialog"
+BeginDialog Send_DISA_dialog, 0, 0, 191, 105, "Send DISA verification"
   EditBox 85, 10, 55, 15, case_number
   EditBox 85, 45, 100, 10, worker_signature
   ButtonGroup ButtonPressed
@@ -68,78 +65,38 @@ BeginDialog Dialog1, 0, 0, 191, 105, "Dialog"
 EndDialog
 
 
-'This will run casenumber once input by the user
-
-Do
-
-	Dialog Dialog1
-	IF ButtonPressed = 0 Then Stopscript
-	IF IsNumeric (Case_Number) = False Then MsgBox "Try again"
-
-Loop until IsNumeric (Case_Number) = True
-
-Case_Number = abs(Case_Number)
-	
-
+'The script-----------------------------------------
 'This will connect to blueZone and let user input case note
-
-
 EMConnect ""
 EMFocus
-EMWriteScreen case_number, 18, 043
+
+Call MAXIS_case_number_finder(case_number)
+
+'This will run case number once input by the user
+Do
+	Dialog Send_DISA_dialog
+	IF ButtonPressed = 0 Then Stopscript
+	IF IsNumeric(Case_Number) = False Then MsgBox "Try again"
+Loop until IsNumeric(Case_Number) = True
 
 'checking for Maxis to avoid PW lockout
-
 call check_for_MAXIS(True)
 
+'setting the 10 day TIKL
+Call navigate_to_MAXIS_screen("DAIL", "WRIT")	'navigate to DAIL/WRIT
+call create_MAXIS_friendly_date(date, 10, 5, 18) 'changes date to MM/DD/YY format for TIKL 
+'TIKL message
+Call write_variable_in_TIKL("Close GA if not recv new mof back")
+Transmit 'saves and closes
+PF3
+PF3
 
-'short cut for navigating to a blank casenote
-
+'THE CASE NOTE-------------------------------------------------------------------------------
 call start_a_blank_case_note
-
-'short cut code for hitting enter key
-
-Transmit
-
-
-
-'Short cut for clear blank screen
-
-PF9
-
 'enter case note that send mof and or IAA forms
-
-EMWriteScreen "Send new MOF and/or IAA forms as disa ending:", 04, 003
-EMWriteScreen "Set tickle for it to return in 10days:", 05, 003
-
-'worker signature in case note
-
+Call write_variable_in_CASE_NOTE("::Send new MOF and/or IAA forms as disa ending::")
+Call write_variable_in_CASE_NOTE("* Set TIKL for it to return in 10 days.")
+Call write_variable_in_CASE_NOTE("---")
 call write_variable_in_CASE_NOTE(worker_signature)
 
-'go back to SELF menu
-
-PF3
-PF3
-PF3
-
-'set your tickle for 10days from today
-
-EMWriteScreen "Dail", 16, 43
-
-EMWriteScreen "writ", 21, 70
-
-Transmit
-
-'at the tikle screen enter 10day from current date
-
-
-call create_MAXIS_friendly_date(date, 10, 5, 18)
-
-Transmit
-
-EMWriteScreen "Close GA if not recv new mof back", 09, 03
-
-Transmit
-
-PF3
-
+script_end_procedure("")
