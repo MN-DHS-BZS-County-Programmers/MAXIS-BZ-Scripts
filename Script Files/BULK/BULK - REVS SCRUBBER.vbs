@@ -165,11 +165,6 @@ EndDialog
 'Connects to BlueZone
 EMConnect ""
 
-'Stopping the script is the user is running it before the 16th of the month.
-day_of_month = DatePart("D", date)
-'IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.")
-'The line above is commented out for development. When the script is live, the line needs to be active to boot the user before the script tries to access a blank REPT/REVS.
-
 'Opening the Excel file
 Set objExcel = CreateObject("Excel.Application")
 objExcel.Visible = True
@@ -200,6 +195,13 @@ If contact_phone_number = "UUDDLRLRBA" then
 	developer_mode = true
 	MsgBox "You have enabled Developer Mode." & vbCr & vbCr & "The script will not enter information into MAXIS, but it will navigate, showing you where the script would otherwise have been."
 END IF
+
+'Stopping the script is the user is running it before the 16th of the month.
+day_of_month = DatePart("D", date)
+If developer_mode <> true then
+	IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.") 'to boot the user before the script tries to access a blank REPT/REVS.
+End IF
+
 
 'Formatting the dates
 calendar_month = DateAdd("M", 1, date)
@@ -471,9 +473,6 @@ FOR i = 1 to num_of_days
 	END IF
 NEXT
 
-'***** THIS stopscript IS IN PLACE FOR DEVELOPMENT. THE SCRIPT UP TO THIS POINT DOES NOT ADD ANYTHING TO MAXIS. THE SCRIPT AFTER THIS POINT ADDS INFORMATION TO MAXIS IN THE FORM OF A SPEC/MEMO, A CASE NOTE, AND A TIKL. *****
-'***** IF YOU ARE TESTING THIS SCRIPT, YOU NEED TO USE THIS stopscript. WHEN THIS SCRIPT GOES LIVE, COMMENT-OUT THE stopscript.
-'stopscript
 If developer_mode = true Then
 	excel_row = 2					'resetting excel row to start reading at the top 
 	DO 								'looping until it meets a blank excel cell without a case number
@@ -497,19 +496,21 @@ If developer_mode = true Then
 		EMwritescreen right(datepart("YYYY", date), 2), 20, 46		'writing current year
 		transmit
 		
-		'Grabbing the phone number from ADDR
-		CALL navigate_to_screen("STAT", "ADDR")
-		EMReadScreen area_code, 3, 17, 45
-		EMReadScreen remaining_digits, 9, 17, 50
-		IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
-			EMReadScreen area_code, 3, 18, 45
-			EMReadScreen remaining_digits, 9, 18, 50
-		END IF
-		IF area_code = "   " THEN 
-			EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
-			EMReadScreen remaining_digits, 9, 19, 50
-		END IF
-		phone_number = area_code & remaining_digits
+		If county_code <> "x127" then
+			'Grabbing the phone number from ADDR
+			CALL navigate_to_screen("STAT", "ADDR")
+			EMReadScreen area_code, 3, 17, 45
+			EMReadScreen remaining_digits, 9, 17, 50
+			IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
+				EMReadScreen area_code, 3, 18, 45
+				EMReadScreen remaining_digits, 9, 18, 50
+			END IF
+			IF area_code = "   " THEN 
+				EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
+				EMReadScreen remaining_digits, 9, 19, 50
+			END IF
+			phone_number = area_code & remaining_digits
+		End If
 		
 		back_to_self
 		CALL navigate_to_screen("SPEC", "MEMO")
@@ -543,25 +544,27 @@ If developer_mode = true Then
 		IF forms_to_swkr = "Y" THEN EMWriteScreen "x", swkr_row, 10
 		transmit
 		'Writing the appointment and letter into a memo
-		Memo_to_display = "MEMO to be written: " & "Your SNAP case is set to recertify on " & Left(cm_plus_2, 2) & "/" & Right(cm_plus_2, 2) & ". An interview is required to process your application." & vbNewLine &_
-			"Your phone interview is scheduled for " & interview_time & "." & vbNewLine
-		IF phone_number <> "            " THEN
-			Memo_to_display = Memo_to_display & "We will be calling you at this number " & phone_number & "." & vbNewLine &_ 
-				"If this date and/or time does not work, or if you would prefer an in-person interview, please call our office." & vbNewLine
-		else
-			Memo_to_display = Memo_to_display & "We currently do not have a phone number on file for you." & vbNewLine &_
-				"Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview." & vbNewLine
+		Memo_to_display = "The State DHS sent you a packet of paperwork. This is renewal paperwork for your SNAP case Your SNAP case is set to close on " &  last_day_of_recert & "Please sign, date and return your renewal paperwork by " & left(cm_plus_1, 2) & "/08/" & right(cm_plus_1, 2) & vbNewLine &_
+			"You must also do an interview for your SNAP case to continue. Your phone interview is scheduled for " & interview_time & "." & vbNewLine
+		IF county_code = "x127" then    'allows for county 27 to have clients call them.
+			Memo_to_display = Memo_to_display & "The phone number for you to call is " & contact_phone_number & "."
+		else	
+			IF phone_number <> "            " THEN
+				Memo_to_display = Memo_to_display & "The phone number we have for you is " & phone_number & ". This is the number we will call." & vbNewLine 
+			else
+				Memo_to_display = Memo_to_display & "We currently do not have a phone number on file for you." & vbNewLine &_
+					"Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview." & vbNewLine
+			end if
 		end if
 		
-		Memo_to_display = Memo_to_display & "If we do not hear from you by " & last_day_of_recert & " your case will auto-close." & vbNewline & vbNewLine &_
-							"A recertification packet has been sent to you, containing an application form. Please complete, sign, and date the form, and return it along with any required verifications by the date of your interview." & vbNewLine &_
-							"Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below." & vbNewline & vbNewLine &_
-							"Income examples: paystubs, pension, unemployment, sponsor income etc." & vbNewLine &_
-							"     Note: the agency will verify social security income." & vbNewLine &_ 
-							"* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc." & vbNewLine &_
-							"* Medical cost examples (if changed): prescription and medical bills, etc." & vbNewLine & vbNewLine &_
-							"Please contact the agency with any questions. Thank you."
-		
+		Memo_to_display = Memo_to_display & "We must have your renewal paperwork to do your interview. Please send proofs with your renewal paperwork." & vbNewline &_
+							" * Examples of income proofs: paystubs, income reports, business ledgers, income tax forms, etc." & vbNewLine &_
+							" * Examples of housing cost proofs(if changed): rent/house payment receipts, mortgage, lease, etc." & vbNewline & vbNewLine &_
+							" * Examples of medical cost proofs(if changed): prescriptions and medical bills, etc." & vbNewLine & vbNewLine &_
+							"Please call us at ###-###-#### if you need to:" & vbNewLine &_ 
+							" * Reschedule your appointment." & vbNewLine &_
+							" * Report a new phone number, or other changes" & vbNewLine & vbNewLine &_
+							" * Request an in-person interview."
 		msgbox Memo_to_display
 		
 		Case_note_to_display = "Case Note: " & "***SNAP Recertification Interview Scheduled***" & vbNewLine
@@ -616,19 +619,21 @@ Else    'if worker is actually running the script it will do this
 		EMwritescreen right(datepart("YYYY", date), 2), 20, 46		'writing current year
 		transmit
 		
-		'Grabbing the phone number from ADDR
-		CALL navigate_to_screen("STAT", "ADDR")
-		EMReadScreen area_code, 3, 17, 45
-		EMReadScreen remaining_digits, 9, 17, 50
-		IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
-			EMReadScreen area_code, 3, 18, 45
-			EMReadScreen remaining_digits, 9, 18, 50
-		END IF
-		IF area_code = "   " THEN 
-			EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
-			EMReadScreen remaining_digits, 9, 19, 50
-		END IF
-		phone_number = area_code & remaining_digits
+		If county_code <> "x127" then   'county 27 has clients call in so no need to navigate to stat to grab phone number
+			'Grabbing the phone number from ADDR
+			CALL navigate_to_screen("STAT", "ADDR")
+			EMReadScreen area_code, 3, 17, 45
+			EMReadScreen remaining_digits, 9, 17, 50
+			IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
+				EMReadScreen area_code, 3, 18, 45
+				EMReadScreen remaining_digits, 9, 18, 50
+			END IF
+			IF area_code = "   " THEN 
+				EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
+				EMReadScreen remaining_digits, 9, 19, 50
+			END IF
+			phone_number = area_code & remaining_digits
+		end If
 		
 		back_to_self
 		CALL navigate_to_screen("SPEC", "MEMO")
@@ -663,29 +668,34 @@ Else    'if worker is actually running the script it will do this
 		transmit
 		'Writing the appointment and letter into a memo
 		EMSendKey("************************************************************")
-		CALL write_new_line_in_SPEC_MEMO("Your SNAP case is set to recertify on " & Left(cm_plus_2, 2) & "/" & Right(cm_plus_2, 2) & ". An interview is required to process your application.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("Your phone interview is scheduled for " & interview_time & ".")
-		IF phone_number <> "            " THEN
-			CALL write_new_line_in_SPEC_MEMO("We will be calling you at this number " & phone_number & ".")
-			CALL write_new_line_in_SPEC_MEMO("If this date and/or time does not work, or if you would prefer an in-person interview, please call our office.")
-		else
-			CALL write_new_line_in_SPEC_MEMO("We currently do not have a phone number on file for you.")
-			CALL write_new_line_in_SPEC_MEMO("Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview.")
-		end if
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("If we do not hear from you by " & last_day_of_recert & " your case will auto-close.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("A recertification packet has been sent to you, containing an application form. Please complete, sign, and date the form, and return it along with any required verifications by the date of your interview.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("Common items to be verified include income, housing costs, and medical costs. Some ways to verify items area included below.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("Income examples: paystubs, pension, unemployment, sponsor income etc.")
-		CALL write_new_line_in_SPEC_MEMO("     Note: the agency will verify social security income.")
-		CALL write_new_line_in_SPEC_MEMO("* Housing cost examples (if changed): rent/house payment receipt, mortgage, lease, etc.")
-		CALL write_new_line_in_SPEC_MEMO("* Medical cost examples (if changed): prescription and medical bills, etc.")
-		CALL write_new_line_in_SPEC_MEMO("")
-		CALL write_new_line_in_SPEC_MEMO("Please contact the agency with any questions. Thank you.")
+		CALL write_variable_in_SPEC_MEMO("The State DHS sent you a packet of paperwork. This is renewal paperwork for your SNAP case Your SNAP case is set to close on " &  last_day_of_recert & "Please sign, date and return your renewal paperwork by " & left(cm_plus_1, 2) & "/08/" & right(cm_plus_1, 2) & ".")
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO("You must also do an interview for your SNAP case to continue.")
+		CALL write_variable_in_SPEC_MEMO("")
+		IF county_code = "x127" THEN    'allows for county 27 to have clients call them.
+			CALL write_variable_in_SPEC_MEMO("Your phone interview is scheduled for " & interview_time & ". The phone number for you to call is " & contact_phone_number & ".")
+			ELSE
+			IF phone_number <> "            " THEN
+				CALL write_variable_in_SPEC_MEMO("Your phone interview is scheduled for " & interview_time & ". The phone number we have for you is " & phone_number & ". This is the number we will call.")
+			else
+				CALL write_variable_in_SPEC_MEMO("Your phone interview is scheduled for " & interview_time & ". We currently do not have a phone number on file for you.")
+				CALL write_variable_in_SPEC_MEMO("Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview.")
+			end if
+		End If
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO("We must have your renewal paperwork to do your interview.")
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO("Please send proofs with your renewal paperwork.")
+		CALL write_variable_in_SPEC_MEMO(" * Examples of income proofs: paystubs, income reports, business ledgers, income tax forms, etc.")
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO(" * Examples of housing cost proofs(if changed): rent/house payment receipt, mortgage, lease, etc.")
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO(" * Examples of medical cost proofs(if changed): Prescription and medical bills, etc.")
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO("Please call us at " & contact_phone_number & " if you need to:")
+		CALL write_variable_in_SPEC_MEMO(" * Reschedule your appointment.")
+		CALL write_variable_in_SPEC_MEMO(" * Report a new phone number, or other changes.")
+		CALL write_variable_in_SPEC_MEMO(" * Request an in-person interview.")
 		PF4
 		back_to_self
 		
