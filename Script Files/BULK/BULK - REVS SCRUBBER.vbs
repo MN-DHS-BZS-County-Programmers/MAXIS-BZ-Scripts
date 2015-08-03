@@ -63,10 +63,11 @@ FUNCTION create_calendar(month_to_use, month_array)
 	ReDim month_array(num_of_days, 0)
 	
 	'=====Another dialog=====
-	BeginDialog calendar_dlg, 0, 0, 280, 160, month_to_use
-		Text 5, 10, 265, 10, "Please select days for the script to ignore."
-		Text 5, 25, 265, 10, ("Month: " & DatePart("M", month_to_use) & "/" & DatePart("YYYY", month_to_use))
-		y = 45
+	BeginDialog calendar_dlg, 0, 0, 280, 190, month_to_use
+		Text 5, 10, 270, 25, "Please check the days to schedule appointments. You cannot schedule appointments prior to the 8th."
+		Text 5, 35, 270, 25, "Please note that Auto-Close Notices are sent on the 16th. To reduce confusion, you may want to schedule before the 16th."
+		Text 5, 65, 265, 10, ("Check appointment dates in " & MonthName(DatePart("M", month_to_use)) & ", " & DatePart("YYYY", month_to_use) & ", for " & MonthName(DatePart("M", next_month)) & ", " & DatePart("YYYY", next_month) & ", recertifications.")
+		y = 85
 		FOR i = 1 TO num_of_days
 			use_date = (DatePart("M", month_to_use) & "/" & i & "/" & DatePart("YYYY", month_to_use))
 			x = 15 + (40 * (WeekDay(use_date) - 1))
@@ -76,11 +77,15 @@ FUNCTION create_calendar(month_to_use, month_array)
 			Else
 				month_array(i, 0) = 1
 			End If
-			CheckBox x, y, 30, 10, i, month_array(i, 0)
+			IF i < 8 THEN 
+				Text x, y, 30, 10, " x " & i
+			ELSE
+				CheckBox x, y, 35, 10, i, month_array(i, 0)
+			END IF
 		NEXT
 		ButtonGroup ButtonPressed
-		OkButton 175, 140, 50, 15
-		CancelButton 225, 140, 50, 15
+		OkButton 175, 170, 50, 15
+		CancelButton 225, 170, 50, 15
 	EndDialog
 	
 	Dialog calendar_dlg
@@ -162,7 +167,7 @@ EMConnect ""
 
 'Stopping the script is the user is running it before the 16th of the month.
 day_of_month = DatePart("D", date)
-IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.")
+'IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.")
 'The line above is commented out for development. When the script is live, the line needs to be active to boot the user before the script tries to access a blank REPT/REVS.
 
 'Opening the Excel file
@@ -270,7 +275,6 @@ DO
 				alt_first_appointment_listbox = DateAdd("H", 12, alt_first_appointment_listbox)
 				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
 			END IF
-			MsgBox DateDiff("N", alt_first_appointment_listbox, last_appointment_listbox) 
 			IF DateDiff("N", alt_appointment_length_listbox, last_appointment_listbox) <= 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block may not begin prior or equal to the first appointment block ending."
 			
 			'Converting the appointment times back from military time.
@@ -305,6 +309,7 @@ current_year = DatePart("YYYY", date)
 'Determining the month that the script will access REPT/REVS.
 
 revs_month = DateAdd("M", 2, date)
+IF developer_mode = True THEN revs_month = DateAdd("M", -1, revs_month)
 revs_year = DatePart("YYYY", revs_month)
 	revs_year = right(revs_year, 2)
 revs_month = DatePart("M", revs_month)
@@ -483,7 +488,6 @@ If developer_mode = true Then
 			am_pm = "AM"
 		END IF
 		appt_minute_place_holder_because_reasons = DatePart("N", interview_time)
-		msgbox len(appt_minute_place_holder_because_reasons)
 		IF appt_minute_place_holder_because_reasons = "0" THEN appt_minute_place_holder_because_reasons = "00"	'This is needed because DatePart("N", 10:00) = 0 and not 00. Times were being displayed 10:0
 		interview_time = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time) & " " & DatePart("H", interview_time) & ":" & appt_minute_place_holder_because_reasons & " " & am_pm
 		IF case_number = "" THEN EXIT DO      'exiting do if it finds a blank cell on the case number column
