@@ -1,15 +1,12 @@
-'Option Explicit
-name_of_script = "NOTES - CHANGE REPORT FORM RECEIVED.vbs"
-start_timer = timer
-
-'DIMMING VARIABLES
-'DIM url, req, fso, crf_received_dialog, case_number, date_received, address_notes, household_notes, savings_notes, property_notes, vehicles_notes, income_notes, shelter_notes, other, actions_taken, other_notes, verifs_requested, tikl_nav_check, changes_continue, worker_signature, ButtonPressed, beta_agency
+'STATS GATHERING----------------------------------------------------------------------------------------------------
+name_of_script = "NOTES - CHANGE REPORTED"
+start_time = timer 'manual time= ? 
 
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
 IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded once
 	IF run_locally = FALSE or run_locally = "" THEN		'If the scripts are set to run locally, it skips this and uses an FSO below.
-		IF default_directory = "C:\DHS-MAXIS-Scripts\Script Files\" OR default_directory = "" THEN			'If the default_directory is C:\DHS-MAXIS-Scripts\Script Files, you're probably a scriptwriter and should use the master branch.
+		IF default_directory = "C:\DHS-MAXIS-Scripts\Script Files\" THEN			'If the default_directory is C:\DHS-MAXIS-Scripts\Script Files, you're probably a scriptwriter and should use the master branch.
 			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/master/MASTER%20FUNCTIONS%20LIBRARY.vbs"
 		ELSEIF beta_agency = "" or beta_agency = True then							'If you're a beta agency, you should probably use the beta branch.
 			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/BETA/MASTER%20FUNCTIONS%20LIBRARY.vbs"
@@ -52,85 +49,161 @@ END IF
 
 'THE DIALOG--------------------------------------------------------------------------------------------------------------
 
-BeginDialog crf_received_dialog, 0, 0, 411, 320, "Change Report Form Received"
-  EditBox 55, 5, 55, 15, case_number
-  EditBox 270, 5, 60, 15, date_received
-  EditBox 50, 35, 340, 15, address_notes
-  EditBox 75, 55, 315, 15, household_notes
-  EditBox 50, 75, 340, 15, savings_notes
-  EditBox 50, 95, 340, 15, property_notes
-  EditBox 50, 115, 340, 15, vehicles_notes
-  EditBox 50, 135, 340, 15, income_notes
-  EditBox 45, 155, 345, 15, shelter_notes
-  EditBox 40, 175, 350, 15, other
-  EditBox 55, 205, 325, 15, actions_taken
-  EditBox 50, 225, 330, 15, other_notes
-  EditBox 70, 245, 310, 15, verifs_requested
-  CheckBox 10, 270, 140, 15, "Check here to navigate to DAIL/WRIT", tikl_nav_check
-  DropListBox 275, 270, 95, 20, "Select One..."+chr(9)+"will continue next month"+chr(9)+"will not continue next month", changes_continue
-  EditBox 80, 295, 85, 15, worker_signature
+BeginDialog change_reported_dialog, 0, 0, 411, 335, "Change Reported"
+  EditBox 60, 5, 55, 15, case_number
+  EditBox 270, 5, 60, 15, date_reported
+  ComboBox 70, 30, 260, 15, " "+chr(9)+"Change Report Form "+chr(9)+"Phone contact from client"+chr(9)+"Written Correspondence "+chr(9)+"Email Received", How_change_reported_combobox
+  EditBox 50, 55, 330, 15, address_notes
+  CheckBox 390, 55, 10, 10, "", address_verif_checkbox
+  EditBox 50, 75, 330, 15, household_notes
+  CheckBox 390, 75, 10, 10, "", household_verif_checkbox
+  EditBox 50, 95, 330, 15, savings_notes
+  CheckBox 390, 95, 10, 10, "", savings_verif_checkbox
+  EditBox 50, 115, 330, 15, property_notes
+  CheckBox 390, 115, 10, 10, "", property_verif_checkbox
+  EditBox 50, 135, 330, 15, vehicles_notes
+  CheckBox 390, 135, 10, 10, "", vehicle_verif_checkbox
+  EditBox 50, 155, 330, 15, income_notes
+  CheckBox 390, 155, 10, 10, "", Income_verif_checkbox
+  EditBox 50, 175, 330, 15, shelter_notes
+  CheckBox 390, 175, 10, 10, "", Shelter_verif_checkbox
+  EditBox 50, 195, 330, 15, other
+  CheckBox 390, 195, 10, 10, "", Other_verif_checkbox
+  EditBox 50, 225, 340, 15, actions_taken
+  EditBox 50, 245, 340, 15, other_notes
+  EditBox 65, 265, 325, 15, verifs_requested
+  CheckBox 10, 290, 140, 10, "Check here to navigate to DAIL/WRIT", tikl_nav_check
+  DropListBox 270, 290, 95, 15, "Select One..."+chr(9)+"will continue next month"+chr(9)+"will not continue next month", changes_continue
+  EditBox 80, 315, 85, 15, worker_signature
   ButtonGroup ButtonPressed
-    OkButton 290, 300, 50, 15
-    CancelButton 345, 300, 50, 15
-  Text 20, 180, 25, 10, "Other:"
-  Text 20, 40, 30, 15, "Address:"
-  Text 10, 210, 45, 10, "Action Taken:"
-  Text 20, 100, 35, 15, "Property:"
-  Text 10, 230, 40, 10, "Other notes:"
-  Text 160, 10, 110, 10, "Change Report Form Rec'd Date:"
-  Text 10, 250, 60, 10, "Verifs Requested:"
-  Text 20, 120, 35, 15, "Vehicles:"
-  Text 20, 60, 60, 15, "Household Mbrs:"
-  Text 185, 270, 90, 15, "The changes client reports:"
-  Text 20, 140, 30, 15, "Income:"
-  Text 10, 300, 70, 10, "Sign your case note:"
+    OkButton 290, 315, 50, 15
+    CancelButton 350, 315, 50, 15
   Text 5, 10, 50, 10, "Case Number:"
-  Text 20, 160, 30, 15, "Shelter:"
-  Text 20, 80, 30, 15, "Savings:"
-  GroupBox 5, 25, 395, 175, "Changes Reported:"
+  Text 165, 10, 90, 10, "Change Reported Date"
+  Text 5, 25, 60, 20, "How was this change reported?"
+  Text 385, 30, 25, 20, "Verif Recvd "
+  Text 5, 60, 30, 15, "Address:"
+  Text 5, 80, 45, 10, "HHLD Comp:"
+  Text 5, 100, 30, 15, "Savings:"
+  Text 5, 120, 35, 15, "Property:"
+  Text 5, 140, 35, 15, "Vehicles:"
+  Text 5, 160, 30, 10, "Income:"
+  Text 5, 180, 30, 10, "Shelter:"
+  Text 5, 200, 25, 10, "Other:"
+  Text 5, 230, 45, 15, "Action Taken:"
+  Text 5, 250, 40, 15, "Other notes:"
+  Text 5, 270, 60, 10, "Verifs Requested:"
+  Text 180, 290, 90, 10, "The changes client reports:"
+  Text 10, 315, 60, 15, "Worker Signature"
 EndDialog
 
 
-'THE SCRIPT--------------------------------------------------------------------------------------------------------------
-'Connect to Bluezone
-EMConnect ""
-'Grabs Maxis Case number
-CALL MAXIS_case_number_finder(case_number)
 
-'Shows dialog
+
+
+
+
+
+'THE SCRIPT--------------------------------------------------------------------------------------------------------------
+
+EMConnect "" 'Connect to Bluezone
+
+CALL MAXIS_case_number_finder(case_number) 'Grabs Maxis Case number
+Call Check_for_MAXIS(True)
+
 DO
-	DO
-		DO
-			Dialog crf_received_dialog
-			cancel_confirmation
-			IF worker_signature = "" THEN MsgBox "You must sign your case note!"
-		LOOP UNTIL worker_signature <> ""
-		IF IsNumeric(case_number) = FALSE THEN MsgBox "You must type a valid numeric case number."
-	LOOP UNTIL IsNumeric(case_number) = TRUE
-	IF changes_continue = "Select One..." THEN MsgBox "You Must Select 'The changes client reports field'"
-LOOP UNTIL changes_continue <> "Select One..."
+	err_msg = ""
+	Dialog change_reported_dialog
+	cancel_confirmation
+	IF case_number = "" OR (case_number <> "" AND IsNumeric(case_number) = False) THEN err_msg = err_msg & vbNewLine & "*Please enter a valid case number"
+	If date_reported = "" THEN err_msg = err_msg & vbNewLine & "*You must enter the date the change was reported"
+	IF How_change_reported_combobox = " " OR How_change_reported_combobox = "" THEN err_msg = err_msg & vbNewLine & "*You must enter how the change was reported"
+	IF actions_taken = "" THEN err_msg = err_msg & vbNewLine & "*You must enter an action taken"
+	IF worker_signature = "" THEN err_msg = err_msg & vbNewLine & "*You must sign your case note"
+	IF err_msg <> "" THEN Msgbox "*** NOTICE!!! ***" & vbNewLine & err_msg & vbNewLine & vbNewLine & "Please resolve for the script to continue"
+LOOP UNTIL err_msg = ""
+
+
+Dim Changes_reported
+If address_notes <> "" THEN Changes_reported = changes_reported & "Addr, "
+If household_notes <> "" Then changes_reported = changes_reported & "HHLD Comp, "
+If savings_notes <> "" OR property_notes <> "" OR vehicle_notes <> "" THEN changes_reported = changes_reported & "Assets, "
+If income_notes <> "" Then changes_reported = changes_reported & "Income, "
+If other <> "" Then changes_reported = changes_reported & "Other, "
+changes_reported = left(changes_reported, len(changes_reported) -2)
+
+
 
 'Checks Maxis for password prompt
 CALL check_for_MAXIS(FALSE)
 
-
 'THE CASE NOTE----------------------------------------------------------------------------------------------------
 'Navigates to case note
 Call start_a_blank_CASE_NOTE
-CALL write_variable_in_case_note ("***Change Report Form Received***")
-CALL write_bullet_and_variable_in_case_note("Date Form Received", date_received)
-CALL write_bullet_and_variable_in_case_note("Address", address_notes)
-CALL write_bullet_and_variable_in_case_note("Household Members", household_notes)
-CALL write_bullet_and_variable_in_case_note("Savings", savings_notes)
-CALL write_bullet_and_variable_in_case_note("Property", property_notes)
-CALL write_bullet_and_variable_in_case_note("Vehicles", vehicles_notes)
-CALL write_bullet_and_variable_in_case_note("Income", income_notes)
-CALL write_bullet_and_variable_in_case_note("Shelter", shelter_notes)
-CALL write_bullet_and_variable_in_case_note("Other", other)
+
+CALL write_variable_in_case_note("Changes Reported: " & changes_reported)   
+CALL write_bullet_and_variable_in_case_note("Date change reported",  date_reported)
+Call write_bullet_and_variable_in_case_note("Change was reported by",  how_change_reported_combobox)
+
+IF address_verif_checkbox = checked THEN 
+	CALL write_bullet_and_variable_in_case_note("Address", address_notes & "- Verified" )
+Else 
+	CALL write_bullet_and_variable_in_case_note("Address", address_notes)
+End If 
+
+
+If household_verif_checkbox = checked THEN 
+	CALL write_bullet_and_variable_in_case_note("HHLD Comp", household_notes & "- Verified")
+Else 
+	CALL write_bullet_and_variable_in_case_note("HHLD Comp", household_notes)
+End If
+
+
+If savings_verif_checkbox = checked THEN 
+	CALL write_bullet_and_variable_in_case_note("Savings", savings_notes & "- Verified")
+Else
+	CALL write_bullet_and_variable_in_case_note("Savings", savings_notes)
+End If
+
+
+If property_verif_checkbox = checked THEN 
+	CALL write_bullet_and_variable_in_case_note("Property", property_notes & "- Verified")
+Else 
+	CALL write_bullet_and_variable_in_case_note("Property", property_notes)
+End If
+
+
+If vehicle_verif_checkbox = checked THEN
+	CALL write_bullet_and_variable_in_case_note("Vehicles", vehicles_notes & "- Verified")
+Else 
+	CALL write_bullet_and_variable_in_case_note("Vehicles", vehicles_notes)
+End If
+
+
+If Income_verif_checkbox = checked THEN 
+	CALL write_bullet_and_variable_in_case_note("Income", income_notes & "- Verified")
+Else 
+	CALL write_bullet_and_variable_in_case_note("Income", income_notes)
+End If
+
+
+If Shelter_verif_checkbox = checked THEN 
+	CALL write_bullet_and_variable_in_case_note("Shelter", shelter_notes & "- Verified")
+Else 
+	CALL write_bullet_and_variable_in_case_note("Shelter", shelter_notes)
+End If
+
+If Other_verif_checkbox = checked THEN 
+	CALL write_bullet_and_variable_in_case_note("Other", other & "- Verified")
+Else
+	CALL write_bullet_and_variable_in_case_note("Other", other)
+End If
+
+
 CALL write_bullet_and_variable_in_case_note("Action Taken", actions_taken)
 CALL write_bullet_and_variable_in_case_note("Other Notes", other_notes)
 CALL write_bullet_and_variable_in_case_note("Verifs Requested", verifs_requested)
-IF changes_continue <> "select one..." THEN CALL write_bullet_and_variable_in_case_note("The changes client reports", changes_continue)
+IF changes_continue <> "Select One..." THEN CALL write_bullet_and_variable_in_case_note("The changes reported", changes_continue)
 CALL write_variable_in_case_note("---")
 CALL write_variable_in_case_note(worker_signature)
 
