@@ -504,15 +504,16 @@ If developer_mode = true Then
 			CALL navigate_to_screen("STAT", "ADDR")
 			EMReadScreen area_code, 3, 17, 45
 			EMReadScreen remaining_digits, 9, 17, 50
-			IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
+			IF area_code = "___" THEN 'Reading phone 2 in case it is the only entered number
 				EMReadScreen area_code, 3, 18, 45
 				EMReadScreen remaining_digits, 9, 18, 50
 			END IF
-			IF area_code = "   " THEN 
+			IF area_code = "___" THEN 
 				EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
 				EMReadScreen remaining_digits, 9, 19, 50
 			END IF
 			phone_number = area_code & remaining_digits
+			phone_number = replace(phone_number, "_", " ") 'replaces _ to blank space so it can work with if statements looking for no phone numbers which looks for 12 spaces
 		End If
 		
 		back_to_self
@@ -625,15 +626,16 @@ Else    'if worker is actually running the script it will do this
 			CALL navigate_to_screen("STAT", "ADDR")
 			EMReadScreen area_code, 3, 17, 45
 			EMReadScreen remaining_digits, 9, 17, 50
-			IF area_code = "   " THEN 'Reading phone 2 in case it is the only entered number
+			IF area_code = "___" THEN 'Reading phone 2 in case it is the only entered number
 				EMReadScreen area_code, 3, 18, 45
 				EMReadScreen remaining_digits, 9, 18, 50
 			END IF
-			IF area_code = "   " THEN 
+			IF area_code = "___" THEN 
 				EMReadScreen area_code, 3, 19, 45 ' reading phone 3 
 				EMReadScreen remaining_digits, 9, 19, 50
 			END IF
 			phone_number = area_code & remaining_digits
+			phone_number = replace(phone_number, "_", " ")  'replaces _ to blank space so it can work with if statements looking for no phone numbers
 		end If
 		
 		back_to_self
