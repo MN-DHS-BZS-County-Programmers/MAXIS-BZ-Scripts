@@ -79,6 +79,7 @@ FUNCTION create_calendar(month_to_use, month_array)
 			End If
 			IF i < 8 THEN 
 				Text x, y, 30, 10, " x " & i
+				month_array(i, 0) = o 'unchecking so selections cannot be made for DD 01-07
 			ELSE
 				CheckBox x, y, 35, 10, i, month_array(i, 0)
 			END IF
@@ -215,6 +216,7 @@ num_of_days = DatePart("D", (DateAdd("D", -1, next_month)))
 ReDim month_array(num_of_days, 0)
 CALL create_calendar(calendar_month, month_array)
 
+
 'Determining the appropriate times to set appointments.
 DO		
 	err_msg = ""
@@ -277,7 +279,7 @@ DO
 				alt_first_appointment_listbox = DateAdd("H", 12, alt_first_appointment_listbox)
 				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
 			END IF
-			IF DateDiff("N", alt_appointment_length_listbox, last_appointment_listbox) <= 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block may not begin prior or equal to the first appointment block ending."
+			'IF DateDiff("N", alt_appointment_length_listbox, last_appointment_listbox) <= 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block may not begin prior or equal to the first appointment block ending."
 			
 			'Converting the appointment times back from military time.
 			IF DatePart("H", last_appointment_listbox) > 12 THEN 
@@ -473,6 +475,7 @@ FOR i = 1 to num_of_days
 	END IF
 NEXT
 
+
 If developer_mode = true Then
 	excel_row = 2					'resetting excel row to start reading at the top 
 	DO 								'looping until it meets a blank excel cell without a case number
@@ -514,37 +517,35 @@ If developer_mode = true Then
 		
 		back_to_self
 		CALL navigate_to_screen("SPEC", "MEMO")
-		PF5
-		EMReadScreen memo_display_check, 12, 2, 33
-		If memo_display_check = "Memo Display" then script_end_procedure("You are not able to go into update mode. Did you enter in inquiry by mistake? Please try again in production.")
-		'Checking for AREP if found sending memo to them as well
-		row = 4
-		col = 1
-		EMSearch "ALTREP", row, col
-		IF row > 4 THEN
-			arep_row = row
-			CALL navigate_to_screen("STAT", "AREP")
-			EMReadscreen forms_to_arep, 1, 10, 45
-			call navigate_to_screen("SPEC", "MEMO")
-			PF5
-		END IF
-		'Checking for SWKR if found sending MEMO to them as well
-		row = 4
-		col = 1
-		EMSearch "SOCWKR", row, col
-		IF row > 4 THEN
-			swkr_row = row
-			call navigate_to_screen("STAT", "SWKR")
-			EMReadscreen forms_to_swkr, 1, 15, 63
-			call navigate_to_screen("SPEC", "MEMO")
-			PF5
-		END IF
-		EMWriteScreen "x", 5, 10
-		IF forms_to_arep = "Y" THEN EMWriteScreen "x", arep_row, 10
-		IF forms_to_swkr = "Y" THEN EMWriteScreen "x", swkr_row, 10
-		transmit
+		'Checking for AREP if found sending memo to them as well 
+		'NOT CURRENTLY WORKING IN DEV MODE
+		'row = 4
+		'col = 1
+		'EMSearch "ALTREP", row, col
+		'IF row > 4 THEN
+		'	arep_row = row
+		'	CALL navigate_to_screen("STAT", "AREP")
+		'	EMReadscreen forms_to_arep, 1, 10, 45
+		'	call navigate_to_screen("SPEC", "MEMO")
+		'	PF5
+		'END IF
+		''Checking for SWKR if found sending MEMO to them as well
+		'row = 4
+		'col = 1
+		'EMSearch "SOCWKR", row, col
+		'IF row > 4 THEN
+		'	swkr_row = row
+		'	call navigate_to_screen("STAT", "SWKR")
+		'	EMReadscreen forms_to_swkr, 1, 15, 63
+		'	call navigate_to_screen("SPEC", "MEMO")
+		'	PF5
+		'END IF
+		'EMWriteScreen "x", 5, 10
+		'IF forms_to_arep = "Y" THEN EMWriteScreen "x", arep_row, 10
+		'IF forms_to_swkr = "Y" THEN EMWriteScreen "x", swkr_row, 10
+		'transmit
 		'Writing the appointment and letter into a memo
-		Memo_to_display = "The State DHS sent you a packet of paperwork. This is renewal paperwork for your SNAP case Your SNAP case is set to close on " &  last_day_of_recert & "Please sign, date and return your renewal paperwork by " & left(cm_plus_1, 2) & "/08/" & right(cm_plus_1, 2) & vbNewLine &_
+		Memo_to_display = "The State DHS sent you a packet of paperwork. This is renewal paperwork for your SNAP case Your SNAP case is set to close on " &  last_day_of_recert & ". Please sign, date and return your renewal paperwork by " & left(cm_plus_1, 2) & "/08/" & right(cm_plus_1, 2) & vbNewLine &_
 			"You must also do an interview for your SNAP case to continue. Your phone interview is scheduled for " & interview_time & "." & vbNewLine
 		IF county_code = "x127" then    'allows for county 27 to have clients call them.
 			Memo_to_display = Memo_to_display & "The phone number for you to call is " & contact_phone_number & "."
@@ -582,7 +583,7 @@ If developer_mode = true Then
 		
 		tikl_date = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
 		
-		MsgBox "Dail: ~*~*~CLIENT HAD RECERT INTERVIEW APPOINTMENT. IF MISSED SEND NOMI." & vbNewLine &_
+		MsgBox "Dail: ~*~*~CLIENT HAD RECERT INTERVIEW APPT AT " & interview_time & ". IF MISSED SEND NOMI." & vbNewLine &_
 				"tikl date: " & tikl_date
 		
 		excel_row = excel_row + 1
@@ -668,7 +669,7 @@ Else    'if worker is actually running the script it will do this
 		transmit
 		'Writing the appointment and letter into a memo
 		EMSendKey("************************************************************")
-		CALL write_variable_in_SPEC_MEMO("The State DHS sent you a packet of paperwork. This is renewal paperwork for your SNAP case Your SNAP case is set to close on " &  last_day_of_recert & "Please sign, date and return your renewal paperwork by " & left(cm_plus_1, 2) & "/08/" & right(cm_plus_1, 2) & ".")
+		CALL write_variable_in_SPEC_MEMO("The State DHS sent you a packet of paperwork. This is renewal paperwork for your SNAP case Your SNAP case is set to close on " &  last_day_of_recert & ". Please sign, date and return your renewal paperwork by " & left(cm_plus_1, 2) & "/08/" & right(cm_plus_1, 2) & ".")
 		CALL write_variable_in_SPEC_MEMO("")
 		CALL write_variable_in_SPEC_MEMO("You must also do an interview for your SNAP case to continue.")
 		CALL write_variable_in_SPEC_MEMO("")
@@ -740,7 +741,8 @@ Else    'if worker is actually running the script it will do this
 		CALL navigate_to_MAXIS_screen("DAIL", "WRIT")
 		tikl_date = DatePart("M", interview_time) & "/" & DatePart("D", interview_time) & "/" & DatePart("YYYY", interview_time)
 		CALL create_MAXIS_friendly_date(tikl_date, 0, 5, 18)
-		EMWriteScreen "~*~*~CLIENT HAD RECERT INTERVIEW APPOINTMENT. IF MISSED SEND NOMI.", 9, 3
+		EMWriteScreen "~*~*~CLIENT HAD RECERT INTERVIEW APPT AT " & interview_time, 9, 3
+		EMWriteScreen "IF MISSED SEND NOMI", 10, 3
 		transmit
 		PF3
 		'END IF
