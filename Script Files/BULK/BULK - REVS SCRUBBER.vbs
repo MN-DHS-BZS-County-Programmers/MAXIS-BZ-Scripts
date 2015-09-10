@@ -172,7 +172,7 @@ objExcel.Visible = True
 Set objWorkbook = objExcel.Workbooks.Add() 
 objExcel.DisplayAlerts = True
 
-'formatting excel file
+'formatting excel file with columns for case number and interview date/time
 objExcel.cells(1, 1).Value = "CASE NUMBER"
 objExcel.Cells(1, 1).Font.Bold = TRUE
 objExcel.Cells(1, 2).Value = "Interview Date & Time"
@@ -188,6 +188,7 @@ last_day_of_recert = dateadd("D", -1, last_day_of_recert)
 'Grabbing the worker's X number.
 CALL find_variable("User: ", worker_number, 7)
 
+'Display REVS scrubber initial dialog
 DIALOG REVS_scrubber_initial_dialog
 IF ButtonPressed = 0 THEN stopscript
 
@@ -203,7 +204,6 @@ If developer_mode <> true then
 	IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.") 'to boot the user before the script tries to access a blank REPT/REVS.
 End IF
 
-
 'Formatting the dates
 calendar_month = DateAdd("M", 1, date)
 appt_month = DatePart("M", calendar_month)
@@ -216,87 +216,86 @@ num_of_days = DatePart("D", (DateAdd("D", -1, next_month)))
 ReDim month_array(num_of_days, 0)
 CALL create_calendar(calendar_month, month_array)
 
-
 'Determining the appropriate times to set appointments.
 DO		
 	err_msg = ""
 	DIALOG REVS_scrubber_time_dialog
-		IF ButtonPressed = 0 THEN stopscript
-		IF first_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must choose an initial appointment time."				
-		IF first_appointment_listbox <> "Select one..." AND last_appointment_listbox <> "Select one..." THEN 
-			'Converting the appointment times for comparison. VBS runs in military time.
-			IF DatePart("H", last_appointment_listbox) < 7 THEN 
-				last_appointment_listbox = DateAdd("H", 12, last_appointment_listbox)
-				first_appointment_listbox = DateAdd("H", 0, first_appointment_listbox)
-			END IF
-			IF DatePart("H", first_appointment_listbox) < 7 THEN 
-				first_appointment_listbox = DateAdd("H", 12, first_appointment_listbox)
-				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
-			END IF
-			
-			IF DateDiff("N", first_appointment_listbox, last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & "* The last appointment may not be earlier than the first appointment."
-			
-			'Converting the appointment times back from military time.
-			IF DatePart("H", last_appointment_listbox) > 12 THEN 
-				last_appointment_listbox = DateAdd("H", -12, last_appointment_listbox)
-				first_appointment_listbox = DateAdd("H", 0, first_appointment_listbox)
-			END IF
-			IF DatePart("H", first_appointment_listbox) > 12 THEN 
-				first_appointment_listbox = DateAdd("H", -12, first_appointment_listbox)
-				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
-			END IF
+	IF ButtonPressed = 0 THEN stopscript
+	IF first_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must choose an initial appointment time."				
+	IF first_appointment_listbox <> "Select one..." AND last_appointment_listbox <> "Select one..." THEN 
+		'Converting the appointment times for comparison. VBS runs in military time.
+		IF DatePart("H", last_appointment_listbox) < 7 THEN 
+			last_appointment_listbox = DateAdd("H", 12, last_appointment_listbox)
+			first_appointment_listbox = DateAdd("H", 0, first_appointment_listbox)
 		END IF
-		IF alt_first_appointment_listbox <> "Select one..." AND alt_last_appointment_listbox <> "Select one..." THEN
-			'Converting the appointment times for comparison. VBS runs in military time.
-			IF DatePart("H", alt_last_appointment_listbox) < 7 THEN 
-				alt_last_appointment_listbox = DateAdd("H", 12, alt_last_appointment_listbox)
-				alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
-			END IF
-			IF DatePart("H", alt_first_appointment_listbox) < 7 THEN 
-				alt_first_appointment_listbox = DateAdd("H", 12, alt_first_appointment_listbox)
-				alt_last_appointment_listbox = DateAdd("H", 0, alt_last_appointment_listbox)
-			END IF
-			
-			IF DateDiff("N", alt_first_appointment_listbox, alt_last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block has an ending earlier than it begins."
-			
-			'Converting the appointment times back from military time.
-			IF DatePart("H", alt_last_appointment_listbox) > 12 THEN 
-				alt_last_appointment_listbox = DateAdd("H", -12, alt_last_appointment_listbox)
-				alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
-			END IF
-			IF DatePart("H", alt_first_appointment_listbox) > 12 THEN 
-				alt_first_appointment_listbox = DateAdd("H", -12, alt_first_appointment_listbox)
-				alt_last_appointment_listbox = DateAdd("H", 0, alt_last_appointment_listbox)
-			END IF
+		IF DatePart("H", first_appointment_listbox) < 7 THEN 
+			first_appointment_listbox = DateAdd("H", 12, first_appointment_listbox)
+			last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
 		END IF
-		IF last_appointment_listbox <> "Select one..." AND alt_first_appointment_listbox <> "Select one..." THEN
-			'Converting the appointment times for comparison. VBS runs in military time.
-			IF DatePart("H", last_appointment_listbox) < 7 THEN 
-				last_appointment_listbox = DateAdd("H", 12, last_appointment_listbox)
-				alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
-			END IF
-			IF DatePart("H", alt_first_appointment_listbox) < 7 THEN 
-				alt_first_appointment_listbox = DateAdd("H", 12, alt_first_appointment_listbox)
-				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
-			END IF
-			'IF DateDiff("N", alt_appointment_length_listbox, last_appointment_listbox) <= 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block may not begin prior or equal to the first appointment block ending."
-			
-			'Converting the appointment times back from military time.
-			IF DatePart("H", last_appointment_listbox) > 12 THEN 
-				last_appointment_listbox = DateAdd("H", -12, last_appointment_listbox)
-				alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
-			END IF
-			IF DatePart("H", alt_first_appointment_listbox) > 12 THEN 
-				alt_first_appointment_listbox = DateAdd("H", -12, alt_first_appointment_listbox)
-				last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
-			END IF
+		
+		IF DateDiff("N", first_appointment_listbox, last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & "* The last appointment may not be earlier than the first appointment."
+		
+		'Converting the appointment times back from military time.
+		IF DatePart("H", last_appointment_listbox) > 12 THEN 
+			last_appointment_listbox = DateAdd("H", -12, last_appointment_listbox)
+			first_appointment_listbox = DateAdd("H", 0, first_appointment_listbox)
 		END IF
-		IF last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must choose a final appointment time."
-		IF alt_first_appointment_listbox <> "Select one..." and alt_last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You have selected an initial appointment time for the additional appointment block, you must select a final appointment time."
-		IF alt_last_appointment_listbox <> "Select one..." and alt_first_appointment_listbox = "Select one.." THEN err_msg = err_msg & VbCr & "* You have selected a final appointment time for the additional appointment block, you must select an initial appointment time."
-		IF appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must select an appointment length."
-		IF alt_first_appointment_listbox <> "Select one..." and alt_appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* Please choose an appointment length for the additional appointment block."
-		IF err_msg <> "" THEN msgbox "*** NOTICE!!! ***" & vbCr & err_msg & vbCr & vbCr & "Please resolve for the script to continue."
+		IF DatePart("H", first_appointment_listbox) > 12 THEN 
+			first_appointment_listbox = DateAdd("H", -12, first_appointment_listbox)
+			last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
+		END IF
+	END IF
+	IF alt_first_appointment_listbox <> "Select one..." AND alt_last_appointment_listbox <> "Select one..." THEN
+		'Converting the appointment times for comparison. VBS runs in military time.
+		IF DatePart("H", alt_last_appointment_listbox) < 7 THEN 
+			alt_last_appointment_listbox = DateAdd("H", 12, alt_last_appointment_listbox)
+			alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
+		END IF
+		IF DatePart("H", alt_first_appointment_listbox) < 7 THEN 
+			alt_first_appointment_listbox = DateAdd("H", 12, alt_first_appointment_listbox)
+			alt_last_appointment_listbox = DateAdd("H", 0, alt_last_appointment_listbox)
+		END IF
+		
+		IF DateDiff("N", alt_first_appointment_listbox, alt_last_appointment_listbox) < 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block has an ending earlier than it begins."
+		
+		'Converting the appointment times back from military time.
+		IF DatePart("H", alt_last_appointment_listbox) > 12 THEN 
+			alt_last_appointment_listbox = DateAdd("H", -12, alt_last_appointment_listbox)
+			alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
+		END IF
+		IF DatePart("H", alt_first_appointment_listbox) > 12 THEN 
+			alt_first_appointment_listbox = DateAdd("H", -12, alt_first_appointment_listbox)
+			alt_last_appointment_listbox = DateAdd("H", 0, alt_last_appointment_listbox)
+		END IF
+	END IF
+	IF last_appointment_listbox <> "Select one..." AND alt_first_appointment_listbox <> "Select one..." THEN
+		'Converting the appointment times for comparison. VBS runs in military time.
+		IF DatePart("H", last_appointment_listbox) < 7 THEN 
+			last_appointment_listbox = DateAdd("H", 12, last_appointment_listbox)
+			alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
+		END IF
+		IF DatePart("H", alt_first_appointment_listbox) < 7 THEN 
+			alt_first_appointment_listbox = DateAdd("H", 12, alt_first_appointment_listbox)
+			last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
+		END IF
+		'IF DateDiff("N", alt_appointment_length_listbox, last_appointment_listbox) <= 0 THEN err_msg = err_msg & VbCr & "* The additional appointment block may not begin prior or equal to the first appointment block ending."
+		
+		'Converting the appointment times back from military time.
+		IF DatePart("H", last_appointment_listbox) > 12 THEN 
+			last_appointment_listbox = DateAdd("H", -12, last_appointment_listbox)
+			alt_first_appointment_listbox = DateAdd("H", 0, alt_first_appointment_listbox)
+		END IF
+		IF DatePart("H", alt_first_appointment_listbox) > 12 THEN 
+			alt_first_appointment_listbox = DateAdd("H", -12, alt_first_appointment_listbox)
+			last_appointment_listbox = DateAdd("H", 0, last_appointment_listbox)
+		END IF
+	END IF
+	IF last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must choose a final appointment time."
+	IF alt_first_appointment_listbox <> "Select one..." and alt_last_appointment_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You have selected an initial appointment time for the additional appointment block, you must select a final appointment time."
+	IF alt_last_appointment_listbox <> "Select one..." and alt_first_appointment_listbox = "Select one.." THEN err_msg = err_msg & VbCr & "* You have selected a final appointment time for the additional appointment block, you must select an initial appointment time."
+	IF appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* You must select an appointment length."
+	IF alt_first_appointment_listbox <> "Select one..." and alt_appointment_length_listbox = "Select one..." THEN err_msg = err_msg & VbCr & "* Please choose an appointment length for the additional appointment block."
+	IF err_msg <> "" THEN msgbox "*** NOTICE!!! ***" & vbCr & err_msg & vbCr & vbCr & "Please resolve for the script to continue."
 LOOP UNTIL err_msg = ""
 
 IF appointments_per_time_slot = "" THEN appointments_per_time_slot = 1
@@ -306,18 +305,17 @@ IF alt_appointments_per_time_slot = "" THEN alt_appointments_per_time_slot = 1
 CALL check_for_MAXIS(false)
 back_to_SELF
 current_month = DatePart("M", date)
-	IF len(current_month) = 1 THEN current_month = "0" & current_month
+IF len(current_month) = 1 THEN current_month = "0" & current_month
 current_year = DatePart("YYYY", date)
-	current_year = right(current_year, 2)
+current_year = right(current_year, 2)
 
 'Determining the month that the script will access REPT/REVS.
-
 revs_month = DateAdd("M", 2, date)
 IF developer_mode = True THEN revs_month = DateAdd("M", -1, revs_month)
 revs_year = DatePart("YYYY", revs_month)
-	revs_year = right(revs_year, 2)
+revs_year = right(revs_year, 2)
 revs_month = DatePart("M", revs_month)
-	IF len(revs_month) = 1 THEN revs_month = "0" & revs_month
+IF len(revs_month) = 1 THEN revs_month = "0" & revs_month
 
 'writing current month
 EMWriteScreen current_month, 20, 43
@@ -352,7 +350,7 @@ DO
 		If SNAP_status = "-" then SNAP_status = ""
 		If HC_status = "-" then HC_status = ""
 		
-				'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
+		'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
 		If trim(SNAP_status) = "N" or trim(SNAP_status) = "I" or trim(SNAP_status) = "U" then add_case_info_to_Excel = True
 		'Adding the case to Excel
 		If add_case_info_to_Excel = True then 
@@ -366,7 +364,6 @@ DO
 	PF8
 	EMReadScreen last_page_check, 21, 24, 2	'checking to see if we're at the end
 Loop until last_page_check = "THIS IS THE LAST PAGE"
-
 
 'Now the script will go through STAT/REVW for each case and check that the case is at CSR or ER and remove the cases that are at CSR from the list.
 excel_row = 2
@@ -386,17 +383,19 @@ DO
 	EMReadScreen recert_mo, 2, 9, 64
 	EMReadScreen recert_yr, 2, 9, 70
 	
-	'It then compares what it read to the previously established current month plus 2 and determine if it is a recert or not. If it is a recert we need an interview
+	'It then compares what it read to the previously established current month plus 2 and determines if it is a recert or not. If it is a recert we need an interview
 	IF CSR_mo = left(cm_plus_2, 2) and CSR_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "NO"
 	IF recert_mo = left(cm_plus_2, 2) and recert_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "YES"
 
+	'If it's not a recert, delete it from the excel list and move on with our lives
 	IF RECERT_STATUS = "NO" THEN
 		SET objRange = objExcel.Cells(excel_row, 1).EntireRow
 		objRange.Delete
 		excel_row = excel_row - 1
 	END If
-	excel_row = excel_row + 1
-LOOP UNTIL objExcel.Cells(excel_row, 1).Value = ""
+	
+	excel_row = excel_row + 1	'Increases Excel row by one
+LOOP UNTIL objExcel.Cells(excel_row, 1).Value = ""	'Loops until there's no excel rows left
 
 'Now the script needs to go back to the start of the Excel file and start assigning appointments.
 'FOR EACH day that is not checked, start assigning appointments according to DatePart("N", appointment) because DatePart"N" is minutes. Once datepart("N") = last_appointment_time THEN the script needs to jump to the next day.
@@ -404,7 +403,8 @@ LOOP UNTIL objExcel.Cells(excel_row, 1).Value = ""
 'Going back to the top of the Excel to insert the appointment date and time in the list, yo
 appointment_length_listbox = left(appointment_length_listbox, 2)	'Hacking the "mins" off the end of the appointment_length_listbox variable
 alt_appointment_length_listbox = left(alt_appointment_length_listbox, 2)
-excel_row = 2
+excel_row = 2	'Declaring variable prior to the next for...next loop
+
 FOR i = 1 to num_of_days
 	IF month_array(i, 0) = 1 THEN		'These are the dates that the user has determined the agency/unit/worker
 		appointment_time = appt_month & "/" & i & "/" & appt_year & " " & first_appointment_listbox		'putting together the date and time values.
@@ -431,15 +431,17 @@ FOR i = 1 to num_of_days
 			ELSE
 				last_appointment_listbox_for_comparison = last_appointment_listbox
 			END IF
+			
 			IF DatePart("H", appointment_time) < 7 THEN 
 				appointment_time_for_comparison = DateAdd("H", 12, appointment_time)
 			ELSE
 				appointment_time_for_comparison = appointment_time
 			END IF
 		LOOP UNTIL (DatePart("H", appointment_time_for_comparison) > DatePart("H", last_appointment_listbox_for_comparison)) OR ((DatePart("H", appointment_time_for_comparison) >= DatePart("H", last_appointment_listbox_for_comparison)) AND DatePart("N", appointment_time_for_comparison) > DatePart("N", last_appointment_listbox_for_comparison))
-		IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT FOR
+
+		IF objExcel.Cells(excel_row, 1).Value = "" THEN EXIT FOR	'If there's nothing in the row, it means it's over.
 		
-		IF alt_first_appointment_listbox <> "Select one..." THEN 	
+		IF alt_first_appointment_listbox <> "Select one..." THEN 	'Same as above but for the second block 'o time
 			appointment_time = appt_month & "/" & i & "/" & appt_year & " " & alt_first_appointment_listbox
 			DO
 				appointment_time = DateAdd("N", 0, appointment_time)	'Putting the date in a MM/DD/YYYY HH:MM format. It just looks nicer.
@@ -464,14 +466,16 @@ FOR i = 1 to num_of_days
 				ELSE
 					last_appointment_listbox_for_comparison = alt_last_appointment_listbox
 				END IF
+				
 				IF DatePart("H", appointment_time) < 7 THEN 
 					appointment_time_for_comparison = DateAdd("H", 12, appointment_time)
 				ELSE
 					appointment_time_for_comparison = appointment_time
 				END IF
 			LOOP UNTIL (DatePart("H", appointment_time_for_comparison) > DatePart("H", last_appointment_listbox_for_comparison)) OR ((DatePart("H", appointment_time_for_comparison) >= DatePart("H", last_appointment_listbox_for_comparison)) AND DatePart("N", appointment_time_for_comparison) > DatePart("N", last_appointment_listbox_for_comparison))		
+		
 		END IF	
-		IF objExcel.Cells(excel_row, 1) = "" THEN EXIT FOR
+		IF objExcel.Cells(excel_row, 1) = "" THEN EXIT FOR		'Because we're all out of cases at this point
 	END IF
 NEXT
 
@@ -519,45 +523,20 @@ If developer_mode = true Then
 		back_to_self
 		CALL navigate_to_screen("SPEC", "MEMO")
 		'Checking for AREP if found sending memo to them as well 
-		'NOT CURRENTLY WORKING IN DEV MODE
-		'row = 4
-		'col = 1
-		'EMSearch "ALTREP", row, col
-		'IF row > 4 THEN
-		'	arep_row = row
-		'	CALL navigate_to_screen("STAT", "AREP")
-		'	EMReadscreen forms_to_arep, 1, 10, 45
-		'	call navigate_to_screen("SPEC", "MEMO")
-		'	PF5
-		'END IF
-		''Checking for SWKR if found sending MEMO to them as well
-		'row = 4
-		'col = 1
-		'EMSearch "SOCWKR", row, col
-		'IF row > 4 THEN
-		'	swkr_row = row
-		'	call navigate_to_screen("STAT", "SWKR")
-		'	EMReadscreen forms_to_swkr, 1, 15, 63
-		'	call navigate_to_screen("SPEC", "MEMO")
-		'	PF5
-		'END IF
-		'EMWriteScreen "x", 5, 10
-		'IF forms_to_arep = "Y" THEN EMWriteScreen "x", arep_row, 10
-		'IF forms_to_swkr = "Y" THEN EMWriteScreen "x", swkr_row, 10
-		'transmit
-		'Writing the appointment and letter into a memo
+		'AREP/ALTP DISPLAY NOT CURRENTLY WORKING IN DEV MODE, THIS IS SOMETHING THAT SHOULD BE ADDED
+
 		Memo_to_display = "The State DHS sent you a packet of paperwork. This is renewal paperwork for your SNAP case Your SNAP case is set to close on " &  last_day_of_recert & ". Please sign, date and return your renewal paperwork by " & left(cm_plus_1, 2) & "/08/" & right(cm_plus_1, 2) & vbNewLine &_
 			"You must also do an interview for your SNAP case to continue. Your phone interview is scheduled for " & interview_time & "." & vbNewLine
 		IF county_code = "x127" then    'allows for county 27 to have clients call them.
 			Memo_to_display = Memo_to_display & "The phone number for you to call is " & contact_phone_number & "."
-		else	
+		ELSE	
 			IF phone_number <> "            " THEN
 				Memo_to_display = Memo_to_display & "The phone number we have for you is " & phone_number & ". This is the number we will call." & vbNewLine 
-			else
+			ELSE
 				Memo_to_display = Memo_to_display & "We currently do not have a phone number on file for you." & vbNewLine &_
 					"Please call us at " & contact_phone_number & " to update your phone number, or if you would prefer an in-person interview." & vbNewLine
-			end if
-		end if
+			END IF
+		END IF
 		
 		Memo_to_display = Memo_to_display & "We must have your renewal paperwork to do your interview. Please send proofs with your renewal paperwork." & vbNewline &_
 							" * Examples of income proofs: paystubs, income reports, business ledgers, income tax forms, etc." & vbNewLine &_
@@ -567,7 +546,7 @@ If developer_mode = true Then
 							" * Reschedule your appointment." & vbNewLine &_
 							" * Report a new phone number, or other changes" & vbNewLine & vbNewLine &_
 							" * Request an in-person interview."
-		msgbox Memo_to_display
+		MsgBox Memo_to_display
 		
 		Case_note_to_display = "Case Note: " & "***SNAP Recertification Interview Scheduled***" & vbNewLine
 		Case_note_to_display = Case_note_to_display & "* A phone interview has been scheduled for " & interview_time & "." & vbNewLine
