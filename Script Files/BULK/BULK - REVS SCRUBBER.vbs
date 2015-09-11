@@ -222,20 +222,17 @@ if worker_county_code = "x127" Then contact_phone_number = "612-596-1300"
 DIALOG REVS_scrubber_initial_dialog
 IF ButtonPressed = 0 THEN stopscript
 
-
 'Entering developer mode
 If contact_phone_number = "UUDDLRLRBA" then 
 	developer_mode = true
 	MsgBox "You have enabled Developer Mode." & vbCr & vbCr & "The script will not enter information into MAXIS, but it will navigate, showing you where the script would otherwise have been."
 END IF
 
-
 'Stopping the script is the user is running it before the 16th of the month.
 day_of_month = DatePart("D", date)
 If developer_mode <> true then
 	IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.") 'to boot the user before the script tries to access a blank REPT/REVS.
 End IF
-
 
 'Formatting the dates
 calendar_month = DateAdd("M", 1, date)
@@ -375,6 +372,8 @@ DO
 	DO
 		EMReadScreen case_number, 8, MAXIS_row, 6
 		EMReadScreen SNAP_status, 1, MAXIS_row, 45
+		EMReadScreen cash_status, 1, MAXIS_row, 34
+		
 		
 		IF case_number = "        " then exit do     'navigates though until it runs out of case numbers to read
 		
@@ -383,8 +382,9 @@ DO
 		If SNAP_status = "-" then SNAP_status = ""
 		If HC_status = "-" then HC_status = ""
 		
-		'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
+				'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
 		If trim(SNAP_status) = "N" or trim(SNAP_status) = "I" or trim(SNAP_status) = "U" then add_case_info_to_Excel = True
+		If trim(cash_status) = "N" or trim(cash_status) = "I" or trim(cash_status) = "U" then add_case_info_to_Excel = True 
 		'Adding the case to Excel
 		If add_case_info_to_Excel = True then 
 			ObjExcel.Cells(excel_row, 1).Value = case_number
