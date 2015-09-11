@@ -1,3 +1,5 @@
+'OPTION EXPLICIT
+
 'STATS GATHERING----------------------------------------------------------------------------------------------------
 name_of_script = "BULK - REVS SCRUBBER.vbs"
 start_time = timer
@@ -5,7 +7,7 @@ start_time = timer
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
 IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded once
 	IF run_locally = FALSE or run_locally = "" THEN		'If the scripts are set to run locally, it skips this and uses an FSO below.
-		IF default_directory = "C:\DHS-MAXIS-Scripts\Script Files\" THEN			'If the default_directory is C:\DHS-MAXIS-Scripts\Script Files, you're probably a scriptwriter and should use the master branch.
+		IF default_directory = "C:\DHS-MAXIS-Scripts\Script Files\" OR default_directory = "" THEN			'If the default_directory is C:\DHS-MAXIS-Scripts\Script Files, you're probably a scriptwriter and should use the master branch.
 			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/master/MASTER%20FUNCTIONS%20LIBRARY.vbs"
 		ELSEIF beta_agency = "" or beta_agency = True then							'If you're a beta agency, you should probably use the beta branch.
 			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/BETA/MASTER%20FUNCTIONS%20LIBRARY.vbs"
@@ -45,6 +47,31 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 	END IF
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
+
+'Declaring variables
+'DIM month, use_date, num_of_days, next_month, month_array, month_to_use
+'DIM first_appointment_listbox, olAppointmentItem, olRecursDaily
+'DIM appointment_length_listbox, last_appointment_listbox, time_array_30_min
+'DIM alt_appointment_length_listbox, alt_first_appointment_listbox
+'DIM last_day_of_recert, cm_plus_1, cm_plus_2, alt_duplicate_appt_times
+'DIM worker_numberm, calendar_dlgm, ButtonPressed, duplicate_appt_times 
+'DIM alt_appointments_per_time_slot, contact_phone_number, worker_signature
+'DIM err_msg, day_of_month, time_array, outlook_calendar_check, worker_number
+'DIM REVS_scrubber_time_dialog, REVS_scrubber_initial_dialog
+'DIM objWorkbook, objOutlook, objRange, appointments_per_time_slot
+'DIM calendar_month, worker_county_code, objAppointment, objExcel
+'DIM appt_date, appt_category, appt_body, appt_month, developer_mode
+'DIM appt_minute_place_holder_because_reasons, appt_location, appt_end_time
+'DIM appt_time_list, appt_subject, appt_start_time, appt_reminder
+'DIM current_year, current_worker, current_month, y, i, x, appt_year
+'DIM MAXIS_row, case_number, excel_row, excel, revs_year, revs_month
+'DIM alt_last_appointment_listbox, calendar_dlg, SNAP_popup_check, SNAP_status
+'DIM cash_status, last_page_check, HC_status, add_case_info_to_Excel, CSR_mo
+'DIM CSR_yr, recert_mo, recert_status, recert_yr, appointment_time
+'DIM appointment_time_for_comparison, appointment_time_for_viewing, appointments, j
+'DIM last_appointment_listbox_for_comparison, last_appointment_time, interview_time
+'DIM am_pm, recert_status, forms_to_swkr
+
 
 'Required variables/arrays
 appt_time_list = "15 mins"+chr(9)+"30 mins"+chr(9)+"45 mins"+chr(9)+"60 mins"
@@ -188,9 +215,13 @@ last_day_of_recert = dateadd("D", -1, last_day_of_recert)
 'Grabbing the worker's X number.
 CALL find_variable("User: ", worker_number, 7)
 
+'if user is Hennepin Co. user, then contact phone number auto-fills with EZ info number
+if worker_county_code = "x127" Then contact_phone_number = "612-596-1300"
+
 'Display REVS scrubber initial dialog
 DIALOG REVS_scrubber_initial_dialog
 IF ButtonPressed = 0 THEN stopscript
+
 
 'Entering developer mode
 If contact_phone_number = "UUDDLRLRBA" then 
@@ -198,11 +229,13 @@ If contact_phone_number = "UUDDLRLRBA" then
 	MsgBox "You have enabled Developer Mode." & vbCr & vbCr & "The script will not enter information into MAXIS, but it will navigate, showing you where the script would otherwise have been."
 END IF
 
+
 'Stopping the script is the user is running it before the 16th of the month.
 day_of_month = DatePart("D", date)
 If developer_mode <> true then
 	IF day_of_month < 16 THEN script_end_procedure("You cannot run this script before the 16th of the month.") 'to boot the user before the script tries to access a blank REPT/REVS.
 End IF
+
 
 'Formatting the dates
 calendar_month = DateAdd("M", 1, date)
@@ -388,14 +421,19 @@ DO
 	IF recert_mo = left(cm_plus_2, 2) and recert_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "YES"
 
 	'If it's not a recert, delete it from the excel list and move on with our lives
-	IF RECERT_STATUS = "NO" THEN
-		SET objRange = objExcel.Cells(excel_row, 1).EntireRow
-		objRange.Delete
-		excel_row = excel_row - 1
-	END If
-	
-	excel_row = excel_row + 1	'Increases Excel row by one
-LOOP UNTIL objExcel.Cells(excel_row, 1).Value = ""	'Loops until there's no excel rows left
+	IF RECERT_STATUS = "NO" THEN		
+		Call navigate_to_MAXIS_screen("STAT", "PROG")
+		EMReadScreen MFIP_prog_check, 2, 6, 67		'checking for an active MFIP case
+		EMReadScreen MFIP_status_check, 4, 6, 74
+		If MFIP_prog_check <> "MF" AND MFIP_status_check <> "ACTV" THEN 	'if MFIP is active, then case will not be deleted.
+			SET objRange = objExcel.Cells(excel_row, 1).EntireRow			
+			objRange.Delete				'all other cases that are not due for a recert will be deleted
+			excel_row = excel_row - 1
+		END If
+	END IF
+	excel_row = excel_row + 1
+LOOP UNTIL objExcel.Cells(excel_row, 1).Value = ""	'looping until the list of cases to check for recert is complete
+
 
 'Now the script needs to go back to the start of the Excel file and start assigning appointments.
 'FOR EACH day that is not checked, start assigning appointments according to DatePart("N", appointment) because DatePart"N" is minutes. Once datepart("N") = last_appointment_time THEN the script needs to jump to the next day.
