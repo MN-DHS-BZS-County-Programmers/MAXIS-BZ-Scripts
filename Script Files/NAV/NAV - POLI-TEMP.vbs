@@ -47,16 +47,15 @@ END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
 'DIALOGS--------------------------------------------------
-BeginDialog POLI_TEMP_dialog, 0, 0, 256, 60, "POLI/TEMP dialog"
-  OptionGroup RadioGroup1
-    RadioButton 5, 30, 175, 10, "Table of Contents (search by TEMP section code)", table_radio
-    RadioButton 5, 45, 150, 10, "Index of Topics (search by a word or topic)", index_radio
-  ButtonGroup ButtonPressed
-    OkButton 195, 10, 50, 15
-    CancelButton 195, 30, 50, 15
-  Text 10, 10, 160, 10, "What area of POLI/TEMP do you want to go to?"
-EndDialog
 
+BeginDialog POLI_TEMP_dialog, 0, 0, 216, 65, "Dialog"
+  DropListBox 40, 30, 115, 45, "TABLE (Search by TEMP code)"+chr(9)+"INDEX (Search by a word or topic)", Temp_table_index
+  ButtonGroup ButtonPressed
+    OkButton 165, 25, 50, 15
+    CancelButton 165, 45, 50, 15
+  Text 5, 10, 140, 15, "What area of POLI/TEMP you want to go?"
+  Text 5, 30, 30, 10, "Select:"
+EndDialog
 
 'THE SCRIPT
 
@@ -64,10 +63,10 @@ EndDialog
 Dialog POLI_TEMP_dialog
 If buttonpressed = cancel then stopscript
 
-'Determines which POLI/TEMP section to go to, using the radioboxes outcome to decide
-If radiogroup1 = table_radio then 
+'Determines which POLI/TEMP section to go to, using the dropdown list outcome to decide
+If Temp_table_index = "TABLE (Search by TEMP code)" then
 	panel_title = "TABLE"
-ElseIf radiogroup1 = index_radio then
+ElseIf Temp_table_index = "INDEX (Search by a word or topic)" then
 	panel_title = "INDEX"
 End if
 
