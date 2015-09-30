@@ -57,7 +57,7 @@ DIM CAF_button, CHANGE_REPORT_FORM_RECEIVED_button, CITIZENSHIP_IDENTITY_VERIFIE
 
 DIM DENIED_PROGRAMS_button, DOCUMENTS_RECEIVED_button, DRUG_FELON_button, DWP_BUDGET_button
 DIM EMERGENCY_button, EMPLOYMENT_PLAN_OR_STATUS_UPDATE_button, EMPLOYMENT_VERIFICATION_button, EXPEDITED_SCREENING_button
-DIM FRAUD_INFO_button, FSET_sanction_button
+DIM FRAUD_INFO_button
 
 DIM GAS_CARDS_ISSUED_button, GOOD_CAUSE_CLAIMED_button, GRH_HRF_button
 DIM HC_RENEWAL_button, HCAPP_button, HH_COMP_CHANGE_button, HRF_button
@@ -225,7 +225,7 @@ EndDialog
 		      PushButton 135, 35, 30, 15, "R - Z", r_through_z_notes_button
 		      PushButton 165, 35, 30, 15, "LTC", ltc_notes_button
 		      PushButton 445, 10, 65, 10, "SIR instructions", SIR_instructions_button
-		      PushButton 5, 70, 30, 10, "REIN", REIN_button
+		      PushButton 5, 70, 30, 10, "REIN", REIN_PROGS_button
 		      PushButton 5, 85, 80, 10, "Shelter Form Received", SHELTER_FORM_RECEIVED_button
 		      PushButton 5, 100, 70, 10, "SNAP case review", SNAP_CASE_REVIEW_button
 		      PushButton 5, 115, 100, 10, "Submit case for SNAP review", SUBMIT_CASE_FOR_SNAP_REVIEW_button

@@ -84,7 +84,6 @@ EndDialog
 IF script_repository = "" THEN script_repository = "https://raw.githubusercontent.com/MN-Script-Team/DHS-MAXIS-Scripts/master/Script Files"		'If it's blank, we're assuming the user is a scriptwriter, ergo, master branch.
 
 'THE SCRIPT----------------------------------------------------------------------------------------------------
-
 'Shows dialog, which asks user which script to run.
 Do
 	dialog ACTIONS_scripts_main_menu_dialog
