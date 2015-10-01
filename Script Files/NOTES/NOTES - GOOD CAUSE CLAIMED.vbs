@@ -54,36 +54,35 @@ END IF
 
 'DIM ButtonGroup_ButtonPressed, ButtonPressed, MAXIS_check, Claim_date, Expiration_date, Date_DHS_Claim_Docs, Date_DHS_Exp_Docs, Docs_provided_check, Good_Cause_Claimed_Dialog, Case_Number, Date_DHS_docs_sent, List_programs, Supporting_doc_date, GC_Review_Date, Other_comments, Worker_signature, Claim_Type_droplist
 
-BeginDialog Good_Cause_Claimed_Dialog, 0, 0, 251, 310, "Child Support Good Cause Claimed"
-  EditBox 180, 5, 65, 15, Case_Number
-  DropListBox 135, 30, 105, 15, "Select One:"+chr(9)+"New Claim"+chr(9)+"Annual Redetermination", Claim_Type_droplist
-  EditBox 60, 60, 65, 15, Claim_Date
-  EditBox 175, 60, 65, 15, Expiration_Date
-  EditBox 150, 90, 65, 15, Date_DHS_Claim_Docs
-  EditBox 150, 115, 65, 15, Date_DHS_Exp_Docs
-  EditBox 45, 140, 195, 15, List_programs
-  CheckBox 5, 165, 160, 15, "Supporting documentation has been provided.", Docs_provided_check
-  EditBox 180, 185, 65, 15, Supporting_doc_date
-  EditBox 180, 210, 65, 15, GC_Review_Date
-  EditBox 30, 235, 210, 15, Other_comments
-  EditBox 70, 260, 75, 15, Worker_signature
+BeginDialog Good_Cause_Claimed_Dialog, 0, 0, 250, 310, "Child Support Good Cause Claimed"
+  EditBox 180, 4, 66, 16, Case_Number
+  DropListBox 134, 30, 106, 16, "Select One:"+chr(9)+"New Claim"+chr(9)+"Annual Redetermination", Claim_Type_droplist
+  EditBox 60, 60, 66, 16, Claim_Date
+  EditBox 174, 60, 66, 16, Expiration_Date
+  EditBox 150, 90, 66, 16, Date_DHS_Claim_Docs
+  EditBox 150, 114, 66, 16, Date_DHS_Exp_Docs
+  EditBox 44, 140, 196, 16, List_programs
+  CheckBox 4, 164, 160, 16, "Supporting documentation has been provided.", Docs_provided_check
+  EditBox 180, 184, 66, 16, Supporting_doc_date
+  EditBox 180, 210, 66, 16, GC_Review_Date
+  EditBox 30, 234, 210, 16, Other_comments
+  EditBox 70, 260, 76, 16, Worker_signature
   ButtonGroup ButtonPressed
-    OkButton 135, 285, 50, 15
-    CancelButton 190, 285, 50, 15
-  Text 125, 10, 50, 15, "Case Number"
-  Text 5, 30, 130, 15, "Is this a new claim or redetermination?"
-  GroupBox 5, 50, 250, 35, "Date Good Cause"
-  Text 30, 65, 30, 15, "Claimed"
-  Text 135, 65, 35, 15, "Expiration"
-  Text 5, 90, 135, 15, "Date DHS-3627 and DHS-3979 were sent:"
-  Text 5, 115, 135, 15, "Date DHS-3630 and DHS-3631 were sent:"
-  Text 5, 145, 40, 15, "Programs:"
-  Text 5, 185, 175, 15, "Deadline given to provide supporting documentation:"
-  Text 5, 205, 165, 20, "Date Good Cause claim will be reviewed (no more than 20 days from present):"
-  Text 5, 235, 20, 15, "Other:"
-  Text 5, 260, 60, 15, "Worker Signature"
+    OkButton 134, 284, 50, 16
+    CancelButton 190, 284, 50, 16
+  Text 124, 10, 50, 16, "Case Number"
+  Text 4, 30, 130, 16, "Is this a new claim or redetermination?"
+  GroupBox 4, 50, 250, 36, "Date Good Cause"
+  Text 30, 64, 30, 16, "Claimed"
+  Text 134, 64, 36, 16, "Expiration"
+  Text 4, 90, 136, 16, "Date DHS-3627, DHS-3632, and DHS-3979 were sent:"
+  Text 4, 114, 136, 16, "Date DHS-3630 and DHS-3631 were sent:"
+  Text 4, 144, 40, 16, "Programs:"
+  Text 4, 184, 176, 16, "Deadline given to provide supporting documentation:"
+  Text 4, 204, 166, 20, "Date Good Cause claim will be reviewed (no more than 20 days from present):"
+  Text 4, 234, 20, 16, "Other:"
+  Text 4, 260, 60, 16, "Worker Signature"
 EndDialog
-
 'Script----------------------------------------------
 'Connect to Bluezone
 EMConnect ""
@@ -129,5 +128,3 @@ CALL write_variable_in_case_note(worker_signature)
 
 
 CALL script_end_procedure("")
-
-
