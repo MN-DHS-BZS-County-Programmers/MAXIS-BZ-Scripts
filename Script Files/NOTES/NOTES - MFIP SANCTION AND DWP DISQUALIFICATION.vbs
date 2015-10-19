@@ -83,9 +83,7 @@ END IF
 'DIM worker_signature
 'DIM ButtonPressed
 'DIM TIKL_date
-
-
-
+DIM Resolution_date
 
 'DIALOGS----------------------------------------------------------------------------------------------------
 'MFIP Sanction/DWP Disqualification Dialog Box
@@ -94,7 +92,7 @@ BeginDialog MFIP_Sanction_DWP_Disq_Dialog, 0, 0, 341, 295, "MFIP Sanction - DWP 
   EditBox 180, 5, 20, 15, HH_Member_Number
   DropListBox 265, 5, 65, 15, "Select one..."+chr(9)+"imposed"+chr(9)+"pending", sanction_status_droplist
   DropListBox 65, 25, 110, 15, "Select one..."+chr(9)+"CS"+chr(9)+"ES"+chr(9)+"No show to orientation"+chr(9)+"Minor mom truancy", sanction_type_droplist
-  DropListBox 265, 25, 65, 15, "Select one..."+chr(9)+"1"+chr(9)+"2"+chr(9)+"3"+chr(9)+"4"+chr(9)+"5"+chr(9)+"6"+chr(9)+"7"+chr(9)+"7+", number_occurances_droplist
+  DropListBox 265, 25, 65, 15, "Select one..."+chr(9)+"1"+chr(9)+"2"+chr(9)+"3"+chr(9)+"4"+chr(9)+"5"+chr(9)+"6"+chr(9)+"7"+chr(9)+"7 +", number_occurances_droplist
   DropListBox 50, 45, 65, 15, "Select one..."+chr(9)+"10%"+chr(9)+"30%"+chr(9)+"100%", Sanction_Percentage_droplist
   EditBox 265, 45, 65, 15, Date_Sanction
   DropListBox 90, 65, 240, 15, "Select one..."+chr(9)+"Failed to attend ES overview"+chr(9)+"Failed to develop employment plan"+chr(9)+"Non-compliance with employment plan"+chr(9)+"< 20, failed education requirement"+chr(9)+"Failed to accept suitable employment"+chr(9)+"Quit suitable employment w/o good cause"+chr(9)+"Failure to attend MFIP orientation"+chr(9)+"Non-cooperation with child support", sanction_reason_droplist
@@ -104,7 +102,6 @@ BeginDialog MFIP_Sanction_DWP_Disq_Dialog, 0, 0, 341, 295, "MFIP Sanction - DWP 
   EditBox 90, 125, 240, 15, other_sanction_notes
   EditBox 90, 145, 240, 15, Impact_Other_Programs
   EditBox 90, 165, 240, 15, Vendor_Information
-  EditBox 175, 185, 60, 15, Last_Day_Cure
   CheckBox 5, 210, 130, 10, "Update sent to Employment Services", Update_Sent_ES_Checkbox
   CheckBox 5, 225, 130, 10, "Update sent to Child Care Assistance", Update_Sent_CCA_Checkbox
   CheckBox 5, 240, 130, 10, "TIKL to change sanction status ", TIKL_next_month
@@ -117,7 +114,7 @@ BeginDialog MFIP_Sanction_DWP_Disq_Dialog, 0, 0, 341, 295, "MFIP Sanction - DWP 
     CancelButton 285, 275, 50, 15
   Text 5, 70, 80, 10, "Reason for the sanction:"
   Text 85, 280, 60, 10, "Worker signature:"
-  Text 5, 190, 170, 10, "Last day to cure (10 day cutoff or last day of month):"
+  Text 5, 190, 325, 10, "Last day to cure (10 days or 1 day prior to the effective month - this will be in the case note)"
   Text 185, 30, 75, 10, "Number of occurences:"
   Text 5, 170, 65, 10, "Vendor information:"
   Text 5, 150, 85, 10, "Impact to other programs:"
@@ -132,9 +129,8 @@ BeginDialog MFIP_Sanction_DWP_Disq_Dialog, 0, 0, 341, 295, "MFIP Sanction - DWP 
   Text 5, 30, 60, 10, "Type of sanction:"
   Text 5, 130, 70, 10, "Other sanction notes:"
   Text 155, 250, 160, 10, "(See TE10.20 for info on when to use this notice)"
-  GroupBox 3, 203, 335, 60, ""
+  GroupBox 0, 200, 335, 60, ""
 EndDialog
-
 
 'THE SCRIPT----------------------------------------------------------------------------------------------------
 'Connects to BlueZone
@@ -142,7 +138,6 @@ EMConnect ""
 
 'Asks for Case Number
 CALL MAXIS_case_number_finder(case_number)
-
 
 'Grabbing counselor name and phone from database if applicable
 IF collecting_ES_statistics = true AND case_number <> "" THEN
@@ -178,12 +173,9 @@ DO
 	IF sanction_information = "" THEN err_msg = err_msg & vbCr & "You must enter information about how the sanction information was received."
 	IF IsDate(Date_Sanction) = FALSE THEN err_msg = err_msg & vbCr & "You must type a valid date of sanction."
 	IF sanction_reason_droplist = "Select One..." THEN err_msg = err_msg & vbCr & "You must select a sanction percentage."
-	IF Last_Day_Cure = "" THEN err_msg = err_msg & vbCr & "You must enter the last day to cure the sanction."
 	IF worker_signature = "" THEN err_msg = err_msg & vbCr & "You must sign your case note."
 	IF err_msg <> "" THEN MsgBox "*** NOTICE!!! ***" & vbCr & err_msg & vbCr & vbCr & "Please resolve for the script to continue."		
 LOOP UNTIL err_msg = ""
-
-
 
 'Checks MAXIS for password prompt
 Call check_for_MAXIS(True)
@@ -205,6 +197,14 @@ If TIKL_next_month = checked THEN
 	PF3
 END If
 
+'This return the date the client has to be in compliance or comply by, and the date that workers need to inform client to cooperate by this date.
+'This date is 10 days from the effective date if it is ES, No Show for Orientation, and/or Minor Mom Truancy, otherwise it is last day of the month prior to the effective month.
+IF (sanction_type_droplist = "ES") or (sanction_type_droplist = "No show to orientation") or (sanction_type_droplist = "Minor mom truancy") then
+	Resolution_date = DateAdd("d", -10, Date_sanction)
+ELSEIf (sanction_type_droplist = "CS") then
+	Resolution_date = DateAdd("d", -1, Date_sanction)
+End If
+
 'Navigates to case note
 CALL start_a_blank_CASE_NOTE
 
@@ -223,7 +223,8 @@ CALL write_bullet_and_variable_in_case_note ("Reason for the sanction", sanction
 CALL write_bullet_and_variable_in_case_note("Other sanction notes", other_sanction_notes)
 CALL write_bullet_and_variable_in_case_note ("Impact to other programs", Impact_Other_Programs)
 CALL write_bullet_and_variable_in_case_note("Vendoring information", Vendor_Information)
-CALL write_bullet_and_variable_in_case_note("Last day to cure", Last_Day_Cure)
+CALL write_bullet_and_variable_in_case_note("Last day to cure", Resolution_date)
+
 'case noting check boxes if checked
 IF Update_Sent_ES_Checkbox = 1 THEN CALL write_variable_in_case_note("* Status update information was sent to Employment Services.")
 IF Update_Sent_CCA_Checkbox = 1 THEN CALL write_variable_in_case_note("* Status update information was sent to Child Care Assistance.")
