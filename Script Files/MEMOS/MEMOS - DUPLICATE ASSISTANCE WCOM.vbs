@@ -63,7 +63,7 @@ EndDialog
 EMConnect ""
 
 'warning box
-Msgbox "Warning: If you have multiple waiting SNAP results this script may be unable to find the most recent one. Please process manually in those instances." & vbNewLine & vbNewLine &_
+Msgbox "Warning: If you have multiple waiting SNAP or MFIP results this script may be unable to find the most recent one. Please process manually in those instances." & vbNewLine & vbNewLine &_
 		"- If this case includes members who are residing in a battered women's shelter please review approval." & vbNewLine &_
 		"- If this was an expedited case where client reported they did not receive benefits in another state please review approval" & vbNewLine &_
 		"- See CM 001.21 for more details on these two situations and how they qualify for duplicate assistance."
@@ -95,13 +95,19 @@ Emwritescreen footer_year, 20, 46
 
 CALL navigate_to_MAXIS_screen("SPEC", "WCOM")
 
-'Searching for waiting SNAP notice
+'Searching for waiting SNAP or MFIP notice
 wcom_row = 6
 Do
 	wcom_row = wcom_row + 1
 	Emreadscreen program_type, 2, wcom_row, 26
 	Emreadscreen print_status, 7, wcom_row, 71
 	If program_type = "FS" then
+		If print_status = "Waiting" then
+			Emwritescreen "x", wcom_row, 13
+			exit Do
+		End If
+	End If
+	If program_type = "MF" then
 		If print_status = "Waiting" then
 			Emwritescreen "x", wcom_row, 13
 			exit Do
@@ -115,22 +121,39 @@ Do
 	If spec_edit_check = "NOTICE" THEN no_fs_waiting = true
 Loop until spec_edit_check = "NOTICE"
 
-If no_fs_waiting = true then script_end_procedure("No waiting FS results were found for the requested month")
+If no_fs_waiting = true then script_end_procedure("No waiting FS or MFIP notices were found for the requested month")
 
 'writing the WCOM
 Transmit
 PF9
-CALL write_variable_in_SPEC_MEMO("******************************************************")
-CALL write_variable_in_SPEC_MEMO("Dear Client,")
-CALL write_variable_in_SPEC_MEMO("")
-CALL write_variable_in_SPEC_MEMO("You will not be eligible for SNAP benefits this month since you have received SNAP benefits on another case for the same month.")
-CALL write_variable_in_SPEC_MEMO("Per program rules SNAP participants are not eligible for duplicate benefits in the same benefit month.")
-CALL write_variable_in_SPEC_MEMO("")
-CALL write_variable_in_SPEC_MEMO("If you have any questions or concerns please feel free to contact your worker.")
-CALL write_variable_in_SPEC_MEMO("---")
-CALL write_variable_in_SPEC_MEMO(worker_signature)
-CALL write_variable_in_SPEC_MEMO("")
-CALL write_variable_in_SPEC_MEMO("******************************************************")
+If program_type = "FS" then
+	'This will write if the notice is for SNAP only
+	CALL write_variable_in_SPEC_MEMO("******************************************************")
+	CALL write_variable_in_SPEC_MEMO("Dear Client,")
+	CALL write_variable_in_SPEC_MEMO("")
+	CALL write_variable_in_SPEC_MEMO("You will not be eligible for SNAP benefits this month since you have received SNAP benefits on another case for the same month.")
+	CALL write_variable_in_SPEC_MEMO("Per program rules SNAP participants are not eligible for duplicate benefits in the same benefit month.")
+	CALL write_variable_in_SPEC_MEMO("")
+	CALL write_variable_in_SPEC_MEMO("If you have any questions or concerns please feel free to contact your worker.")
+	CALL write_variable_in_SPEC_MEMO("---")
+	CALL write_variable_in_SPEC_MEMO(worker_signature)
+	CALL write_variable_in_SPEC_MEMO("")
+	CALL write_variable_in_SPEC_MEMO("******************************************************")
+	Else if program_type = "MF" then
+		'This will write if it is for an MFIP notice
+		CALL write_variable_in_SPEC_MEMO("******************************************************")
+		CALL write_variable_in_SPEC_MEMO("Dear Client,")
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO("One or more of your household members will not be eligible for SNAP benefits in this month since you have received SNAP benefits on another case for the same month.")
+		CALL write_variable_in_SPEC_MEMO("Per program rules SNAP participants are not eligible for duplicate benefits in the same benefit month.")
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO("If you have any questions or concerns please feel free to contact your worker.")
+		CALL write_variable_in_SPEC_MEMO("---")
+		CALL write_variable_in_SPEC_MEMO(worker_signature)
+		CALL write_variable_in_SPEC_MEMO("")
+		CALL write_variable_in_SPEC_MEMO("******************************************************")
+	End If
+End if
 PF4
 
-script_end_procedure("WCOM has been added to the first found waiting SNAP notice for the month and case selected. Please feel free to review the notice.")
+script_end_procedure("WCOM has been added to the first found waiting SNAP or MFIP notice for the month and case selected. Please feel free to review the notice.")
