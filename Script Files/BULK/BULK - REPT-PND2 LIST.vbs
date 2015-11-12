@@ -115,6 +115,22 @@ If SNAP_check = checked then
 	col_to_use = col_to_use + 1
 	SNAP_letter_col = convert_digit_to_excel_column(snap_pends_col)
 End if
+
+If SNAP_check = checked then
+	ObjExcel.Cells(1, col_to_use).Value = "Interviewed?"
+	objExcel.Cells(1, col_to_use).Font.Bold = TRUE
+	interviewed_col = col_to_use
+	col_to_use = col_to_use + 1
+End if
+
+'CODE TO ADD COLUMN FOR EXPEDITED STATUS
+'If SNAP_check = checked then
+'	ObjExcel.Cells(1, col_to_use).Value = "Expedited per Case Note"
+'	objExcel.Cells(1, col_to_use).Font.Bold = TRUE
+'	expedited_col = col_to_use
+'	col_to_use = col_to_use + 1
+'End if
+
 If cash_check = checked then
 	ObjExcel.Cells(1, col_to_use).Value = "CASH?"
 	objExcel.Cells(1, col_to_use).Font.Bold = TRUE
@@ -202,6 +218,10 @@ For each worker in worker_array
 				HC_status = trim(replace(HC_status, "_", ""))
 				EA_status = trim(replace(EA_status, "_", ""))
 				GRH_status = trim(replace(GRH_status, "_", ""))
+				
+				'Adding SNAP pending cases to an array to check later for interview status
+				If SNAP_status <> "" and SNAP_check = checked THEN SNAP_cases = SNAP_cases & "~" & case_number 
+				
 
 				'Using if...thens to decide if a case should be added (status isn't blank and respective box is checked)
 				If SNAP_status <> "" and SNAP_check = checked then add_case_info_to_Excel = True
@@ -232,6 +252,50 @@ For each worker in worker_array
 		Loop until last_page_check = "THIS IS THE LAST PAGE"
 	End if
 next
+
+'This is a seperate section to go back into SNAP cases after adding them to an array to check their interview (and possibly expedited status)
+SNAP_cases = split(SNAP_cases, "~")
+SNAP_case_row = 2
+For each case_number in SNAP_cases
+	SNAP_intervew_status = ""
+	expedited_status = ""
+	IF trim(case_number) <> "" Then
+		CALL navigate_to_MAXIS_screen("STAT", "PROG")
+		EMReadScreen error_check, 4, 2, 50 					'checking for ERR stat screen
+		IF error_check = "PROG" THEN
+			EMReadScreen SNAP_intervew_status, 8, 10, 55
+			'Formatting interview status
+			IF SNAP_intervew_status = "__ __ __" THEN 
+				SNAP_intervew_status = "N"
+			ELSE
+				SNAP_intervew_status = "Y"
+			END IF	
+			back_to_self
+		ELSE 
+			SNAP_intervew_status = "PRIVILEGED/ERROR"
+		END IF
+		'!!! CODE TO GRAB EXPEDITED STATUS AND ENTER IT INTO THE EXCEL SHEET as well as in do loop just below
+		'CALL navigate_to_MAXIS_screen("CASE", "NOTE")
+		'CN_row = 1
+		'CN_col = 1
+		'EMSearch "appears expedited", CN_row, CN_col
+		'IF CN_row <> 0 then 
+		'	expedited_status = "expedited per NOTES"
+		'ELSE	
+		'	expedited_status = "not expedited per NOTES"
+		DO						'this do loop finds the correct case number on the excel sheet and matches it to the case number in the SNAP array
+			compare_case_number = objExcel.Cells(SNAP_case_row, 2).Value
+			IF (compare_case_number * 1) = (case_number * 1) THEN 
+				objExcel.Cells(SNAP_case_row, interviewed_col).Value = SNAP_intervew_status
+		'		objExcel.Cells(SNAP_case_row, expedited_col).Value = expedited_status
+				EXIT DO
+			ELSE
+				SNAP_case_row = SNAP_case_row + 1
+			END IF
+		LOOP until objExcel.Cells(SNAP_case_row, 2).Value = case_number
+	END IF
+NEXT
+
 
 'Resetting excel_row variable, now we need to start looking people up
 excel_row = 2
@@ -536,4 +600,4 @@ If GRH_check = checked then
 End if
 
 'Logging usage stats
-script_end_procedure("")
+script_end_procedure("Success!")
