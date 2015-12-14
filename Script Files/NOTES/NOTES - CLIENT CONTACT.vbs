@@ -5,8 +5,10 @@ start_time = timer
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
 IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded once
 	IF run_locally = FALSE or run_locally = "" THEN		'If the scripts are set to run locally, it skips this and uses an FSO below.
-		IF use_master_branch = TRUE THEN			'If the default_directory is C:\DHS-MAXIS-Scripts\Script Files, you're probably a scriptwriter and should use the master branch.
+		IF default_directory = "C:\DHS-MAXIS-Scripts\Script Files\" THEN			'If the default_directory is C:\DHS-MAXIS-Scripts\Script Files, you're probably a scriptwriter and should use the master branch.
 			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/master/MASTER%20FUNCTIONS%20LIBRARY.vbs"
+		ELSEIF beta_agency = "" or beta_agency = True then							'If you're a beta agency, you should probably use the beta branch.
+			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/BETA/MASTER%20FUNCTIONS%20LIBRARY.vbs"
 		Else																		'Everyone else should use the release branch.
 			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/RELEASE/MASTER%20FUNCTIONS%20LIBRARY.vbs"
 		End if
@@ -17,7 +19,7 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 			Set fso = CreateObject("Scripting.FileSystemObject")	'Creates an FSO
 			Execute req.responseText								'Executes the script code
 		ELSE														'Error message, tells user to try to reach github.com, otherwise instructs to contact Veronica with details (and stops script).
-			MsgBox 	"Something has gone wrong. The code stored on GitHub was not able to be reached." & vbCr &_
+			MsgBox 	"Something has gone wrong. The code stored on GitHub was not able to be reached." & vbCr &_ 
 					vbCr & _
 					"Before contacting Veronica Cary, please check to make sure you can load the main page at www.GitHub.com." & vbCr &_
 					vbCr & _
@@ -28,7 +30,7 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 					vbTab & vbTab & "responsible for network issues." & vbCr &_
 					vbTab & "- The URL indicated below (a screenshot should suffice)." & vbCr &_
 					vbCr & _
-					"Veronica will work with your IT department to try and solve this issue, if needed." & vbCr &_
+					"Veronica will work with your IT department to try and solve this issue, if needed." & vbCr &_ 
 					vbCr &_
 					"URL: " & FuncLib_URL
 					script_end_procedure("Script ended due to error connecting to GitHub.")
@@ -83,6 +85,42 @@ BeginDialog client_contact_dialog, 0, 0, 386, 300, "Client contact"
   Text 240, 260, 70, 10, "Sign your case note: "
 EndDialog
 
+'Hennepin County dialog
+BeginDialog client_contact_Hennepin_dialog, 0, 0, 386, 260, "Client contact"
+  ComboBox 55, 5, 60, 15, "Phone call"+chr(9)+"Voicemail"+chr(9)+"Email"+chr(9)+"Office visit"+chr(9)+"Letter", contact_type
+  DropListBox 120, 5, 45, 10, "from"+chr(9)+"to", contact_direction
+  ComboBox 170, 5, 85, 15, "client"+chr(9)+"AREP"+chr(9)+"Non-AREP"+chr(9)+"SWKR", who_contacted
+  EditBox 280, 5, 100, 15, regarding
+  EditBox 55, 25, 60, 15, case_number
+  EditBox 175, 25, 55, 15, phone_number
+  EditBox 295, 25, 85, 15, when_contact_was_made
+  EditBox 75, 50, 305, 15, contact_reason
+  EditBox 75, 70, 305, 15, actions_taken
+  EditBox 75, 105, 305, 15, verifs_needed
+  EditBox 85, 125, 295, 15, cl_instructions
+  EditBox 65, 145, 315, 15, case_status
+  CheckBox 5, 175, 255, 10, "Check here if you want to TIKL out for this case after the case note is done.", TIKL_check
+  CheckBox 5, 190, 230, 10, "Check here if you reminded client about the importance of the CAF 1.", caf_1_check
+  CheckBox 5, 205, 135, 10, "Check here if you sent forms to AREP.", Sent_arep_checkbox
+  CheckBox 5, 220, 120, 10, "Check here if follow-up is needed.", follow_up_needed_checkbox
+  EditBox 175, 235, 95, 15, worker_signature
+  ButtonGroup ButtonPressed
+    OkButton 275, 235, 50, 15
+    CancelButton 330, 235, 50, 15
+  Text 5, 10, 45, 10, "Contact type:"
+  Text 260, 10, 15, 10, "Re:"
+  Text 125, 30, 50, 10, "Phone number: "
+  Text 235, 30, 60, 10, "Contact date/time:"
+  Text 5, 30, 45, 10, "Case number: "
+  Text 5, 55, 65, 10, "Reason for contact:"
+  Text 5, 75, 50, 10, "Actions taken: "
+  GroupBox 0, 95, 385, 75, "Helpful info for call centers (or front desks) to pass on to clients"
+  Text 10, 110, 50, 10, "Verifs needed: "
+  Text 10, 130, 75, 10, "Instructions/message:"
+  Text 10, 150, 45, 10, "Case status: "
+  Text 115, 240, 60, 10, "Worker signature:"
+EndDialog
+
 'THE SCRIPT--------------------------------------------------------------------------------------------------
 'CONNECTING TO MAXIS & GRABBING THE CASE NUMBER
 EMConnect ""
@@ -94,7 +132,11 @@ when_contact_was_made = date & ", " & time
 Do
 	Do
 		Do
-			Dialog client_contact_dialog
+			If worker_county_code = "x127" then
+				Dialog client_contact_Hennepin_dialog
+			ELSE
+				Dialog client_contact_dialog
+			END IF
 			cancel_confirmation
 			IF contact_reason = "" or contact_type = "" Then MsgBox("You must enter a reason for contact, as well as a type (phone, etc.).")
 		Loop until contact_reason <> "" and contact_type <> ""
@@ -116,15 +158,12 @@ CALL write_bullet_and_variable_in_CASE_NOTE("Actions Taken", actions_taken)
 CALL write_bullet_and_variable_in_CASE_NOTE("Verifs Needed", verifs_needed)
 CALL write_bullet_and_variable_in_CASE_NOTE("Instructions/Message for CL", cl_instructions)
 CALL write_bullet_and_variable_in_CASE_NOTE("Case Status", case_status)
-
 'checkbox results
 IF caf_1_check = checked THEN CALL write_variable_in_CASE_NOTE("* Reminded client about the importance of submitting the CAF 1.")
 IF Sent_arep_checkbox = checked THEN CALL write_variable_in_CASE_NOTE("* Sent form(s) to AREP.")
 IF call_center_answer_check = checked THEN CALL write_variable_in_CASE_NOTE("* Call center answered caller's question.")
 IF call_center_transfer_check = checked THEN CALL write_variable_in_CASE_NOTE("* Call center transferred call to a worker.")
 IF follow_up_needed_checkbox = checked THEN CALL write_variable_in_CASE_NOTE("* Follow-up is needed.")
-
-'Worker sig
 CALL write_variable_in_CASE_NOTE("---")
 CALL write_variable_in_CASE_NOTE(worker_signature)
 
@@ -134,7 +173,7 @@ IF TIKL_check = checked THEN
 	CALL navigate_to_MAXIS_screen("dail", "writ")
 END IF
 
-'If case requires followup, it will create a MsgBox (via script_end_procedure) explaining that followup is needed. This MsgBox gets inserted into the statistics database for counties using that function. This will allow counties to "pull statistics" on follow-up, including case numbers, which can be used to track outcomes.
+'If case requires follow-up, it will create a MsgBox (via script_end_procedure) explaining that followup is needed. This MsgBox gets inserted into the statistics database for counties using that function. This will allow counties to "pull statistics" on follow-up, including case numbers, which can be used to track outcomes.
 If follow_up_needed_checkbox = checked then
 	script_end_procedure("Success! Follow-up is needed for case number: " & case_number)
 Else
