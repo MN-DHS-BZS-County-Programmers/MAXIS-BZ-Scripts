@@ -222,7 +222,7 @@ FUNCTION create_NOTES_main_menu(dialog_name)
 		Text 85, 220, 415, 10, "--- Template for documenting proof of relationship between a member 01 and someone else in the household."
 		ButtonGroup ButtonPressed
 			CancelButton 460, 245, 50, 15
-		Text 45, 175, 290, 10, "--- NEW 10/2015!!!! Template for case noting an MTAF (MFIP Transition Application Form)."
+		Text 45, 175, 290, 10, "--- Template for case noting an MTAF (MFIP Transition Application Form)."
 		EndDialog
 	ELSEIF dialog_name = "R-Z" THEN
 		BeginDialog dialog_name, 0, 0, 516, 270, "Notes (R-Z) scripts main menu dialog"
