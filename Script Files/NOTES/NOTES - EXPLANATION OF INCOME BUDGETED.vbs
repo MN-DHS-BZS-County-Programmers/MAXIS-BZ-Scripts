@@ -1,5 +1,5 @@
 'GATHERING STATS----------------------------------------------------------------------------------------------------
-name_of_script = "NOTES - Explanation Of Income Budgeted.vbs"
+name_of_script = "NOTES - EXPLAINATION OF INCOME BUDGETED.vbs"
 start_time = timer
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
