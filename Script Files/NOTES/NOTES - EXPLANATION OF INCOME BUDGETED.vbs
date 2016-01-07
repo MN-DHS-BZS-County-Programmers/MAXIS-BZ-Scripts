@@ -1,5 +1,5 @@
 'GATHERING STATS----------------------------------------------------------------------------------------------------
-name_of_script = "NOTES - EXPLAINATION OF INCOME BUDGETED.vbs"
+name_of_script = "NOTES - Explanation Of Income Budgeted.vbs"
 start_time = timer
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
@@ -135,8 +135,9 @@ Do
   If explanation_of_income = "" then err_msg = err_msg & vbNewLine & "* Enter the income that is being budgeted."
   If type_of_verification_used = "Select one..." then err_msg = err_msg & vbNewLine & "* You must select the type verification used."
   If time_period_used = "Select one..." then err_msg = err_msg & vbNewLine & "* You must select the time period of the income used."
-  If (type_of_verification_used = "Select one..." AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the type of verification used in the ""other notes"" field.")
-  If (time_period_used = "Select one..." AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the time period of income used in the ""other notes"" field.")
+  If (type_of_verification_used = "Select one..." AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the type of verification used in the ""other notes"" field."
+  If (time_period_used = "Select one..." AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the time period of income used in the ""other notes"" field."
+	If worker_signature = "" then err_msg = err_msg & vbNewLine & "* You must sign your case note."
   IF err_msg <> "" THEN MsgBox "*** NOTICE!!! ***" & vbNewLine & err_msg & vbNewLine
 LOOP until err_msg = ""
 
@@ -153,9 +154,9 @@ call write_bullet_and_variable_in_CASE_NOTE("Type of verification used", type_of
 call write_bullet_and_variable_in_CASE_NOTE("Time period used", time_period_used)
 call write_bullet_and_variable_in_CASE_NOTE("Other notes on income", other_notes_on_income)
 Call write_variable_in_CASE_NOTE("---")
-If reasonably_certain_check = 1 then call write_variable_in_CASE_NOTE("* Agency/client are 'reasonably certain' budgeted income will continue during the certification period.")
+If reasonably_certain_check = 1 then call write_variable_in_CASE_NOTE("* Agency/client are 'reasonably certain' budgeted income will continue during the     certification period.")
 If verifications_match_check = 1 then call write_variable_in_CASE_NOTE("* Verification/s match what client reported they anticipate.")
 call write_variable_in_CASE_NOTE("---")
 call write_variable_in_CASE_NOTE(worker_signature)
 
-script_end_procedure()
+script_end_procedure("")
