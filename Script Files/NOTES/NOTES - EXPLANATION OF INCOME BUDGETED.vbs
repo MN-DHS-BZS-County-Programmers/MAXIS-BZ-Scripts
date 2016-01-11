@@ -44,6 +44,12 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
+'Required for statistical purposes==========================================================================================
+STATS_counter = 1                       'sets the stats counter at one
+STATS_manualtime = 240                  'manual run time in seconds
+STATS_denomination = "C"       					'C is for each MEMBER
+'END OF stats block==============================================================================================
+
 'DIALOGS---------------------------------------------------------------
 BeginDialog case_number_dialog, 0, 0, 146, 70, "Case number dialog"
   EditBox 80, 5, 60, 15, case_number
@@ -56,7 +62,6 @@ BeginDialog case_number_dialog, 0, 0, 146, 70, "Case number dialog"
   Text 10, 10, 45, 10, "Case number: "
 EndDialog
 
-BeginDialog explanation_of_income_budgeted_dialog, 0, 0, 296, 240, "Explanation Of Income Budgeted Dialog"
 BeginDialog explanation_of_income_budgeted_dialog, 0, 0, 306, 300, "Explanation Of Income Budgeted Dialog"
   EditBox 105, 40, 65, 15, date_calculated
   EditBox 75, 75, 220, 15, earned_income
@@ -137,7 +142,6 @@ Do
   If time_period_used = "Select one..." then err_msg = err_msg & vbNewLine & "* You must select the time period of the income used."
   If (type_of_verification_used = "Select one..." AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the type of verification used in the ""other notes"" field."
   If (time_period_used = "Select one..." AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the time period of income used in the ""other notes"" field."
-	If worker_signature = "" then err_msg = err_msg & vbNewLine & "* You must sign your case note."
   IF err_msg <> "" THEN MsgBox "*** NOTICE!!! ***" & vbNewLine & err_msg & vbNewLine
 LOOP until err_msg = ""
 
@@ -154,7 +158,7 @@ call write_bullet_and_variable_in_CASE_NOTE("Type of verification used", type_of
 call write_bullet_and_variable_in_CASE_NOTE("Time period used", time_period_used)
 call write_bullet_and_variable_in_CASE_NOTE("Other notes on income", other_notes_on_income)
 Call write_variable_in_CASE_NOTE("---")
-If reasonably_certain_check = 1 then call write_variable_in_CASE_NOTE("* Agency/client are 'reasonably certain' budgeted income will continue during the     certification period.")
+If reasonably_certain_check = 1 then call write_variable_in_CASE_NOTE("* Agency/client are 'reasonably certain' budgeted income will continue during the certification period.")
 If verifications_match_check = 1 then call write_variable_in_CASE_NOTE("* Verification/s match what client reported they anticipate.")
 call write_variable_in_CASE_NOTE("---")
 call write_variable_in_CASE_NOTE(worker_signature)
