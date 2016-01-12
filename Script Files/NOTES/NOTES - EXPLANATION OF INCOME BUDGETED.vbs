@@ -1,5 +1,5 @@
 'GATHERING STATS----------------------------------------------------------------------------------------------------
-name_of_script = "NOTES - Explanation Of Income Budgeted.vbs"
+name_of_script = "NOTES - EXPLANATION OF INCOME BUDGETED.vbs"
 start_time = timer
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
@@ -62,21 +62,22 @@ BeginDialog case_number_dialog, 0, 0, 146, 70, "Case number dialog"
   Text 10, 10, 45, 10, "Case number: "
 EndDialog
 
-BeginDialog explanation_of_income_budgeted_dialog, 0, 0, 306, 300, "Explanation Of Income Budgeted Dialog"
+BeginDialog explanation_of_income_budgeted_dialog, 0, 0, 306, 320, "Explanation Of Income Budgeted Dialog"
   EditBox 105, 40, 65, 15, date_calculated
   EditBox 75, 75, 220, 15, earned_income
   EditBox 75, 95, 220, 15, unea_income
   EditBox 120, 125, 175, 15, explanation_of_income
   EditBox 120, 145, 175, 15, income_not_budgeted_and_why
-  DropListBox 105, 165, 150, 15, "Select one..."+chr(9)+"Paystubs"+chr(9)+"Employer's Statement"+chr(9)+"Other (Specified Under 'Other Notes')", type_of_verification_used
-  DropListBox 105, 185, 150, 15, "Select one..."+chr(9)+"Most Recent 30 Days"+chr(9)+"30 Days Prior To Date Of Application/Recertification"+chr(9)+"Retrospective Month (MFIP/GA)"+chr(9)+"Other (Specified Under 'Other Notes')", time_period_used
-  EditBox 90, 205, 205, 15, other_notes_on_income
-  CheckBox 5, 230, 195, 10, "Verification/s match what client reported they anticipate.", verifications_match_check
-  CheckBox 5, 250, 340, 10, "Agency/client are ''reasonably certain'' budgeted income will continue during the ", reasonably_certain_check
-  EditBox 70, 275, 115, 15, worker_signature
+  DropListBox 120, 165, 175, 15, "Select one..."+chr(9)+"Paystubs"+chr(9)+"Employer's Statement"+chr(9)+"Other (Specified Under 'Other Notes on verifications')", type_of_verification_used
+  EditBox 120, 185, 175, 15, other_notes_verifs
+  DropListBox 120, 205, 175, 15, "Select one..."+chr(9)+"Most Recent 30 Days"+chr(9)+"30 Days Prior To Date Of Application/Recertification"+chr(9)+"Retrospective Month (MFIP/GA)"+chr(9)+"Other (Specified Under 'Other Notes on income')", time_period_used
+  EditBox 120, 225, 175, 15, other_notes_on_income
+  CheckBox 5, 250, 195, 10, "Verification/s match what client reported they anticipate.", verifications_match_check
+  CheckBox 5, 270, 340, 10, "Agency/client are ''reasonably certain'' budgeted income will continue during the ", reasonably_certain_check
+  EditBox 70, 295, 115, 15, worker_signature
   ButtonGroup ButtonPressed
-    OkButton 190, 275, 50, 15
-    CancelButton 245, 275, 50, 15
+    OkButton 190, 295, 50, 15
+    CancelButton 245, 295, 50, 15
     PushButton 10, 20, 25, 10, "BUSI", BUSI_button
     PushButton 35, 20, 25, 10, "JOBS", JOBS_button
     PushButton 60, 20, 25, 10, "RBIC", RBIC_button
@@ -85,19 +86,20 @@ BeginDialog explanation_of_income_budgeted_dialog, 0, 0, 306, 300, "Explanation 
     PushButton 175, 20, 40, 10, "prev memb", prev_memb_button
     PushButton 215, 20, 40, 10, "next panel", next_panel_button
     PushButton 255, 20, 40, 10, "next memb", next_memb_button
-  Text 5, 130, 110, 10, "Explanation Of Income Budgeted:"
-  Text 5, 190, 95, 10, "Time period of income used:"
+  Text 5, 210, 95, 10, "Time period of income used:"
   Text 5, 170, 85, 10, "Type Of Verification Used:"
   GroupBox 5, 5, 110, 30, "Income panel navigation:"
-  Text 5, 280, 60, 10, "Worker signature:"
-  Text 5, 210, 80, 10, "Other Notes On Income:"
+  Text 5, 300, 60, 10, "Worker signature:"
+  Text 5, 230, 80, 10, "Other Notes On Income:"
   Text 5, 45, 95, 10, "Date income was calculated:"
   GroupBox 130, 5, 170, 30, "STAT-based navigation:"
   Text 5, 150, 110, 10, "Income NOT Budgeted and Why:"
   Text 10, 100, 60, 10, "Unearned income:"
-  Text 15, 260, 65, 10, "certification period."
+  Text 15, 280, 65, 10, "certification period."
   Text 10, 80, 55, 10, "Earned income:"
   GroupBox 5, 65, 295, 55, "Income in this section reflects the income in MAXIS for the selected footer month/year."
+  Text 5, 130, 110, 10, "Explanation Of Income Budgeted:"
+  Text 5, 190, 105, 10, "Other notes on verfications:"
 EndDialog
 
 'THE SCRIPT----------------------------------------------------------------------
@@ -107,10 +109,17 @@ Call MAXIS_case_number_finder(case_number)
 Call MAXIS_footer_finder(MAXIS_footer_month, MAXIS_footer_year)
 
 Do
-  dialog case_number_dialog     'initial dialog
-  If ButtonPressed = 0 then Stopscript    'if cancel is pressed then the script ends
-  Call check_for_password(are_we_passworded_out)    'function to see if users is password-ed out
-Loop until are_we_passworded_out = false            'will loop until user is password-ed back in
+	err_msg = ""
+	Do
+  	dialog case_number_dialog     'initial dialog
+  	If ButtonPressed = 0 then Stopscript    'if cancel is pressed then the script ends
+  	Call check_for_password(are_we_passworded_out)    'function to see if users is password-ed out
+	Loop until are_we_passworded_out = false  	'will loop until user is password-ed back in
+	If IsNumeric(MAXIS_footer_month) = False or len(MAXIS_footer_month) > 2 or len(MAXIS_footer_month) < 2 then err_msg = err_msg & vbNewLine & "* Enter a valid footer month."
+  If IsNumeric(MAXIS_footer_year) = False or len(MAXIS_footer_year) > 2 or len(MAXIS_footer_year) < 2 then err_msg = err_msg & vbNewLine & "* Enter a valid footer year."
+	If IsNumeric(case_number) = False or Len(case_number) > 8 then err_msg = err_msg & vbNewLine & "* You must enter a valid case number."
+  IF err_msg <> "" THEN MsgBox "*** NOTICE!!! ***" & vbNewLine & err_msg & vbNewLine
+LOOP until err_msg = ""
 
 back_to_self        'retuns user back to self menu
 MAXIS_background_check    'checks to see if the case is stuck in background
@@ -137,13 +146,17 @@ Do
       Loop until ButtonPressed = -1     'Looping until OK button is pressed
   If IsNumeric(case_number) = FALSE or len(case_number) > 8 then err_msg = err_msg & vbNewLine & "* Enter a valid case number."
   If IsDate(date_calculated) = FALSE then err_msg = err_msg & vbNewLine & "* Enter the date income was calculated."
-  If explanation_of_income = "" then err_msg = err_msg & vbNewLine & "* Enter the income that is being budgeted."
+  If explanation_of_income = "" then err_msg = err_msg & vbNewLine & "* Explain the income that is being budgeted."
   If type_of_verification_used = "Select one..." then err_msg = err_msg & vbNewLine & "* You must select the type verification used."
   If time_period_used = "Select one..." then err_msg = err_msg & vbNewLine & "* You must select the time period of the income used."
-  If (type_of_verification_used = "Select one..." AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the type of verification used in the ""other notes"" field."
-  If (time_period_used = "Select one..." AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the time period of income used in the ""other notes"" field."
+  If (type_of_verification_used = "Other (Specified Under 'Other Notes on verifications')" AND other_notes_verifs = "") then err_msg = err_msg & vbNewLine & "* You must explain the type of verification used in the ""other notes on verifications"" field."
+  If (time_period_used = "Other (Specified Under 'Other Notes on income')" AND other_notes_on_income = "") then err_msg = err_msg & vbNewLine & "* You must explain the time period of income used in the ""other notes on income"" field."
   IF err_msg <> "" THEN MsgBox "*** NOTICE!!! ***" & vbNewLine & err_msg & vbNewLine
 LOOP until err_msg = ""
+
+'cleaning up the variables for the case note
+If type_of_verification_used = "Other (Specified Under 'Other Notes on verifications')" then type_of_verification_used = "Other verification"
+If time_period_used = "Other (Specified Under 'Other Notes on income')" then time_period_used = "Other time period"
 
 'Writes to the CASE NOTE
 Call start_a_blank_case_note    'navigates to, and starts a new case note
@@ -155,10 +168,11 @@ Call write_variable_in_CASE_NOTE("---")
 Call write_bullet_and_variable_in_CASE_NOTE("Explanation of income budgeted", explanation_of_income)
 call write_bullet_and_variable_in_CASE_NOTE("Income not budgeted and why", income_not_budgeted_and_why)
 call write_bullet_and_variable_in_CASE_NOTE("Type of verification used", type_of_verification_used)
+Call write_bullet_and_variable_in_CASE_NOTE("Other notes on verifications", other_notes_verifs)
 call write_bullet_and_variable_in_CASE_NOTE("Time period used", time_period_used)
 call write_bullet_and_variable_in_CASE_NOTE("Other notes on income", other_notes_on_income)
 Call write_variable_in_CASE_NOTE("---")
-If reasonably_certain_check = 1 then call write_variable_in_CASE_NOTE("* Agency/client are 'reasonably certain' budgeted income will continue during the certification period.")
+If reasonably_certain_check = 1 then call write_variable_in_CASE_NOTE("* Agency/client are 'reasonably certain' budgeted income will continue during      the certification period.")
 If verifications_match_check = 1 then call write_variable_in_CASE_NOTE("* Verification/s match what client reported they anticipate.")
 call write_variable_in_CASE_NOTE("---")
 call write_variable_in_CASE_NOTE(worker_signature)
