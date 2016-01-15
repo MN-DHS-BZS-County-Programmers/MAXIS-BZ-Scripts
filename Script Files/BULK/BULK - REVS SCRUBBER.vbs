@@ -204,6 +204,8 @@ objExcel.cells(1, 1).Value = "CASE NUMBER"
 objExcel.Cells(1, 1).Font.Bold = TRUE
 objExcel.Cells(1, 2).Value = "Interview Date & Time"
 objExcel.cells(1, 2).Font.Bold = TRUE
+objExcel.cells(1, 5).Value = "Privileged Cases"
+objExcel.cells(1, 5).Font.Bold = TRUE
 
 'creating month plus 1 and plus 2
 cm_plus_1 = dateadd("M", 1, date)
@@ -403,33 +405,42 @@ excel_row = 2
 DO
 	case_number = objExcel.cells(excel_row, 1).Value
 	CALL navigate_to_MAXIS_screen("STAT", "REVW")
+	'Checking for PRIV cases.
+	EMReadScreen priv_check, 6, 24, 14 'If it can't get into the case needs to skip
+	IF priv_check = "PRIVIL" THEN 'Delete priv cases from excel sheet, save to a list for later
+		priv_case_list = priv_case_list & "|" & case_number
+		SET objRange = objExcel.Cells(excel_row, 1).EntireRow			
+		objRange.Delete
+		excel_row = excel_row - 1
+		msgbox priv_case_list
+	ELSE
+		EMwritescreen "x", 5, 58
+		Transmit
+		DO											'looping to check if the SNAP REVW popup is on the screen
+			EMReadScreen SNAP_popup_check, 7, 5, 43
+		LOOP until SNAP_popup_check = "Reports"
+		
+		'The script will now read the CSR MO/YR and the Recert MO/YR
+		EMReadScreen CSR_mo, 2, 9, 26
+		EMReadScreen CSR_yr, 2, 9, 32
+		EMReadScreen recert_mo, 2, 9, 64
+		EMReadScreen recert_yr, 2, 9, 70
+		
+		'It then compares what it read to the previously established current month plus 2 and determines if it is a recert or not. If it is a recert we need an interview
+		IF CSR_mo = left(cm_plus_2, 2) and CSR_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "NO"
+		IF recert_mo = left(cm_plus_2, 2) and recert_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "YES"
 	
-	EMwritescreen "x", 5, 58
-	Transmit
-	DO											'looping to check if the SNAP REVW popup is on the screen
-		EMReadScreen SNAP_popup_check, 7, 5, 43
-	LOOP until SNAP_popup_check = "Reports"
-    
-	'The script will now read the CSR MO/YR and the Recert MO/YR
-	EMReadScreen CSR_mo, 2, 9, 26
-	EMReadScreen CSR_yr, 2, 9, 32
-	EMReadScreen recert_mo, 2, 9, 64
-	EMReadScreen recert_yr, 2, 9, 70
-	
-	'It then compares what it read to the previously established current month plus 2 and determines if it is a recert or not. If it is a recert we need an interview
-	IF CSR_mo = left(cm_plus_2, 2) and CSR_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "NO"
-	IF recert_mo = left(cm_plus_2, 2) and recert_yr = right(cm_plus_2, 2) THEN RECERT_STATUS = "YES"
-
-	'If it's not a recert, delete it from the excel list and move on with our lives
-	IF RECERT_STATUS = "NO" THEN		
-		Call navigate_to_MAXIS_screen("STAT", "PROG")
-		EMReadScreen MFIP_prog_check, 2, 6, 67		'checking for an active MFIP case
-		EMReadScreen MFIP_status_check, 4, 6, 74
-		If MFIP_prog_check <> "MF" AND MFIP_status_check <> "ACTV" THEN 	'if MFIP is active, then case will not be deleted.
-			SET objRange = objExcel.Cells(excel_row, 1).EntireRow			
-			objRange.Delete				'all other cases that are not due for a recert will be deleted
-			excel_row = excel_row - 1
-		END If
+		'If it's not a recert, delete it from the excel list and move on with our lives
+		IF RECERT_STATUS = "NO" THEN		
+			Call navigate_to_MAXIS_screen("STAT", "PROG")
+			EMReadScreen MFIP_prog_check, 2, 6, 67		'checking for an active MFIP case
+			EMReadScreen MFIP_status_check, 4, 6, 74
+			If MFIP_prog_check <> "MF" AND MFIP_status_check <> "ACTV" THEN 	'if MFIP is active, then case will not be deleted.
+				SET objRange = objExcel.Cells(excel_row, 1).EntireRow			
+				objRange.Delete				'all other cases that are not due for a recert will be deleted
+				excel_row = excel_row - 1
+			END If
+		END IF
 	END IF
 	excel_row = excel_row + 1
 LOOP UNTIL objExcel.Cells(excel_row, 1).Value = ""	'looping until the list of cases to check for recert is complete
@@ -770,12 +781,18 @@ Else    'if worker is actually running the script it will do this
 			
 	LOOP until objExcel.cells(excel_row, 1).Value = ""
 	
-		
 	'Formatting the columns to autofit after they are all finished being created. 
 	objExcel.Columns(1).autofit()
 	objExcel.Columns(2).autofit()
 	objExcel.Columns(3).autofit()
 	objExcel.Columns(4).autofit()
 End IF
-
-script_end_procedure("Success, the excel file now has all of the cases that have had interviews scheduled.")
+'Creating the list of privileged cases and adding to the spreadsheet
+	prived_case_array = split(priv_case_list, "|")
+	excel_row = 2
+FOR EACH case_number in prived_case_array
+	objExcel.cells(excel_row, 5).value = case_number
+	excel_row = excel_row + 1
+NEXT
+		
+script_end_procedure("Success, the excel file now has all of the cases that have had interviews scheduled.  Please manually review the list of priveleged cases.")
