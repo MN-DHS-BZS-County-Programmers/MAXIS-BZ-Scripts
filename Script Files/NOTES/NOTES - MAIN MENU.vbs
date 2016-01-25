@@ -74,44 +74,47 @@ DIM LTC_RENEWAL_button, LTC_TRANSFER_PENALTY_button, LTC_1503_button, LTC_5181_b
 'The function that creates the 4 dialogs depending on the dialog_name being sent through.
 FUNCTION create_NOTES_main_menu(dialog_name)
 	IF dialog_name = "#-C" THEN
-        BeginDialog dialog_name, 0, 0, 516, 270, "# - C NOTES Scripts"
+        BeginDialog dialog_name, 0, 0, 516, 280, "# - C NOTES Scripts"
  	    Text 5, 5, 435, 10, "Notes scripts main menu: select the script to run from the choices below. Notes with autofill functionality marked with an asterisk (*)."
  		 ButtonGroup ButtonPressed
    			PushButton 15, 35, 30, 15, "# - C", number_through_c_notes_button
    			PushButton 45, 35, 30, 15, "D - F", d_through_f_notes_button
-  		      PushButton 75, 35, 30, 15, "G - L", g_through_l_notes_button
-    			PushButton 105, 35, 30, 15, "M - Q", m_through_q_notes_button
-    			PushButton 135, 35, 30, 15, "R - Z", r_through_z_notes_button
-    			PushButton 165, 35, 30, 15, "LTC", ltc_notes_button
-    			PushButton 445, 10, 65, 10, "SIR instructions", SIR_instructions_button
-    			PushButton 5, 70, 80, 10, "Application received", APPLICATION_RECEIVED_button
-    			PushButton 5, 85, 70, 10, "Approved programs", APPROVED_PROGRAMS_button
-    			PushButton 5, 100, 45, 10, "Baby born", BABY_BORN_button
-    			PushButton 5, 115, 50, 10, "Burial assets", BURIAL_ASSETS_button
-    			PushButton 5, 130, 20, 10, "CAF", CAF_button
-    			PushButton 5, 145, 105, 10, "Change Report Form Received", CHANGE_REPORT_FORM_RECEIVED_button
-    			PushButton 5, 160, 70, 10, "Change Reported", CHANGE_REPORTED_button
-    			PushButton 5, 175, 95, 10, "Citizenship/identity verified", CITIZENSHIP_IDENTITY_VERIFIED_button
-    			PushButton 5, 190, 50, 10, "Client contact", CLIENT_CONTACT_button
-    			PushButton 5, 205, 60, 10, "Closed programs", CLOSED_PROGRAMS_button
-    			PushButton 5, 220, 50, 10, "Combined AR", COMBINED_AR_button
-    			PushButton 5, 235, 20, 10, "CSR", CSR_button
-    			PushButton 5, 250, 85, 10, "County Burial Application", COUNTY_BURIAL_button
+  		    PushButton 75, 35, 30, 15, "G - L", g_through_l_notes_button
+    		PushButton 105, 35, 30, 15, "M - Q", m_through_q_notes_button
+    		PushButton 135, 35, 30, 15, "R - Z", r_through_z_notes_button
+    		PushButton 165, 35, 30, 15, "LTC", ltc_notes_button
+    		PushButton 445, 10, 65, 10, "SIR instructions", SIR_instructions_button
+    		PushButton 5, 70, 80, 10, "Application received", APPLICATION_RECEIVED_button
+    		PushButton 5, 85, 70, 10, "Approved programs", APPROVED_PROGRAMS_button
+			PushButton 5, 100, 70, 10, "AREP Form Received", AREP_FORM_RECEIVED_button
+    		PushButton 5, 115, 45, 10, "Baby born", BABY_BORN_button
+    		PushButton 5, 130, 50, 10, "Burial assets", BURIAL_ASSETS_button
+    		PushButton 5, 145, 20, 10, "CAF", CAF_button
+    		PushButton 5, 160, 105, 10, "Change Report Form Received", CHANGE_REPORT_FORM_RECEIVED_button
+    		PushButton 5, 175, 70, 10, "Change Reported", CHANGE_REPORTED_button
+    		PushButton 5, 190, 95, 10, "Citizenship/identity verified", CITIZENSHIP_IDENTITY_VERIFIED_button
+    		PushButton 5, 205, 50, 10, "Client contact", CLIENT_CONTACT_button
+    		PushButton 5, 220, 60, 10, "Closed programs", CLOSED_PROGRAMS_button
+    		PushButton 5, 235, 50, 10, "Combined AR", COMBINED_AR_button
+    		PushButton 5, 250, 20, 10, "CSR", CSR_button
+    		PushButton 5, 265, 85, 10, "County Burial Application", COUNTY_BURIAL_button
     		CancelButton 460, 245, 50, 15
-  	Text 90, 70, 330, 10, "--- Template for documenting details about an application recevied."
-  	Text 80, 85, 325, 10, "--- Template for when you approve a client's programs."
-  	Text 55, 100, 270, 10, "--- Template for a baby born and added to household."
-  	Text 60, 115, 135, 10, "--- Template for burial assets."
-  	Text 30, 130, 390, 10, "--- Template for when you're processing a CAF. Works for intake as well as recertification and reapplication.*"
-  	Text 120, 145, 255, 10, "--- Template for case noting information reported from a Change Report Form."
-  	Text 85, 160, 385, 10, "--- Template for case noting HHLD Comp or Baby Born being reported. **More changes to be added in the future**"
-  	Text 105, 175, 295, 10, "--- Template for documenting citizenship/identity status for a case."
-  	Text 60, 190, 430, 10, "--- Template for documenting client contact, either from or to a client."
-  	Text 70, 205, 430, 10, "--- Template for indicating which programs are closing, and when. Also case notes intake/REIN dates based on various selections."
-  	Text 60, 220, 250, 10, "--- Template for the Combined Annual Renewal.*"
-  	Text 30, 235, 120, 10, "--- Template for the CSR.*"
-
-EndDialog
+			Text 90, 70, 330, 10, "--- Template for documenting details about an application recevied."
+			Text 80, 85, 325, 10, "--- Template for when you approve a client's programs."
+			Text 80, 100, 325, 10, "--- NEW 1/16!!! Template for when you receive an AREP form."
+			Text 55, 115, 270, 10, "--- Template for a baby born and added to household."
+			Text 60, 130, 135, 10, "--- Template for burial assets."
+			Text 30, 145, 390, 10, "--- Template for when you're processing a CAF. Works for intake as well as recertification and reapplication.*"
+			Text 120, 160, 255, 10, "--- Template for case noting information reported from a Change Report Form."
+			Text 85, 175, 385, 10, "--- Template for case noting HHLD Comp or Baby Born being reported. **More changes to be added in the future**"
+			Text 105, 190, 295, 10, "--- Template for documenting citizenship/identity status for a case."
+			Text 60, 205, 430, 10, "--- Template for documenting client contact, either from or to a client."
+			Text 70, 220, 430, 10, "--- Template for indicating which programs are closing, and when. Also case notes intake/REIN dates based on various selections."
+			Text 60, 235, 250, 10, "--- Template for the Combined Annual Renewal.*"
+			Text 30, 250, 120, 10, "--- Template for the CSR.*"
+			Text 100, 265, 145, 10, "--- Template for the County Burial Application.*"
+			GroupBox 5, 20, 205, 35, "NOTES Sub-Menus"
+		EndDialog
         ELSEIF dialog_name = "D-F" THEN
         	BeginDialog dialog_name, 0, 0, 516, 260, "D - F NOTES Scripts"
 		ButtonGroup ButtonPressed
@@ -332,6 +335,7 @@ LOOP UNTIL ButtonPressed <> SIR_instructions_button AND _
 'Available scripts
 IF ButtonPressed = APPLICATION_RECEIVED_button						THEN CALL run_from_GitHub(script_repository & "/NOTES/NOTES - APPLICATION RECEIVED.vbs")
 IF ButtonPressed = APPROVED_PROGRAMS_button							THEN CALL run_from_GitHub(script_repository & "/NOTES/NOTES - APPROVED PROGRAMS.vbs")
+IF ButtonPressed = AREP_FORM_RECEIVED_button						THEN CALL run_from_GitHub(script_repository & "/NOTES/NOTES - AREP FORM RECEIVED.vbs")
 IF ButtonPressed = BABY_BORN_button									THEN CALL run_from_GitHub(script_repository & "/NOTES/NOTES - CHANGE REPORTED.vbs")
 IF ButtonPressed = BURIAL_ASSETS_button								THEN CALL run_from_GitHub(script_repository & "/NOTES/NOTES - BURIAL ASSETS.vbs")
 IF ButtonPressed = CAF_button										THEN CALL run_from_GitHub(script_repository & "/NOTES/NOTES - CAF.vbs")
