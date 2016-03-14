@@ -71,14 +71,14 @@ End function
 
 'DIALOG===========================================================================================================================
 BeginDialog housing_grant_dialog, 0, 0, 271, 200, "MFIP Housing Grant FIATER"
-  EditBox 65, 10, 60, 15, case_number
-  EditBox 210, 10, 25, 15, initial_month
-  EditBox 240, 10, 25, 15, initial_year
+  EditBox 65, 5, 60, 15, case_number
+  EditBox 210, 5, 25, 15, initial_month
+  EditBox 240, 5, 25, 15, initial_year
+  CheckBox 160, 20, 110, 10, "Only run for the above month.", one_month_checkbox
   ButtonGroup ButtonPressed
     OkButton 160, 180, 50, 15
     CancelButton 215, 180, 50, 15
-  Text 10, 15, 50, 10, "Case Number:"
-  Text 145, 15, 60, 10, "Initial month/year:"
+  Text 145, 10, 60, 10, "Initial month/year:"
   Text 15, 75, 100, 10, "* Caregivers age 60 or older"
   GroupBox 5, 35, 260, 140, "MFIP Housing Grant $50 earned income exemption"
   Text 15, 50, 245, 20, "Only certain people are eligible for the housing grant $50 unearned income exemption. These recipients include:"
@@ -87,6 +87,7 @@ BeginDialog housing_grant_dialog, 0, 0, 271, 200, "MFIP Housing Grant FIATER"
   Text 15, 120, 245, 20, "* Caregivers who are disabled and do not anticipated being able to work for        20+ hours for more than 30 days"
   Text 15, 145, 100, 10, "* Caregivers who receive SSI"
   Text 15, 160, 180, 10, "* Caregivers who receive Mille Lacs Band Tribal TANF"
+  Text 10, 10, 50, 10, "Case Number:"
 EndDialog
 
 'The script============================================================================================================================
@@ -119,57 +120,93 @@ call date_array_generator(initial_month, initial_year, footer_month_array)
 MAXIS_footer_month = initial_month
 MAXIS_footer_year = initial_year
 
-'The following loop will take the script through each month in the package, from appl month. to CM+1
-For i = 0 to ubound(footer_month_array)				'array of footer months
-	MAXIS_footer_month = datepart("m", footer_month_array(i)) 'Need to assign footer month / year each time through
-	if len(MAXIS_footer_month) = 1 THEN MAXIS_footer_month = "0" & MAXIS_footer_month		'adds a 0 if footer month is a single digit
-	MAXIS_footer_year = right(datepart("YYYY", footer_month_array(i)), 2)			'users the last 2 digits of the footer year
+'Checks if the worker only wants the script to FIAT the one month entered
+IF one_month_checkbox = 1 THEN
+	back_to_self
 
-	'-----------------GO TO FIAT!---------------------------------
-	back_to_self						'entering the footer month/year and navigating to FIAT'
-	EMwritescreen "FIAT", 16, 43
-	EMWritescreen case_number, 18, 43
-	EMwritescreen MAXIS_footer_month, 20, 43
-	EMWritescreen MAXIS_footer_year, 20, 46
-	transmit
-	EMReadscreen results_check, 4, 9, 46 'We need to make sure results exist, otherwise stop.
-	IF results_check = "    " THEN script_end_procedure("The script was unable to find unapproved MFIP results for the benefit month, please check your case and try again.")
-	EMWritescreen "03", 4, 34 'entering the FIAT reason
-	EMWritescreen "x", 9, 22
-	transmit 'This should take us to FMSL
+	'starting at requested month
+	EMwritescreen initial_month, 20, 43
+	EMwritescreen initial_year, 20, 46
+
+	'Navigates to FIAT and selects MFIP.
+	CALL navigate_to_MAXIS_screen("FIAT", "____")
+		EMwritescreen "03", 4, 34
+		EMwritescreen "x", 9, 22
+		transmit
 
 	'Selects View Case Budget.
-	EMwritescreen "x", 18, 4
-	transmit
-	'Selects the Subsidy/Tribal pop-up then the Housing Subsidy sub-pop-up
-	EMwritescreen "x", 17, 5
-	transmit
-	EMwritescreen "x", 8, 13
-	transmit
+		EMwritescreen "x", 18, 4
+		transmit
+
+	'Selects the Subsidy/Tribal popup then the Housing Subsidy sub-popup
+		EMwritescreen "x", 17, 5
+		transmit
+		EMwritescreen "x", 8, 13
+		transmit
+
 	'Changes the prospective column to $0
-	EMwritescreen "0       ", 8, 51
-	transmit
-	transmit
-	transmit
-	'Reading to ensure the housing grant is in budget
-	EMReadScreen MFIP_grant_confirmation, 6, 15, 75
-	If MFIP_grant_confirmation <> "110.00" then 
-		script_end_procedure("An issued occured during the FIAT process. Please process manually.") 
-	ELSE
-		PF3
-		PF3
-		EMWritescreen "Y", 13, 41
+		EMwritescreen "0       ", 8, 51
 		transmit
-		STATS_counter = STATS_counter + 1  'adds one instance to the stats counter, counting each month as it's own run
-	END IF
-	EMReadscreen final_month_check, 4, 10, 53 'This looks for a pop-up that only comes up in the final month, and clears it.
-	IF final_month_check = "ELIG" THEN
-		EMWritescreen "Y", 11, 52
-		EMWritescreen initial_month, 13, 37
-		EMWritescreen right(initial_year, 2), 13, 40
 		transmit
-	END IF
-NEXT
+		transmit
+		'Reading to ensure the housing grant is in budget
+		EMReadScreen MFIP_grant_confirmation, 6, 15, 75
+		If MFIP_grant_confirmation <> "110.00" then 
+			script_end_procedure("An issued occured during the FIAT process. Please process manually.")
+
+ELSE
+	'The following loop will take the script through each month in the package, from appl month. to CM+1
+	For i = 0 to ubound(footer_month_array)				'array of footer months
+		MAXIS_footer_month = datepart("m", footer_month_array(i)) 'Need to assign footer month / year each time through
+		if len(MAXIS_footer_month) = 1 THEN MAXIS_footer_month = "0" & MAXIS_footer_month		'adds a 0 if footer month is a single digit
+		MAXIS_footer_year = right(datepart("YYYY", footer_month_array(i)), 2)			'users the last 2 digits of the footer year
+
+		'-----------------GO TO FIAT!---------------------------------
+		back_to_self						'entering the footer month/year and navigating to FIAT'
+		EMwritescreen "FIAT", 16, 43
+		EMWritescreen case_number, 18, 43
+		EMwritescreen MAXIS_footer_month, 20, 43
+		EMWritescreen MAXIS_footer_year, 20, 46
+		transmit
+		EMReadscreen results_check, 4, 9, 46 'We need to make sure results exist, otherwise stop.
+		IF results_check = "    " THEN script_end_procedure("The script was unable to find unapproved MFIP results for the benefit month, please check your case and try again.")
+		EMWritescreen "03", 4, 34 'entering the FIAT reason
+		EMWritescreen "x", 9, 22
+		transmit 'This should take us to FMSL
+
+		'Selects View Case Budget.
+		EMwritescreen "x", 18, 4
+		transmit
+		'Selects the Subsidy/Tribal pop-up then the Housing Subsidy sub-pop-up
+		EMwritescreen "x", 17, 5
+		transmit
+		EMwritescreen "x", 8, 13
+		transmit
+		'Changes the prospective column to $0
+		EMwritescreen "0       ", 8, 51
+		transmit
+		transmit
+		transmit
+		'Reading to ensure the housing grant is in budget
+		EMReadScreen MFIP_grant_confirmation, 6, 15, 75
+		If MFIP_grant_confirmation <> "110.00" then 
+			script_end_procedure("An issued occured during the FIAT process. Please process manually.") 
+		ELSE
+			PF3
+			PF3
+			EMWritescreen "Y", 13, 41
+			transmit
+			STATS_counter = STATS_counter + 1  'adds one instance to the stats counter, counting each month as it's own run
+		END IF
+		EMReadscreen final_month_check, 4, 10, 53 'This looks for a pop-up that only comes up in the final month, and clears it.
+		IF final_month_check = "ELIG" THEN
+			EMWritescreen "Y", 11, 52
+			EMWritescreen initial_month, 13, 37
+			EMWritescreen right(initial_year, 2), 13, 40
+			transmit
+		END IF
+	NEXT
+END IF 
 
 STATS_counter = STATS_counter - 1 	'removes one instance since one is counted at the start
 
