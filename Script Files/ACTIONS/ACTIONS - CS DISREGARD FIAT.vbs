@@ -3,6 +3,13 @@
 'STATS GATHERING----------------------------------------------------------------------------------------------------
 name_of_script = "ACTIONS - CS DISREGARD FIAT.vbs"
 start_time = timer
+
+'Required for statistical purposes==========================================================================================
+STATS_counter = 1                     	'sets the stats counter at one
+STATS_manualtime = 101                	'manual run time in seconds
+STATS_denomination = "C"       		'C is for each CASE
+'END OF stats block=========================================================================================================
+
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
 IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded once
 	IF run_locally = FALSE or run_locally = "" THEN		'If the scripts are set to run locally, it skips this and uses an FSO below.
@@ -45,11 +52,6 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
-'Required for statistical purposes==========================================================================================
-STATS_counter = 1                     	'sets the stats counter at one
-STATS_manualtime = 101                	'manual run time in seconds
-STATS_denomination = "C"       		'C is for each CASE
-'END OF stats block=========================================================================================================
 
 'DIALOG===========================================================================================================================
 BeginDialog CSD_FIAT_dlg, 0, 0, 161, 95, "Child Support Disregard FIATer"
