@@ -2,6 +2,13 @@
 name_of_script = "ACTIONS - TYMA TIKLER.vbs"
 start_time = timer
 
+'Required for statistical purposes==========================================================================================
+STATS_counter = 1              'sets the stats counter at one
+IF TYMA_TIKL_ALL_AT_ONCE = TRUE THEN STATS_manualtime = 136        'manual run time in seconds for TIKLING all at once
+IF TYMA_TIKL_ALL_AT_ONCE = FALSE THEN STATS_manualtime = 30        'manual run time in seconds for TIKLING as you go (1st TIKL)
+STATS_denomination = "C"		'C is for case
+'END OF stats block==============================================================================================
+
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
 IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded once
 	IF run_locally = FALSE or run_locally = "" THEN		'If the scripts are set to run locally, it skips this and uses an FSO below.
@@ -44,12 +51,6 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
-'Required for statistical purposes==========================================================================================
-STATS_counter = 1              'sets the stats counter at one
-IF TYMA_TIKL_ALL_AT_ONCE = TRUE THEN STATS_manualtime = 136        'manual run time in seconds for TIKLING all at once
-IF TYMA_TIKL_ALL_AT_ONCE = FALSE THEN STATS_manualtime = 30        'manual run time in seconds for TIKLING as you go (1st TIKL)
-STATS_denomination = "C"		'C is for case
-'END OF stats block==============================================================================================
 
 	'DIALOGS--------------------------------------------------------------------------------------------------------------------
 	BeginDialog TYMA_tikler, 0, 0, 261, 200, "TYMA/TMA TIKLer"
@@ -232,5 +233,4 @@ IF TYMA_TIKL_ALL_AT_ONCE = FALSE or TYMA_TIKL_ALL_AT_ONCE = "" THEN  'This porti
 	PF3
 	script_end_procedure("Success! Script has added a TIKL to send the 1st quarter report form on " & first_quart_send)
 END IF
-
 
