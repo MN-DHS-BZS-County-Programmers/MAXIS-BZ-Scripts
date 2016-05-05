@@ -1,6 +1,10 @@
 'STATS GATHERING--------------------------------------------------------------------------
 name_of_script = "BULK - REVW-MONT CLOSURES.vbs"
 start_time = timer
+STATS_counter = 1                          'sets the stats counter at one
+STATS_manualtime = 147                     'manual run time in seconds
+STATS_denomination = "C"       							'C is for each CASE
+'END OF stats block==============================================================================================
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
 IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded once
@@ -44,12 +48,6 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
-'Required for statistical purposes==========================================================================================
-STATS_counter = 1                          'sets the stats counter at one
-STATS_manualtime = 147                     'manual run time in seconds
-STATS_denomination = "C"       							'C is for each CASE
-'END OF stats block==============================================================================================
-
 'USER DETERMINATION-------------------------------------------------
 'Getting network ID info for use by the next part of the script.
 Set objNet = CreateObject("WScript.NetWork")
@@ -79,18 +77,20 @@ footer_year = datepart("yyyy", dateadd("m", 1, date))
 footer_year = footer_year - 2000
 
 '----------------------THIS IS THE DIALOG FOR THE SCRIPT
-BeginDialog REVW_MONT_closures_dialog, 0, 0, 256, 110, "REVW/MONT closures"
+BeginDialog REVW_MONT_closures_dialog, 0, 0, 256, 125, "REVW/MONT closures"
   EditBox 195, 15, 55, 15, worker_signature
   EditBox 205, 35, 45, 15, worker_number
-  CheckBox 15, 75, 120, 10, "REPT/MONT? (HRFs)", MONT_check
-  CheckBox 15, 90, 120, 10, "REPT/REVW? (CSRs and ARs)", REVW_check
+  CheckBox 15, 75, 120, 10, "REPT/GRMR? (GRH HRFs)", GRMR_check
+  CheckBox 15, 90, 120, 10, "REPT/MONT? (HRFs)", MONT_check
+  CheckBox 15, 105, 120, 10, "REPT/REVW? (CSRs and ARs)", REVW_check
   ButtonGroup ButtonPressed
     OkButton 200, 65, 50, 15
     CancelButton 200, 90, 50, 15
-  Text 5, 5, 185, 25, "This script will case note all of your renewals that are closing/incomplete. You'll need to sign your case notes:"
   Text 5, 40, 195, 10, "Enter all 7 digits of your x1# here (e.g. ''X######''):"
-  GroupBox 5, 60, 150, 45, "Case note closing/incomplete cases from:"
+  GroupBox 5, 60, 155, 60, "Case note closing/incomplete cases from:"
+  Text 5, 5, 185, 25, "This script will case note all of your renewals that are closing/incomplete. You'll need to sign your case notes:"
 EndDialog
+
 
 '----------------------CONNECTING TO BLUEZONE, RUNNING THE DIALOG, AND NAVIGATING TO REPT/REVW
 EMConnect ""
@@ -389,9 +389,17 @@ If mont_check = 1 then
 		Else
 		  call write_variable_in_CASE_NOTE("---HRF not provided---")
 		End if
+		IF cash_review_code = "I" THEN call write_variable_in_CASE_NOTE("Cash closing for incomplete renewal. See previous case note for details on what's needed.")
+		IF FS_review_code = "I" THEN call write_variable_in_CASE_NOTE("SNAP closing for incomplete renewal. See previous case note for details on what's needed.")
+		IF GRH_review_code = "I" THEN call write_variable_in_CASE_NOTE("GRH closing for incomplete renewal. See previous case note for details on what's needed.")
+		IF HC_review_code = "I" THEN call write_variable_in_CASE_NOTE("HC closing for incomplete renewal. See previous case note for details on what's needed.")
+		IF cash_review_code = "N" THEN call write_variable_in_CASE_NOTE("Cash closing for no renewal paperwork turned in.")
+		IF FS_review_code = "N" THEN call write_variable_in_CASE_NOTE("SNAP closing for no renewal paperwork turned in.")
+		IF GRH_review_code = "N" THEN call write_variable_in_CASE_NOTE("GRH closing for no renewal paperwork turned in.")
+		IF HC_review_code = "N" THEN call write_variable_in_CASE_NOTE("HC closing for no renewal paperwork turned in.")
 		call write_variable_in_CASE_NOTE("---")
 		call write_variable_in_CASE_NOTE(worker_signature & ", via automated script.")
-	ELSE 'Prived case, add the case number to the list
+	ELSE 'Privileged case, add the case number to the list
 		priv_case_list = priv_case_list & " " & case_number
 	END IF
 
@@ -411,6 +419,101 @@ If mont_check = 1 then
   Next
 
   call navigate_to_MAXIS_screen("rept", "mont")
+  EMReadScreen default_worker_number, 3, 21, 10
+  If worker_number <> default_worker_number then
+    EMWriteScreen worker_number, 21, 6
+    transmit
+  End if
+End If
+
+'THIS PART DOES THE REPT GRMR----------------------------------------------------------------------------------------------------
+If GRMR_check = 1 then
+  'Navigating to GRMR
+  call navigate_to_MAXIS_screen("rept", "GRMR")
+
+  'Checking the current worker number. If it's not the selected one it will enter the selected one.
+  EMReadScreen default_worker_number, 3, 21, 10
+  If worker_number <> default_worker_number then
+    EMWriteScreen worker_number, 21, 6
+    transmit
+  End if
+
+  'changing month to past month
+   past_date = dateadd("m", -1, date)
+   past_month = "0" & datepart("m", past_date)
+   EMReadScreen GRMR_month, 2, 20, 54
+   EMReadScreen GRMR_year, 2, 20, 57
+   IF GRMR_month <> right(past_month, 2) THEN
+	EMWriteScreen right(past_month, 2), 20, 54
+	EMWriteScreen right(past_date, 2), 20, 57
+	transmit
+   END IF
+
+  'Setting the variable for the following do...loop
+  row = 7
+
+  'This reads the case number and program status. If an "N" or "I" is detected it will add to the case_number_array variable.
+  Do
+    EMReadScreen case_number, 8, row, 6
+    EMReadScreen program_status, 7, row, 51
+    are_programs_closing = instr(program_status, "N") <> 0 or instr(program_status, "I") <> 0
+    If are_programs_closing = True then case_number_array = trim(case_number_array & " " & trim(case_number))
+    row = row + 1
+    If row = 19 then
+      PF8
+      EMReadScreen last_check, 4, 24, 14
+      row = 7
+    End if
+  Loop until trim(case_number) = "" or last_check = "LAST"
+  
+  'Creating an array out of the case number array
+  case_number_array = split(case_number_array)
+
+  'Navigating to each case, and case noting the ones that are closing.
+  For each case_number in case_number_array
+    'Going to the case, checking for error prone
+	footer_month = right(past_month, 2)		'redeclaring footer_month/year as for GRMR we need to look at the past month
+	footer_year = right(past_date, 2)
+    call navigate_to_MAXIS_screen("stat", "mont")
+	EMReadScreen priv_check, 4, 24, 14 'Checking if we can get into stat (need to bypass Privileged cases)
+	IF priv_check <> "PRIV" THEN 'Not privileged, we can go ahead and do everything
+		call navigate_to_MAXIS_screen("stat", "mont") 'In case of error prone cases
+
+		'Reading the review codes, converting them to a status update for the case note
+		EMReadScreen GRH_review_code, 1, 11, 63
+	  '---------------NOW IT CASE NOTES
+		PF4
+		PF9
+
+		If GRH_review_code = "I" then
+		  call write_variable_in_CASE_NOTE("---Incomplete HRF---")
+		Else
+		  call write_variable_in_CASE_NOTE("---HRF not provided---")
+		End if
+		IF GRH_review_code = "I" THEN call write_variable_in_CASE_NOTE("GRH closing for incomplete renewal. See previous case note for details on what's needed.")
+		IF GRH_review_code = "N" THEN call write_variable_in_CASE_NOTE("GRH closing for no renewal paperwork turned in.")
+		call write_variable_in_CASE_NOTE("---")
+		call write_variable_in_CASE_NOTE(worker_signature & ", via automated script.")
+	ELSE 'Privileged case, add the case number to the list
+		priv_case_list = priv_case_list & " " & case_number
+	END IF
+
+  '----------------NOW IT RESETS THE VARIABLES FOR THE REVIEW CODES, STATUS, AND DATES
+    cash_review_code = ""
+    GRH_review_code = ""
+    FS_review_code = ""
+    HC_review_code = ""
+    cash_review_status = ""
+    GRH_review_status = ""
+    FS_review_status = ""
+    HC_review_status = ""
+    first_of_working_month = ""
+    last_day_to_turn_in_docs = ""
+    intake_date = ""
+		STATS_counter = STATS_counter + 1                      'adds one instance to the stats counter
+  Next
+
+  call navigate_to_MAXIS_screen("rept", "GRMR")
   EMReadScreen default_worker_number, 3, 21, 10
   If worker_number <> default_worker_number then
     EMWriteScreen worker_number, 21, 6
