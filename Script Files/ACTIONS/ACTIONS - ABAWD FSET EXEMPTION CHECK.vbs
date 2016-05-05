@@ -53,7 +53,7 @@ STATS_denomination = "M"       		'M is for each MEMBER
 'END OF stats block=========================================================================================================
 
 'DIALOGS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-BeginDialog Dialog1, 0, 0, 166, 70, "Case number dialog"
+BeginDialog , 0, 0, 166, 70, "Case number dialog"
   EditBox 65, 5, 70, 15, MAXIS_case_number
   EditBox 65, 25, 30, 15, footer_month
   EditBox 130, 25, 30, 15, footer_year
@@ -86,7 +86,7 @@ cstr(footer_month)
 
 DO
 	err_msg = ""
-	DIALOG Dialog1
+	DIALOG
 		cancel_confirmation
 		IF MAXIS_case_number = "" THEN err_msg = err_msg & vbCr & "* Please enter a case number."
 		IF footer_month = "" THEN err_msg = err_msg & vbCr & "* Please enter a benefit month."
