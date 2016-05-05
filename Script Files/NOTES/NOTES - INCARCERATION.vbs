@@ -56,7 +56,7 @@ EMConnect ""
 'Grabs the MAXIS case number
 CALL MAXIS_case_number_finder(case_number)
 
-BeginDialog Dialog1, 0, 0, 166, 85, "Incarceration"
+BeginDialog , 0, 0, 166, 85, "Incarceration"
   EditBox 80, 5, 75, 15, case_number
   EditBox 80, 25, 75, 15, hh_member
   EditBox 80, 45, 25, 15, month_benefit
@@ -71,7 +71,7 @@ EndDialog
 
 'Shows the FIRST dialog box
 DO
-	Dialog Dialog1
+	Dialog 
 	cancel_confirmation
 	IF isnumeric(case_number)= FALSE THEN MsgBox "You must enter a valid case number!"
 LOOP UNTIL Isnumeric(case_number) = TRUE
@@ -85,7 +85,7 @@ CALL navigate_to_MAXIS_screen("stat", "faci")
 		'transmit
 	END IF
 
-BeginDialog Dialog1, 0, 0, 451, 200, "Incarceration"
+BeginDialog , 0, 0, 451, 200, "Incarceration"
   EditBox 85, 10, 85, 15, case_number
   EditBox 280, 10, 75, 15, hh_member
   EditBox 85, 40, 85, 15, start_date
@@ -121,7 +121,7 @@ EndDialog
 'Shows the MAIN dialog
 DO
 	err_msg = ""
-	Dialog Dialog1
+	Dialog 
 		IF ButtonPressed = 0 THEN StopScript
 		IF info_recd = "Click here to enter info" THEN err_msg = err_msg & vbCr & "You must select how the incarceration info was received!"
 		IF faci_type = "Select One..." THEN err_msg = err_msg & vbCr & "You must select a facility type!"

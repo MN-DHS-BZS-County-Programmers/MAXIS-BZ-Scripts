@@ -51,7 +51,7 @@ STATS_denomination = "C"        'C is for each case
 'END OF stats block=========================================================================================================
 
 'THE DIALOG--------------------------------------------------------------------------------------------------
-BeginDialog Dialog1, 0, 0, 351, 185, "Pregnancy Reported"
+BeginDialog , 0, 0, 351, 185, "Pregnancy Reported"
   EditBox 95, 5, 80, 15, maxis_case_number
   EditBox 95, 25, 80, 15, member_preg
   EditBox 260, 25, 70, 15, due_date
@@ -86,7 +86,7 @@ CALL MAXIS_case_number_finder(case_number)
 'Shows dialog
 DO
 	err_msg = ""
-	Dialog Dialog1 
+	Dialog
 		IF ButtonPressed = 0 THEN StopScript
 		IF report_method = "Select One..." THEN err_msg = err_msg & vbCr & "* You must select how the pregnancy was reported!"
 		IF IsNumeric(case_number) = FALSE THEN err_msg = err_msg & vbCr & "* You must type a valid numeric case number."
