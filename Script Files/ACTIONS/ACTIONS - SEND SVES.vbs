@@ -59,7 +59,7 @@ call MAXIS_case_number_finder(case_number)
 
 'Dialog is defined here so that the dialog does not cause problems when being chain loaded with a Workflow script'
 'Must be named Dialog1 for Workflow
-BeginDialog Dialog1, 0, 0, 271, 85, "Send SVES Dialog"
+BeginDialog , 0, 0, 271, 85, "Send SVES Dialog"
   EditBox 90, 5, 60, 15, case_number
   EditBox 125, 25, 25, 15, member_number
   CheckBox 5, 50, 165, 10, "Check here to case note that a QURY was sent.", case_note_checkbox
@@ -78,7 +78,7 @@ BeginDialog Dialog1, 0, 0, 271, 85, "Send SVES Dialog"
 EndDialog
 
 'Shows dialog
-Dialog Dialog1
+Dialog 
 If ButtonPressed = cancel then StopScript
 
 'Defaults member number to 01
@@ -157,7 +157,7 @@ ElseIf UNEA_radiobutton = 1 then
 
 	'Dialog is defined here so that the dialog does not cause problems when being chain loaded with a Workflow script'
 	'Must be named Dialog1 for Workflow
-    BeginDialog Dialog1, 0, 0, 240, dialog_size_variable, "UNEA claim dialog"
+    BeginDialog  , 0, 0, 240, dialog_size_variable, "UNEA claim dialog"
       ButtonGroup ButtonPressed
         OkButton 185, 10, 50, 15
         CancelButton 185, 30, 50, 15
@@ -170,7 +170,7 @@ ElseIf UNEA_radiobutton = 1 then
       If UNEA_type_05 <> "" then RadioButton 10, 80, 160, 10, "Type " & UNEA_type_05 & ", claim number " & UNEA_claim_number_05, UNEA_type_05_radiobutton
     EndDialog
 
-    Dialog Dialog1
+    Dialog 
     If ButtonPressed = 0 then stopscript
     If UNEA_type_01_radiobutton = 1 then
       claim_number = UNEA_claim_number_01
@@ -215,7 +215,7 @@ ElseIf BNDX_radiobutton = 1 then
   Else
   'Dialog is defined here so that the dialog does not cause problems when being chain loaded with a Workflow script'
   'Must be named Dialog1 for Workflow
-    BeginDialog Dialog1, 0, 0, 240, 70, "BNDX claim dialog"
+    BeginDialog , 0, 0, 240, 70, "BNDX claim dialog"
       ButtonGroup ButtonPressed
         OkButton 185, 10, 50, 15
         CancelButton 185, 30, 50, 15
@@ -226,7 +226,7 @@ ElseIf BNDX_radiobutton = 1 then
       If BNDX_claim_number_03 <> "" then RadioButton 10, 50, 160, 10, BNDX_claim_number_03, BNDX_claim_number_03_radiobutton
     EndDialog
 
-    Dialog Dialog1
+    Dialog 
     If ButtonPressed = 0 then stopscript
     If BNDX_claim_number_01_radiobutton = 1 then
       claim_number = replace(BNDX_claim_number_01, " ", "")

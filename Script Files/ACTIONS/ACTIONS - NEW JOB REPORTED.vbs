@@ -65,7 +65,7 @@ call MAXIS_case_number_finder(case_number)
 
 'Dialog is defined here so that the dialog does not cause problems when being chain loaded with a Workflow script'
 'Must be named Dialog1 for Workflow
-BeginDialog Dialog1, 0, 0, 161, 65, "Case number and footer month"
+BeginDialog , 0, 0, 161, 65, "Case number and footer month"
   Text 5, 10, 85, 10, "Enter your case number:"
   EditBox 95, 5, 60, 15, case_number
   Text 15, 30, 50, 10, "Footer month:"
@@ -77,7 +77,7 @@ BeginDialog Dialog1, 0, 0, 161, 65, "Case number and footer month"
     CancelButton 85, 45, 50, 15
 EndDialog
 'Shows the case number dialog
-Dialog Dialog1
+Dialog
 cancel_confirmation
 
 'checking for an active MAXIS session
@@ -103,7 +103,7 @@ HH_memb_row = 5 'This helps the navigation buttons work!
 
 'Dialog is defined here so that the dialog does not cause problems when being chain loaded with a Workflow script'
 'Must be named Dialog1 for Workflow
-BeginDialog Dialog1, 0, 0, 286, 280, "New job reported dialog"
+BeginDialog , 0, 0, 286, 280, "New job reported dialog"
   EditBox 80, 5, 25, 15, HH_memb
   DropListBox 55, 25, 110, 15, "W Wages (Incl Tips)"+chr(9)+"J WIA (JTPA)"+chr(9)+"E EITC"+chr(9)+"G Experience Works"+chr(9)+"F Federal Work Study"+chr(9)+"S State Work Study"+chr(9)+"O Other"+chr(9)+"I Infrequent < 30 N/Recur"+chr(9)+"M Infreq <= 10 MSA Exclusion"+chr(9)+"C Contract Income", income_type_dropdown
   DropListBox 135, 45, 150, 15, "not applicable"+chr(9)+"01 Subsidized Public Sector Employer"+chr(9)+"02 Subsidized Private Sector Employer"+chr(9)+"03 On-the-Job-Training"+chr(9)+"04 AmeriCorps (VISTA/State/National/NCCC)", subsidized_income_type_dropdown
@@ -146,7 +146,7 @@ DO
 				Do
 					Do
 						Do
-							Dialog Dialog1
+							Dialog 
 							cancel_confirmation
 							MAXIS_dialog_navigation
 							If isdate(income_start_date) = True then		'Logic to determine if the income start date is functional
