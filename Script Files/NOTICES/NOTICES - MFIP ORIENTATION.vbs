@@ -870,10 +870,4 @@ call write_variable_in_case_note("---")
 call write_variable_in_case_note(worker_signature)
 
 script_end_procedure("")	'Script ends
-eduled on: " & orientation_date & " at " & orientation_time)
-call write_variable_in_case_note("Location: " & interview_location)
-call write_bullet_and_variable_in_case_note("Household members needing to attend: ", members_to_attend)
-call write_variable_in_case_note("---")
-call write_variable_in_case_note(worker_signature)
 
-script_end_procedure("")	'Script ends
