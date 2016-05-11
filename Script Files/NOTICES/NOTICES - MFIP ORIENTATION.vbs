@@ -264,7 +264,7 @@ call convert_array_to_droplist_items(agency_office_array, county_office_list)
 'DIALOGS----------------------------------------------------------------------------------------------------
 'Must modify county_office_list manually each time to force recognition of variable from functions file. In other words, remove it from quotes.
 BeginDialog Dialog1, 0, 0, 366, 155, "MFIP orientation letter"
-  EditBox 60, 5, 55, 15, case_number
+  EditBox 60, 5, 55, 15, MAXIS_case_number
   EditBox 185, 5, 55, 15, orientation_date
   EditBox 310, 5, 55, 15, orientation_time
   EditBox 205, 25, 55, 15, member_list
@@ -297,8 +297,8 @@ agency_address.state = "MN"
 EMConnect ""
 
 'Searches for a case number
-call MAXIS_case_number_finder(case_number)
-err_msg = ""
+call MAXIS_case_number_finder(MAXIS_case_number)
+
 'This Do...loop shows the appointment letter dialog, and contains logic to require most fields.
 Do
 	err_msg = ""
@@ -807,7 +807,7 @@ Do
 			mfip_address_line_01 = agency_address.oneline
 	End if
 	END IF
-	If isnumeric(case_number) = False or len(case_number) > 8 then err_msg = err_msg & vbCr & "You must fill in a valid case number."
+	If isnumeric(MAXIS_case_number) = False or len(MAXIS_case_number) > 8 then err_msg = err_msg & vbCr & "You must fill in a valid case number."
 	If isdate(orientation_date) = False then err_msg = err_msg & vbCr & "You did not enter a valid  date (MM/DD/YYYY format)."
 	If orientation_time = "" then err_msg = err_msg & vbCr & "You must type an interview time."
 	If member_list = "" then err_msg = err_msg & vbCr & "You must enter at least one household member to attend the interview."
