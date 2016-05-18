@@ -163,8 +163,57 @@ IF XFERRadioGroup = 0 THEN
 			EMReadScreen MAXIS_check, 5, 1, 39
 			If MAXIS_check <> "MAXIS" and MAXIS_check <> "AXIS " then MsgBox "You appear to be locked out of MAXIS. Are you passworded out? Did you navigate away from MAXIS?"
 		  Loop until MAXIS_check = "MAXIS" or MAXIS_check = "AXIS "
+		  
+	'NOTING THE TRANSFER'
+		start_a_blank_CASE_NOTE
 
-		'goes to MEMO and create a new memo to be send out
+	'Cleaning up for case note
+		IF SNAP_active_check = 1 THEN active_programs = active_programs & "SNAP/"
+		IF hc_active_check = 1 THEN active_programs = active_programs & "HC/"
+		IF cash_active_check = 1 THEN active_programs = active_programs & "CASH/"
+		IF mnsure_active_check = 1 THEN active_programs = active_programs & "Mnsure/"
+		IF EMER_active_check = 1 THEN active_programs = active_programs & "EMER/"
+
+		IF SNAP_pend_check = 1 THEN pend_programs = pend_programs & "SNAP/"
+		IF hc_pend_check = 1 THEN pend_programs = pend_programs & "HC/"
+		IF cash_pend_check = 1 THEN pend_programs = pend_programs & "CASH/"
+		IF mnsure_pend_check = 1 THEN pend_programs = pend_programs & "Mnsure/"
+		IF EMER_pend_check = 1 THEN pend_programs = pend_programs & "EMER/"
+
+		'Case notes
+		EMSendKey "***Transfer within county***" & "<newline>"
+		IF unit_drop_down <> "N/A" THEN call write_variable_in_case_note("* Transfer to: " & unit_drop_down)
+		IF active_programs <> "" THEN
+			EMSendKey "* Active Programs: " & active_programs & "<backspace>"
+			EMSendKey "<newline>"
+		END IF
+		IF pend_programs <> "" THEN
+			EMSendKey "* Pending Programs: " & pend_programs & "<backspace>"
+			EMSendKey "<newline>"
+		END IF
+		IF preg_y_n <> "N/A" THEN call write_variable_in_case_note("* Pregnancy verification rec'd: " & preg_y_n)
+		call write_bullet_and_variable_in_case_note("Reason for transfer", Transfer_reason)
+		call write_bullet_and_variable_in_case_note("Actions to be taken", Action_to_be_taken)
+		IF spec_memo_withincty_check = checked THEN call write_variable_in_case_note ("SPEC/MEMO sent to client") 'adding this line in case note indicating a memo is sent to client
+		IF forms_to_arep = "Y" THEN call write_variable_in_case_note("Copy of SPEC/MEMO sent to AREP.")
+		IF forms_to_swkr = "Y" THEN call write_variable_in_case_note("Copy of SPEC/MEMO sent to social worker.")
+		call write_variable_in_case_note("---")
+		call write_variable_in_case_note(worker_signature)
+		
+		'Transfers case
+		back_to_self
+		EMWriteScreen "spec", 16, 43
+		EMWriteScreen "________", 18, 43
+		EMWriteScreen MAXIS_case_number, 18, 43
+		EMWriteScreen "xfer", 21, 70
+		transmit
+		EMWriteScreen "x", 7, 16
+		transmit
+		PF9
+		EMWriteScreen worker_to_transfer_to, 18, 61
+		transmit
+
+		'goes to MEMO and create a new memo to be send out must be done after transfer of memo will contain old worker's information. 
 		If spec_memo_withincty_check = checked THEN
 			Call navigate_to_MAXIS_screen ("SPEC", "MEMO")
 			'Creates a new MEMO. If it's unable the script will stop.
@@ -210,61 +259,11 @@ IF XFERRadioGroup = 0 THEN
 				PF4
 				PF3
 		END If
-		'NOTING THE TRANSFER'
-		start_a_blank_CASE_NOTE
 
-	'Cleaning up for case note
-		IF SNAP_active_check = 1 THEN active_programs = active_programs & "SNAP/"
-		IF hc_active_check = 1 THEN active_programs = active_programs & "HC/"
-		IF cash_active_check = 1 THEN active_programs = active_programs & "CASH/"
-		IF mnsure_active_check = 1 THEN active_programs = active_programs & "Mnsure/"
-		IF EMER_active_check = 1 THEN active_programs = active_programs & "EMER/"
+		script_end_procedure("")				'end of in county portion
 
-		IF SNAP_pend_check = 1 THEN pend_programs = pend_programs & "SNAP/"
-		IF hc_pend_check = 1 THEN pend_programs = pend_programs & "HC/"
-		IF cash_pend_check = 1 THEN pend_programs = pend_programs & "CASH/"
-		IF mnsure_pend_check = 1 THEN pend_programs = pend_programs & "Mnsure/"
-		IF EMER_pend_check = 1 THEN pend_programs = pend_programs & "EMER/"
-
-	'Case notes
-	EMSendKey "***Transfer within county***" & "<newline>"
-	IF unit_drop_down <> "N/A" THEN call write_variable_in_case_note("* Transfer to: " & unit_drop_down)
-	IF active_programs <> "" THEN
-		EMSendKey "* Active Programs: " & active_programs & "<backspace>"
-		EMSendKey "<newline>"
-	END IF
-	IF pend_programs <> "" THEN
-		EMSendKey "* Pending Programs: " & pend_programs & "<backspace>"
-		EMSendKey "<newline>"
-	END IF
-	IF preg_y_n <> "N/A" THEN call write_variable_in_case_note("* Pregnancy verification rec'd: " & preg_y_n)
-	call write_bullet_and_variable_in_case_note("Reason for transfer", Transfer_reason)
-	call write_bullet_and_variable_in_case_note("Actions to be taken", Action_to_be_taken)
-	IF spec_memo_withincty_check = checked THEN call write_variable_in_case_note ("SPEC/MEMO sent to client") 'adding this line in case note indicating a memo is sent to client
-	IF forms_to_arep = "Y" THEN call write_variable_in_case_note("Copy of SPEC/MEMO sent to AREP.")
-	IF forms_to_swkr = "Y" THEN call write_variable_in_case_note("Copy of SPEC/MEMO sent to social worker.")
-	call write_variable_in_case_note("---")
-	call write_variable_in_case_note(worker_signature)
-
-
-		'Transfers case
-		back_to_self
-		EMWriteScreen "spec", 16, 43
-		EMWriteScreen "________", 18, 43
-		EMWriteScreen MAXIS_case_number, 18, 43
-		EMWriteScreen "xfer", 21, 70
-		transmit
-		EMWriteScreen "x", 7, 16
-		transmit
-		PF9
-		EMWriteScreen worker_to_transfer_to, 18, 61
-		transmit
-
-
-		script_end_procedure("")
-
-	ELSEIF XFERRadioGroup = 1 THEN
-
+ELSEIF XFERRadioGroup = 1 THEN
+											'begining of out of county portion.
 	DO
 		DO
 			DO
