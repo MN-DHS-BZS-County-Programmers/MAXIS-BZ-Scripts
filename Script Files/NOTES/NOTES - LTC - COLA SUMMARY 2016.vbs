@@ -86,7 +86,7 @@ Function approval_summary
   EMWriteScreen "stat", 16, 43
   EMWriteScreen "________", 18, 43
   EMWriteScreen MAXIS_case_number, 18, 43
-  EMWriteScreen "01", 20, 43
+  EMWriteScreen "07", 20, 43
   EMWriteScreen "16", 20, 46
   EMWriteScreen "hcmi", 21, 70
   transmit
@@ -143,7 +143,7 @@ Function approval_summary
   EMWriteScreen "elig", 16, 43
   EMWriteScreen "________", 18, 43
   EMWriteScreen MAXIS_case_number, 18, 43
-  EMWriteScreen "01", 20, 43
+  EMWriteScreen "07", 20, 43
   EMWriteScreen "16", 20, 46
   EMWriteScreen "hc", 21, 70
   transmit
@@ -158,9 +158,9 @@ Function approval_summary
 
   row = 3
   col = 1
-  EMSearch "01/16", row, col
+  EMSearch "07/16", row, col
   If row = 0 then
-    MsgBox "A 01/16 span could not be found. Try this again. You may need to run the case through background."
+    MsgBox "A 07/16 span could not be found. Try this again. You may need to run the case through background."
     stopscript
   End if
 
@@ -298,9 +298,9 @@ EndDialog
   			 transmit
 			 row = 3
   			 col = 1
-  			 EMSearch "01/16", row, col
+  			 EMSearch "07/16", row, col
  			 If row = 0 then
- 			   MsgBox "A 01/16 span could not be found. Try this again. You may need to run the case through background."
+ 			   MsgBox "A 07/16 span could not be found. Try this again. You may need to run the case through background."
  			   stopscript
 			  End if
 			  EMReadScreen elig_type, 2, 12, col - 2
@@ -344,7 +344,7 @@ function income_summary
 
 	'FORCING THE CASE INTO FOOTER MONTH 01/15
 	back_to_self
-	EMWriteScreen "01", 20, 43
+	EMWriteScreen "07", 20, 43
 	EMWriteScreen "16", 20, 46
 
 	'GRABBING THE HH MEMBERS---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -602,8 +602,8 @@ EMSearch "Case Nbr:", row, col
 If row <> 0 then EMReadScreen MAXIS_case_number, 8, row, col + 10
 
 'Checking to see that we are in an appropriate footer month to be updating in CY2016
-If DateDiff("D", #12/01/2015#, date) < 0 THEN
-	script_end_procedure("MAXIS is unable to be updated for the footer month of 01/16." & vbNewLine & "You must wait until 12/01/15 or after to run this script.")
+If DateDiff("D", #06/01/2016#, date) < 0 THEN
+	script_end_procedure("MAXIS is unable to be updated for the footer month of 07/16." & vbNewLine & "You must wait until 06/01/16 or after to run this script.")
 Else
 	BeginDialog COLA_case_number_dialog, 0, 0, 166, 82, "COLA case number dialog"
 	EditBox 100, 0, 60, 15, MAXIS_case_number
