@@ -3,7 +3,7 @@ name_of_script = "BULK - REPT-MRSR LIST.vbs"
 start_time = timer
 STATS_counter = 1                          'sets the stats counter at one
 STATS_manualtime = 13                      'manual run time in seconds
-STATS_denomination = "C"       							'C is for each CASE
+STATS_denomination = "C"       			   'C is for each CASE
 'END OF stats block==============================================================================================
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
@@ -41,7 +41,6 @@ END IF
 'Checks for county info from global variables, or asks if it is not already defined.
 get_county_code
 
-'DIALOGS-----------------------------------------------------------
 'DIALOGS----------------------------------------------------------------------
 BeginDialog pull_REPT_data_into_excel_dialog, 0, 0, 286, 120, "Pull REPT data into Excel dialog"
   EditBox 135, 20, 145, 15, worker_number
@@ -62,7 +61,6 @@ EndDialog
 'Connects to BlueZone
 EMConnect ""
 
-'Shows dialog
 'Shows dialog
 DO 
 	DO
