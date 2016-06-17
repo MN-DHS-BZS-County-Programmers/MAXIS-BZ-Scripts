@@ -738,6 +738,61 @@ If Special_medical_checkbox = checked Then
 	transmit
 End If 
 
+Call Navigate_to_MAXIS_screen ("STAT", "SUMM")
+EMWriteScreen "BGTX", 20, 71
+transmit
+Do 
+	Call Navigate_to_MAXIS_screen ("STAT", "REVW")
+	EMReadScreen revw_panel_check, 4, 2, 46
+Loop until revw_panel_check = "REVW"
+EMReadScreen er_code, 1, 7, 40
+Select Case er_code
+Case "_", "A"
+	er_due = FALSE
+Case "I", "N"
+	er_due = TRUE
+End Select
+Call Navigate_to_MAXIS_screen ("STAT", "MONT")
+EMReadScreen mont_code, 1, 11, 43
+Select Case mont_code
+Case "_", "A"
+	mont_due = FALSE
+Case "I", "N"
+	mont_due = TRUE
+End Select
+
+'Need to work out footer months for this part'
+Call Navigate_to_MAXIS_screen ("ELIG", "MFIP")
+EMReadScreen elig_check, 4, 3, 47
+If elig_check = "MFPR" Then 
+	EMReadScreen process_date, 8, 2, 73
+	If CDate(process_date) = date Then 
+		EMWriteScreen "MFSM", 20, 71
+		transmit
+		EMReadScreen benefit_status, 13, 10, 31
+		benefit_status = trim(benefit_status)
+		If benefit_status = "NO CHANGE" Then 
+			EMReadScreen version, 1, 2, 12
+			version = abs(version)
+			prev_version = version - 1
+			EMWriteScreen "0" & prev_version, 20, 79
+			transmit
+		End If 
+		EMReadScreen total_grant, 8, 13, 73
+		EMReadScreen cash_amt, 8, 14, 73
+		EMReadScreen food_amt, 8, 15, 73
+		EMReadScreen housing_grant, 8, 16, 73
+	
+End If 
+
+'Send through background
+'Look for MONT and REVW to see if they are due
+'Read new ES Status
+'Navigate to ELIG
+'Wrap up dialog
+'TIKL if needed
+'Case Note
+
 'use current emps status to determine if this is an es status change, add or ENd
 'crate a dynamic dialog that asks for information based on the status selected in the first dialog 
 
