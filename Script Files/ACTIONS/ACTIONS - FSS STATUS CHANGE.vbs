@@ -761,29 +761,86 @@ Case "I", "N"
 	mont_due = TRUE
 End Select
 
-'Need to work out footer months for this part'
-Call Navigate_to_MAXIS_screen ("ELIG", "MFIP")
-EMReadScreen elig_check, 4, 3, 47
-If elig_check = "MFPR" Then 
-	EMReadScreen process_date, 8, 2, 73
-	If CDate(process_date) = date Then 
-		EMWriteScreen "MFSM", 20, 71
-		transmit
-		EMReadScreen benefit_status, 13, 10, 31
-		benefit_status = trim(benefit_status)
-		If benefit_status = "NO CHANGE" Then 
-			EMReadScreen version, 1, 2, 12
-			version = abs(version)
-			prev_version = version - 1
-			EMWriteScreen "0" & prev_version, 20, 79
-			transmit
+inhibiting_error = FALSE 
+month_to_start = right("00" & DatePart("m", date), 2)
+year_to_start = right(DatePart ("yyyy", date), 2)
+
+FUNCTION Read_MFIP_Results(month_to_start, year_to_start, MFIP_results)
+	Call date_array_generator(month_to_start, year_to_start, date_array)
+
+	For Each version in date_array
+		MAXIS_footer_month = right("00" & datepart("m", version), 2)
+		MAXIS_footer_year = right(datepart("yyyy", version), 2)
+		Call Navigate_to_MAXIS_screen ("ELIG", "MFIP")
+		EMReadScreen elig_check, 4, 3, 47
+		If elig_check = "MFPR" Then 
+			EMReadScreen process_date, 8, 2, 73
+			If CDate(process_date) = date Then 
+				EMWriteScreen "MFSM", 20, 71
+				transmit
+				EMReadScreen benefit_status, 13, 10, 31
+				benefit_status = trim(benefit_status)
+				If benefit_status = "NO CHANGE" Then 
+					EMReadScreen version, 1, 2, 12
+					version = abs(version)
+					prev_version = version - 1
+					EMWriteScreen "0" & prev_version, 20, 79
+					transmit
+				End If 
+				EMReadScreen total_grant, 8, 13, 73
+				EMReadScreen cash_amt, 8, 14, 73
+				EMReadScreen food_amt, 8, 15, 73
+				EMReadScreen housing_grant, 8, 16, 73
+				MFIP_results = MFIP_results & MAXIS_footer_month & "/" & MAXIS_footer_year & " Total Grant: " & total_grant & "; Cash Portion: " & cash_amt & "; Food Portion: " & food_amt & "; Housing Grant: " & housing_grant & "; "
+			Else 
+				CALL Navigate_to_MAXIS_screen ("STAT", "SUMM")
+				summ_row = 2
+				Do 
+					EMReadScreen edit_msg, 23, summ_row, 20
+					If edit_msg = "CASH HAS BEEN INHIBITED" Then 
+						inhibiting_error = TRUE
+						Exit do 
+					End If 
+					If trim(edit_msg) = "" Then 
+						EMReadScreen next_page, 7, summ_row, 71
+						If next_page = "MORE: +" Then 
+							PF8
+							summ_row = 1
+						End If 
+					End iF 
+					summ_row = summ_row + 1
+				Loop until summ_row = 23
+				If inhibiting_error = TRUE then 
+					MFIP_results = MFIP_results & MAXIS_footer_month & "/" & MAXIS_footer_year & " has an Ihibiting EDIT in STAT - resolved and rerun to generate results"
+					inhibiting_error = FALSE
+				End If 
+			End IF 
+		Else 
+			CALL Navigate_to_MAXIS_screen ("STAT", "SUMM")
+			summ_row = 2
+			Do 
+				EMReadScreen edit_msg, 23, summ_row, 20
+				If edit_msg = "CASH HAS BEEN INHIBITED" Then 
+					inhibiting_error = TRUE
+					Exit do 
+				End If 
+				If trim(edit_msg) = "" Then 
+					EMReadScreen next_page, 7, summ_row, 71
+					If next_page = "MORE: +" Then 
+						PF8
+						summ_row = 1
+					End If 
+				End iF 
+				summ_row = summ_row + 1
+			Loop until summ_row = 23
+			If inhibiting_error = TRUE then 
+				MFIP_results = MFIP_results & MAXIS_footer_month & "/" & MAXIS_footer_year & " has an Ihibiting EDIT in STAT - resolved and rerun to generate results"
+				inhibiting_error = FALSE
+			End If 
 		End If 
-		EMReadScreen total_grant, 8, 13, 73
-		EMReadScreen cash_amt, 8, 14, 73
-		EMReadScreen food_amt, 8, 15, 73
-		EMReadScreen housing_grant, 8, 16, 73
-	
-End If 
+	Next
+End Function 
+
 
 'Send through background
 'Look for MONT and REVW to see if they are due
