@@ -2,8 +2,8 @@
 name_of_script = "ACTIONS - FSS STATUS CHANGE.vbs"
 start_time = timer
 STATS_counter = 1                     	'sets the stats counter at one
-STATS_manualtime = 49                	'manual run time in seconds
-STATS_denomination = "M"       		'M is for each MEMBER
+STATS_manualtime = 150                	'manual run time in seconds
+STATS_denomination = "I"       		'I is for Item
 'END OF stats block=========================================================================================================
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
@@ -667,6 +667,7 @@ MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
 
 If ill_incap_checkbox = checked Then 
+	STATS_counter = STATS_counter + 1
 	fvw_only = FALSE 
 	fss_category_list = fss_category_list & "; Ill/Incap >60 Days"
 	If ill_incap_end_date = "" Then 
@@ -766,6 +767,7 @@ If ill_incap_checkbox = checked Then
 End If 
 
 If care_of_ill_Incap_checkbox = checked Then 
+	STATS_counter = STATS_counter + 1
 	fvw_only = FALSE 
 	fss_category_list = fss_category_list & "; Care of Ill/Incap Family Member"
 	If rel_care_end_date = "" Then 
@@ -865,6 +867,7 @@ If care_of_ill_Incap_checkbox = checked Then
 End If 
 
 If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentally_ill_checkbox = checked OR dev_delayed_checkbox = checked OR unemployable_checkbox = checked Then 
+	STATS_counter = STATS_counter + 1
 	fvw_only = FALSE 
 	fss_category_list = fss_category_list & "; Unemployable"
 	If iq_test_checkbox = checked Then fss_category_list = fss_category_list & " - IQ Tested < 80"
@@ -889,6 +892,7 @@ If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentall
 End If 
 
 If fam_violence_checkbox = checked Then 
+	STATS_counter = STATS_counter + 1
 	fss_category_list = fss_category_list & "; Family Violence Waiver"
 	If fvw_new_checkbox = checked Then 
 		fss_category_list = fss_category_list & " - NEW"
@@ -1007,6 +1011,7 @@ MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
 
 If ssi_pending_checkbox = checked Then 
+	STATS_counter = STATS_counter + 1
 	fvw_only = FALSE 
 	fss_category_list = fss_category_list & "; SSI/RSDI Pending"
 	IF ssa_app_new_checkbox = checked Then fss_category_list = fss_category_list & " - NEW"
@@ -1157,6 +1162,7 @@ MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
 
 If child_under_one_checkbox = checked Then 
+	STATS_counter = STATS_counter + 1
 	fvw_only = FALSE 
 	fss_category_list = fss_category_list & "; Care of Child < 12 Months"
 	If child_under_1_new_checkbox = checked Then 
@@ -1249,6 +1255,7 @@ MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
 
 If new_imig_checkbox = checked Then
+	STATS_counter = STATS_counter + 1
 	fvw_only = FALSE 
  	fss_category_list = fss_category_list & "; Newly Arrived Immigrant"
 	If imig_new_checkbox = checked OR imig_renew_checkbox = checked Then 
@@ -1296,6 +1303,7 @@ If IsDate(smc_diagnosis_date) = TRUE Then
 End IF 
 
 If Special_medical_checkbox = checked Then 
+	STATS_counter = STATS_counter + 1
 	fvw_only = FALSE 
 	fss_category_list = fss_category_list & "; Special Medical Criteria"
 	If smc_new_checkbox = checked Then 
@@ -1609,4 +1617,5 @@ If fvw_only = FALSE Then
 	CALL write_variable_in_CASE_NOTE (worker_signature)
 End If 
 
+STATS_counter = STATS_counter - 1
 script_end_procedure("Success!")
