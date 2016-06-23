@@ -112,6 +112,36 @@ EndDialog
 '===========================================================================================================================
 
 'FUNCTIONS==================================================================================================================
+FUNCTION month_change(interval, starting_month, starting_year, result_month, result_year)
+	result_month = abs(starting_month)
+	result_year = abs(starting_year)
+	valid_month = FALSE
+	IF result_month = 1 OR result_month = 2 OR result_month = 3 OR result_month = 4 OR result_month = 5 OR result_month = 6 OR result_month = 7 OR result_month = 8 OR result_month = 9 OR result_month = 10 OR result_month = 11 OR result_month = 12 Then valid_month = TRUE 
+	If valid_month = FALSE Then 
+		Month_Input_Error_Msg = MsgBox("The month to start from is not a number between 1 and 12, these are the only valid entries for this function. Your data will have the wrong month." & vbnewline & "The month input was: " & result_month & vbnewline & vbnewline & "Do you wish to continue?", vbYesNo + vbSystemModal, "Input Error")
+		If Month_Input_Error_Msg = VBNo Then script_end_procedure("")
+	End If
+	Do 
+		If left(interval, 1) = "-" Then 
+			result_month = result_month - 1
+			If result_month = 0 then 
+				result_month = 12
+				result_year = result_year - 1
+			End If 
+			interval = interval + 1
+		Else 
+			result_month = result_month + 1
+			If result_month = 13 then 
+				result_month = 1
+				result_year = result_year + 1
+			End if 
+			interval = interval - 1
+		End If 
+	Loop until interval = 0
+	result_month = right("00" & result_month, 2)
+	result_year = right(result_year, 2)
+END FUNCTION 
+
 FUNCTION Read_MFIP_Results(month_to_start, year_to_start, MFIP_results)
 	Call date_array_generator(month_to_start, year_to_start, date_array)
 
@@ -367,7 +397,10 @@ detail_dialog_length = 45
 If ill_incap_checkbox = checked Then detail_dialog_length = detail_dialog_length + 40
 If care_of_ill_Incap_checkbox = checked Then detail_dialog_length = detail_dialog_length + 60
 If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentally_ill_checkbox = checked OR dev_delayed_checkbox = checked OR unemployable_checkbox = checked Then detail_dialog_length = detail_dialog_length + 40
-If fam_violence_checkbox = checked Then detail_dialog_length = detail_dialog_length + 40
+If fam_violence_checkbox = checked Then 
+	detail_dialog_length = detail_dialog_length + 40
+	fvw_only = TRUE
+End IF 
 If ssi_pending_checkbox = checked Then detail_dialog_length = detail_dialog_length + 40
 If child_under_one_checkbox = checked Then detail_dialog_length = detail_dialog_length + 60
 If new_imig_checkbox = checked Then detail_dialog_length = detail_dialog_length + 35
@@ -848,7 +881,7 @@ If fam_violence_checkbox = checked Then
 					Exit For 
 				End If 
 			Next
-			EMReadScreen is_counted, 2, fvw_month_row, first_fvw_month_col
+			EMReadScreen is_counted, 2, fvw_month_row, fvw_month_col
 			If is_counted = "SS" OR is_counted = "SF" OR is_counted = "WS" OR is_counted = "WF" Then 
 				If Extension_case = TRUE THEN 
 					PF9 
@@ -859,12 +892,14 @@ If fam_violence_checkbox = checked Then
 				End IF 
 				counted_months_changed = counted_months_changed & " & " & MAXIS_footer_month & "/" & MAXIS_footer_year
 			End If 
-			Call month_change(1, MAXIS_footer_month, MAXIS_footer_year, MAXIS_footer_month, MAXIS_footer_year)
+			Call month_change(1, MAXIS_footer_month, MAXIS_footer_year, month_ahead, month_yr_ahead)
+			MAXIS_footer_month = month_ahead
+			MAXIS_footer_year = month_yr_ahead 
 		Loop until MAXIS_footer_month & "/" & MAXIS_footer_year = next_MAXIS_month
 		transmit
 		panels_updated = panels_updated & "TIME for Memb " & ref_number & " & "
 		EMReadScreen tanf_used, 3, 17, 69
-		EMReadScreen ext_tanf_used, 19, 69
+		EMReadScreen ext_tanf_used, 3, 19, 69
 	ElseIf fvw_renew_checkbox = checked Then 
 		fss_category_list = fss_category_list & " - RENEW"
 		Call Navigate_to_MAXIS_screen ("STAT", "MEMI")
@@ -1192,7 +1227,7 @@ If Special_medical_checkbox = checked Then
 						Exit For 
 					End If 
 				Next
-				EMReadScreen is_counted, 2, fvw_month_row, first_fvw_month_col
+				EMReadScreen is_counted, 2, smc_month_row, smc_month_col
 				If is_counted = "SF" OR is_counted = "WF" Then 
 					EMWriteScreen "FM", smc_month_row, smc_month_col
 					tanf_banked_months_coded = tanf_banked_months_coded + 1
