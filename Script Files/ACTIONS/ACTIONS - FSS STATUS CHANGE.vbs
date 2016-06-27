@@ -137,7 +137,8 @@ FUNCTION Read_MFIP_Results(initial_month, initial_year, MFIP_results)
 	'date_array = null
 	'Call date_array_generator(initial_month, initial_year, months_of_mfip_array)
 	
-		'THIS IS THE DATE ARRAY GENERATOR - IT WAS CAUSING PROBLEMS TO BE CALLED TWICE================'
+		'THIS IS THE DATE ARRAY GENERATOR - IT WAS CAUSING PROBLEMS TO BE CALLED TWICE================
+		'So I embedded the code into this function
 		date_list = ""
 		'defines an intial date from the initial_month and initial_year parameters
 		initial_date = initial_month & "/1/" & initial_year
@@ -152,28 +153,28 @@ FUNCTION Read_MFIP_Results(initial_month, initial_year, MFIP_results)
 	
 		'Splits this into an array
 		months_of_mfip_array = split(date_list, "|")
-		'============================================================================================='
+		'=============================================================================================
 	
-	MFIP_results = ""
+	MFIP_results = ""		'Since this is stored as a string, blanking it out so that it doesn't keep old data
 
 	For Each version in months_of_mfip_array
-		MAXIS_footer_month = right("00" & datepart("m", version), 2)
+		MAXIS_footer_month = right("00" & datepart("m", version), 2)		'Setting the footer month and year
 		MAXIS_footer_year = right(datepart("yyyy", version), 2)
-		Back_to_SELF
+		Back_to_SELF														'Footer month and year do not change well within ELIG
 		Call Navigate_to_MAXIS_screen ("ELIG", "MFIP")
-		EMReadScreen elig_check, 4, 3, 47
+		EMReadScreen elig_check, 4, 3, 47									'Makes sure there is an ELIG version to read
 		If elig_check = "MFPR" Then 
-			EMReadScreen process_date, 8, 2, 73
+			EMReadScreen process_date, 8, 2, 73								'Makes sure the elig results are from today
 			If CDate(process_date) = date Then 
-				EMWriteScreen "MFSM", 20, 71
+				EMWriteScreen "MFSM", 20, 71								'Goes to the last page of ELIG
 				transmit
 				Do 
-					EMReadScreen benefit_status, 13, 10, 31
+					EMReadScreen benefit_status, 13, 10, 31					'Sometimes if there is 'NO CHANGE' the benefits incorrectly list as $0
 					benefit_status = trim(benefit_status)
 					If benefit_status = "NO CHANGE" Then 
 						no_change = TRUE
 						EMReadScreen total_grant, 8, 13, 73
-						If trim(total_grant) = "0.00" Then 
+						If trim(total_grant) = "0.00" Then 					'Switches to a previous version that will list the amounts
 							EMReadScreen version, 1, 2, 12
 							version = abs(version)
 							prev_version = version - 1
@@ -183,24 +184,24 @@ FUNCTION Read_MFIP_Results(initial_month, initial_year, MFIP_results)
 						End If 
 					End If 
 				Loop Until benefit_status <> "NO CHANGE"
-				EMReadScreen total_grant, 8, 13, 73
+				EMReadScreen total_grant, 8, 13, 73							'Reads all of the benefit amounts by category
 				EMReadScreen cash_amt, 8, 14, 73
 				EMReadScreen food_amt, 8, 15, 73
-				EMReadScreen housing_grant, 8, 16, 73
+				EMReadScreen housing_grant, 8, 16, 73						'Lists them as a string, formatted with ; for case note display
 				MFIP_results = MFIP_results & MAXIS_footer_month & "/" & MAXIS_footer_year & " Total Grant: $" & Trim(total_grant) & "; Cash Portion: $" & Trim(cash_amt) & "; Food Portion: $" & Trim(food_amt) & "; Housing Grant: $" & Trim(housing_grant) & "; "
-			Else 
-				Do 
+			Else 															'If ELIG results are from a different day
+				Do 															'Goes to STAT SUMM to find if there is an inhibiting error
 					CALL Navigate_to_MAXIS_screen ("STAT", "SUMM")
 					EMReadScreen nav_check, 4, 2, 46
 				Loop until nav_check = "SUMM"
 				summ_row = 2
-				Do 
+				Do 															'Reads each line on SUMM looking for CASH inhibited
 					EMReadScreen edit_msg, 23, summ_row, 20
 					If edit_msg = "CASH HAS BEEN INHIBITED" Then 
 						inhibiting_error = TRUE
 						Exit do 
 					End If 
-					If trim(edit_msg) = "" Then 
+					If trim(edit_msg) = "" Then 							'Goes to the next page of edits if needed
 						EMReadScreen next_page, 7, summ_row, 71
 						If next_page = "MORE: +" Then 
 							PF8
@@ -209,13 +210,13 @@ FUNCTION Read_MFIP_Results(initial_month, initial_year, MFIP_results)
 					End iF 
 					summ_row = summ_row + 1
 				Loop until summ_row = 23
-				If inhibiting_error = TRUE then 
+				If inhibiting_error = TRUE then 							'Adds the inhibiting error information to the display
 					MFIP_results = MFIP_results & MAXIS_footer_month & "/" & MAXIS_footer_year & " has an Inhibiting EDIT in STAT - resolve and rerun to generate results."
-					inhibiting_error = FALSE
+					inhibiting_error = FALSE								'Resets this value because each month needs to be assessed individually
 				End If 
 			End IF 
-		Else 
-			Do
+		Else 																'If no ELIG results
+			Do																'Goes to STAT SUMM to find if there is an inhibiting error
 				CALL Navigate_to_MAXIS_screen ("STAT", "SUMM")
 				EMReadScreen nav_check, 4, 2, 46
 			Loop until nav_check = "SUMM"
@@ -269,26 +270,26 @@ FUNCTION date_array_generator(initial_month, initial_year, date_array)
 	date_array = split(date_list, "|")
 End function
 
-FUNCTION get_MFIP_case_info(ref_number, client_name)
-	Do 
+FUNCTION get_MFIP_case_info(ref_number, client_name)			'Function created to get basic information about a case
+	Do 															'Starts at MEMB
 		Call Navigate_to_MAXIS_screen("STAT", "MEMB")
 		EMReadScreen nav_check, 4, 2, 48
 	Loop until nav_check = "MEMB"
 	
-	If ref_number = "" Then EMReadScreen ref_number, 2, 4, 33
-	ref_number = right("00" & ref_number, 2)
+	If ref_number = "" Then EMReadScreen ref_number, 2, 4, 33	'Defaults to M01 if not defined
+	ref_number = right("00" & ref_number, 2)					'Ref number must be 2 digits
 	EMWriteScreen ref_number, 20, 76
 	transmit
-	EMReadScreen memb_on_case, 7, 8, 22
+	EMReadScreen memb_on_case, 7, 8, 22							'Checks to make sure the Reference Number is used on this case
 	If memb_on_case = "Arrival" Then 
 		PF3
-		PF10
+		PF10													'If a wrong ref number was entered and this person does not exist on the case, the script will use M01
 		MsgBox "HH Member " & ref_number & " does not exist on this case. The script will default to HH Member 01. Please check the reference number of the caregiver listed on the Status Update."
 		ref_number = "01"
 		EMWriteScreen ref_number, 20, 76
 		transmit
 	End If 
-	EMReadScreen first_name, 12, 6, 63
+	EMReadScreen first_name, 12, 6, 63							'Gets Client name and puts it together
 	EMReadScreen last_name, 25, 6, 30
 
 	first_name = Replace(first_name, "_", "")
@@ -296,11 +297,11 @@ FUNCTION get_MFIP_case_info(ref_number, client_name)
 	client_name = first_name & " " & last_name & ""
 	ref_number = ref_number & ""
 
-	Call Navigate_to_MAXIS_screen ("STAT", "PROG")
+	Call Navigate_to_MAXIS_screen ("STAT", "PROG")				'Goes to PROG to check if this is an MFIP case
 	prog_row = 6
-	Do 
+	Do 															'Cash has 2 lines on PROG and both should be checked
 		EMReadScreen cash_prog, 2, prog_row, 67
-		If cash_prog = "MF" Then 
+		If cash_prog = "MF" Then 								'MFIP cases active or pending are allowed'
 			EMReadScreen prog_status, 4, prog_row, 74
 			If prog_status = "ACTV" or prog_status = "REIN" or prog_status = "PEND" Then 
 				Exit Do 
@@ -308,8 +309,8 @@ FUNCTION get_MFIP_case_info(ref_number, client_name)
 				end_message = "This script is only for MFIP cases." & vbnewline & "MFIP is not Active, Pending or in REIN. The script will now end."
 				script_end_procedure (end_message)
 			End If 
-		ElseIf cash_prog = "  " Then 
-			EMReadScreen prog_status, 4, prog_row, 74
+		ElseIf cash_prog = "  " Then 							'Sometimes the cash program is not defined in PROG while pending
+			EMReadScreen prog_status, 4, prog_row, 74			'Will assume workers know this is a cash case
 			If prog_status = "PEND" Then 
 				Exit Do 
 			Else 
@@ -325,10 +326,10 @@ FUNCTION get_MFIP_case_info(ref_number, client_name)
 		prog_row = prog_row + 1
 	Loop Until prog_row = 8 
 
-	Call Navigate_to_MAXIS_screen ("STAT", "TIME")
+	Call Navigate_to_MAXIS_screen ("STAT", "TIME")				'Needs to determine if this is an extension case or not
 	EMWriteScreen ref_number, 20, 76
 	transmit
-	EMReadScreen MF_counted_mo, 2, 17, 69
+	EMReadScreen MF_counted_mo, 2, 17, 69						'Need to remove the banked months from counted months for to asses true extension potential'
 	EMReadScreen MF_banked_mo, 3, 19, 16
 	MF_counted_mo = abs(MF_counted_mo)
 	MF_banked_mo = abs(Trim(MF_banked_mo))
@@ -340,34 +341,34 @@ FUNCTION get_MFIP_case_info(ref_number, client_name)
 END FUNCTION
 
 FUNCTION update_disa(ref_number, disa_start_date, disa_end_date, disa_status, disa_verif)
-Do
-    Call Navigate_to_MAXIS_screen ("STAT", "DISA")
+Do																'Function to write information to DISA
+    Call Navigate_to_MAXIS_screen ("STAT", "DISA")				'Goes to DISA for the correct person
     EMReadScreen nav_check, 4, 2, 45
 Loop until nav_check = "DISA"
 EMWriteScreen ref_number, 20, 76
 transmit
-start_month = right("00" & DatePart("m", disa_start_date), 2)
+start_month = right("00" & DatePart("m", disa_start_date), 2)	'Isolates the start month, day, and year as these are seperate fields on DISA
 start_day = right("00" & DatePart("d", disa_start_date), 2)
 start_year = DatePart("yyyy", disa_start_date)
 
-end_month = right("00" & DatePart("m", disa_end_date), 2)
+end_month = right("00" & DatePart("m", disa_end_date), 2)		'Isolates the end month, day, and year as these are seperate fields on DISA
 end_day = right("00" & DatePart("d", disa_end_date), 2)
 end_year = DatePart("yyyy", disa_end_date)
-EMReadScreen disa_exist, 4, 6, 53
-If disa_exist <> "____" Then 
+EMReadScreen disa_exist, 4, 6, 53								'Checking for dates already entered - looks at the DISA start year field
+If disa_exist <> "____" Then 									'Anything listed here would indicate DISA is already loaded
     EMReadScreen listed_end_month, 2, 6, 69
     EMReadScreen listed_end_day, 2, 6, 72
     EMReadScreen listed_end_year, 4, 6, 75
-    If listed_end_year = "____" Then disa_info = "It appears there is an open ended DISA for this person." 
+    If listed_end_year = "____" Then disa_info = "It appears there is an open ended DISA for this person." 	'If no end date
     listed_end_date = listed_end_month & "/" & listed_end_day & "/" & listed_end_year
     listed_end_date = cDate(listed_end_date)
-    If listed_end_date > date Then disa_info = "It appears there is DISA with a future end date for this person." 
-    If listed_end_date <= date Then disa_info = "It appears there is a DISA for this person that has already ended."
+    If listed_end_date > date Then disa_info = "It appears there is DISA with a future end date for this person." 	
+    If listed_end_date <= date Then disa_info = "It appears there is a DISA for this person that has already ended."	'WIll ask the user if the script should overwrite the current listed DISA dates
     change_disa_message = MsgBox(disa_info & vbNewLine & "Do you want the script to replace the dates on the panel with these?" & vbNewLine & vbNewLine & "Disability & Certification Begin: " & start_month & "/" & start_day & "/" & start_year & vbNewLine & "Disability & Certification End: " & end_month & "/" & end_day & "/" & end_year, vbYesNo + vbQuestion, "Update DISA?")
-    If change_disa_message = VBNo Then panels_reviewed = panels_reviewed & "DISA for Memb " & ref_number & " & "
+    If change_disa_message = VBNo Then panels_reviewed = panels_reviewed & "DISA for Memb " & ref_number & " & " ''
 End If 
-If disa_exist = "____" or change_disa_message = VBYes Then
-    EMReadScreen numb_of_panels, 1, 2, 78
+If disa_exist = "____" or change_disa_message = VBYes Then		'If the panel is to be updated
+    EMReadScreen numb_of_panels, 1, 2, 78						'Reading if it needs to create a new panel or just pF9
     IF numb_of_panels = "0" Then 
         EMWriteScreen "NN", 20, 79
         transmit
@@ -400,16 +401,15 @@ END FUNCTION
 
 EMConnect ""
 
-developer_mode = FALSE 
+Call MAXIS_case_number_finder(MAXIS_case_number)		'Looks for a case number
 
-Call MAXIS_case_number_finder(MAXIS_case_number)
-
-If MAXIS_case_number <> "" Then
+If MAXIS_case_number <> "" Then							'If one is found, will get case information using M01 as default
 	CALL get_MFIP_case_info (ref_number, client_name)
 End IF 
 
-If client_name = "" then client_name = "Enter Ref Numb and press 'Reload Client Name'"
+If client_name = "" then client_name = "Enter Ref Numb and press 'Reload Client Name'"	'Loads instructions into the edit box
 
+'Running the first dialog
 Do
 	err_msg = ""
 	Dialog fss_status_dialog
@@ -422,81 +422,77 @@ Do
 Loop until err_msg = "" AND ButtonPressed = OK
 
 Call check_for_maxis(False)
-
-If age_sixty_checkbox = checked AND preg_checkbox = checked AND child_under_one_checkbox = checked AND universal_partipant_checkbox = checked then 
-	developer_mode = TRUE
-	MsgBox "You have enabled Developer Mode, if you did not intend to do this, stop the script and start it again."
-End IF 
 	
-ref_number = right("00" & ref_number, 2)
-Call Navigate_to_MAXIS_screen("STAT", "EMPS")
+ref_number = right("00" & ref_number, 2)			'Makes reference number 2 digit
+Call Navigate_to_MAXIS_screen("STAT", "EMPS")		'Goes to EMPS for the designated person
 EMWriteScreen ref_number, 20, 76
 transmit
-EMReadScreen current_emps_status, 38, 15, 40
+EMReadScreen current_emps_status, 38, 15, 40		'Find the emps status
 current_emps_status = trim(current_emps_status)
 CALL Navigate_to_MAXIS_screen ("STAT", "MEMI")
-EMReadScreen current_fvw, 2, 17, 78
+EMReadScreen current_fvw, 2, 17, 78					'Reads the code if there is a family violence waiver currently coded
 
-new_fvw = TRUE 
+new_fvw = TRUE 										'setting the default for these variables
 new_fss = FALSE 
 
-If current_emps_status = "20 (UP) Universal Participation" Then new_fss = TRUE
-If current_fvw = "02" Then new_fvw = FALSE 
+If current_emps_status = "20 (UP) Universal Participation" Then new_fss = TRUE	'If currently a universal partcipant, then the FSS coding is New
+If current_fvw = "02" Then new_fvw = FALSE 			'If waiver code is 02 on MEMI then the FVW is a renewal
 
-If child_under_one_checkbox = checked then 
-	baby_on_case = FALSE
+If child_under_one_checkbox = checked then 			'Looking for a baby on the case if child under 1 is checked 
+	baby_on_case = FALSE							'Defaults to false
 	Do 
 		Call Navigate_to_MAXIS_screen ("STAT", "PNLP")
 		EMReadScreen nav_check, 4, 2, 53
 	Loop until nav_check = "PNLP"
 	maxis_row = 3
 	Do 
-		EMReadScreen panel_name, 4, maxis_row, 5
-		If panel_name = "MEMB" Then 
-			EMReadScreen client_age, 2, maxis_row, 71
-			If client_age = " 0" Then baby_on_case = TRUE
+		EMReadScreen panel_name, 4, maxis_row, 5	'Reads the name of each panel listed on PNLP
+		If panel_name = "MEMB" Then 				'Looking for MEMB
+			EMReadScreen client_age, 2, maxis_row, 71		'Reads the age on the MEMB line
+			If client_age = " 0" Then baby_on_case = TRUE	'If a age is listed as 0 then a baby is on the case'
 		End If 
-		If panel_name = "MEMI" Then Exit Do
-		maxis_row = maxis_row + 1
-		If maxis_row = 20 Then 
+		If panel_name = "MEMI" Then Exit Do			'Once it gets to a panel named MEMI, there are no additional MEMB panels
+		maxis_row = maxis_row + 1					'Go to next row
+		If maxis_row = 20 Then 						'If it gets to row 20 it needs to go to the next page
 			transmit
 			maxis_row = 3
 		End If 
 	Loop until panel_name = "REVW"
-	If baby_on_case = FALSE Then 
+	If baby_on_case = FALSE Then 		'If there is no baby on the case the script will not update to a child under 12 months exemption - this notifies the worker and unchecks the selector
 		no_baby_message = MsgBox("You are reporting an FSS status with a child under 12 months but there is no child under 1 listed in the household. You must add the baby fisrt." & vbNewLine & "Press Cancel to stop the script." & vbNewLine & "Press OK to continue the script if you have selected other FSS reasons.", vbOKCancel + VBAlert, "Review Child Under 12 Months Selection")
 		If no_baby_message = VBCancel then cancel_confirmation
 		child_under_one_checkbox = unchecked
 	End If 
 End If 
 
-If child_under_one_checkbox = checked Then 
+If child_under_one_checkbox = checked Then 				'If child under 1 is requested, go to EMPS to figure out which months have already been used
 	Do 
 		Call Navigate_to_MAXIS_screen ("STAT", "EMPS")
 		EMReadScreen nav_check, 4, 2, 50
 	Loop until nav_check = "EMPS"
-	EMWriteScreen "X", 12, 39
+	EMWriteScreen "X", 12, 39							'Open the list of exemption months already taken
 	transmit
-	emps_row = 7
+	emps_row = 7										'Setting the first row and col
 	emps_col = 22
-	Do
-		EMReadScreen month_used, 2, emps_row, emps_col
-		If month_used = "__" Then Exit Do
-		EMReadScreen year_used, 4, emps_row, emps_col + 5
-		emps_exemption_month_used = emps_exemption_month_used & "~" & month_used & "/" & year_used
-		emps_col = emps_col + 11
-		If emps_col = 66 Then 
-			emps_col = 22
+	Do													
+		EMReadScreen month_used, 2, emps_row, emps_col	'reading the first field
+		If month_used = "__" Then Exit Do				'if the month was listed as blank, there are no more months listed
+		EMReadScreen year_used, 4, emps_row, emps_col + 5		'reads the year associated with the month listed
+		emps_exemption_month_used = emps_exemption_month_used & "~" & month_used & "/" & year_used	'adds the month and year to a string seperated by ~
+		emps_col = emps_col + 11						'moves to the next month listed spot
+		If emps_col = 66 Then 							'Once it has gone through all the fields on this row, it goes to the next row and starts over at the beginning of the columns.
+			emps_col = 22		
 			emps_row = emps_row + 1
 		End If 
-	Loop Until emps_row = 10
-	emps_exemption_month_used = right(emps_exemption_month_used, len(emps_exemption_month_used)-1)
-	used_expemption_months_array = split(emps_exemption_month_used, "~")
-	months_for_use = Join(used_expemption_months_array, ", ")
-	number_of_months_available = 12 - (ubound(used_expemption_months_array) + 1) & ""
+	Loop Until emps_row = 10							'There are only 3 rows of data
+	emps_exemption_month_used = right(emps_exemption_month_used, len(emps_exemption_month_used)-1)	'lops off the extra ~ at the beginning
+	used_expemption_months_array = split(emps_exemption_month_used, "~")							'creates an array for the counting
+	months_for_use = Join(used_expemption_months_array, ", ")										'creates a string of months used for case noting
+	number_of_months_available = 12 - (ubound(used_expemption_months_array) + 1) & ""				'uses the ubound of the array to determine how many months are left to be used
 End If 
 
-months_to_fill = "Enter the date of request and click 'Calculate' to fill this field."
+'This is required to set the size of the next dialog based on the checkboxes on the previous dialog
+months_to_fill = "Enter the date of request and click 'Calculate' to fill this field."				'instructions in the edit box
 detail_dialog_length = 45
 If ill_incap_checkbox = checked Then detail_dialog_length = detail_dialog_length + 40
 If care_of_ill_Incap_checkbox = checked Then detail_dialog_length = detail_dialog_length + 60
@@ -511,6 +507,7 @@ If new_imig_checkbox = checked Then detail_dialog_length = detail_dialog_length 
 If Special_medical_checkbox = checked Then detail_dialog_length = detail_dialog_length + 50
 y_pos_counter = 25
 
+'This is the second Dialog - which is defined here because it is dynamic.
 BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Information from the Status Update"
   Text 5, 10, 40, 10, "Date of SU"
   EditBox 50, 5, 50, 15, SU_date
@@ -521,9 +518,6 @@ BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Inform
   
   If ill_incap_checkbox = checked Then 
 	  GroupBox 5, y_pos_counter, 430, 35, "Client Illness/Incapacity"
-''	  CheckBox 100, y_pos_counter, 30, 10, "New", ill_incap_new_checkbox
-''	  CheckBox 145, y_pos_counter, 35, 10, "Renew", ill_incap_renew_checkbox
-''	  CheckBox 195, y_pos_counter, 25, 10, "End", ill_incap_end_checkbox
 	  Text 15, y_pos_counter + 20, 40, 10, "Start Date"
 	  EditBox 75, y_pos_counter + 15, 50, 15, ill_incap_start_date
 	  Text 135, y_pos_counter + 20, 35, 10, "End Date"
@@ -533,13 +527,9 @@ BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Inform
 	  CheckBox 370, y_pos_counter + 20, 50, 10, "Financial", ill_incap_docs_with_fas
 	  
 	  y_pos_counter = y_pos_counter + 40
-  End If 
-  
+  End If
   If care_of_ill_Incap_checkbox = checked Then 
 	  GroupBox 5, y_pos_counter, 430, 55, "Needed in Home to care for Family Member"
-''	  CheckBox 160, y_pos_counter, 30, 10, "New", rel_care_new_checkbox
-''	  CheckBox 205, y_pos_counter, 35, 10, "Renew", rel_care_renew_checkbox
-''	  CheckBox 255, y_pos_counter, 25, 10, "End", rel_care_end_checkbox
 	  Text 15, y_pos_counter + 20, 95, 10, "Person in HH requiring care"
 	  EditBox 115, y_pos_counter + 15, 25, 15, disa_HH_memb
 	  Text 15, y_pos_counter + 40, 55, 10, "DISA Start Date"
@@ -552,12 +542,8 @@ BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Inform
 	  
 	  y_pos_counter = y_pos_counter + 60
   End If
-  
   If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentally_ill_checkbox = checked OR dev_delayed_checkbox = checked OR unemployable_checkbox = checked Then 
 	  GroupBox 5, y_pos_counter, 430, 35, "Unemployable"
-''	  CheckBox 75, y_pos_counter, 30, 10, "New", unemployable_new_checkbox
-''	  CheckBox 120, y_pos_counter, 35, 10, "Renew", unemployable_renew_checkbox
-''	  CheckBox 170, y_pos_counter, 25, 10, "End", unemployable_end_checkbox
 	  Text 15, y_pos_counter + 20, 55, 10, "Start Date on SU"
 	  EditBox 75, y_pos_counter + 15, 50, 15, unemployable_start_date
 	  Text 135, y_pos_counter + 20, 35, 10, "End Date"
@@ -567,13 +553,9 @@ BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Inform
 	  CheckBox 370, y_pos_counter + 20, 50, 10, "Financial", unemployable_docs_with_fas
 	  
 	  y_pos_counter = y_pos_counter + 40
-  End If 
-  
+  End If
   If fam_violence_checkbox = checked Then 
 	  GroupBox 5, y_pos_counter, 430, 35, "Family Violence Waiver"
-''	  CheckBox 100, y_pos_counter, 30, 10, "New", fvw_new_checkbox
-''	  CheckBox 145, y_pos_counter, 35, 10, "Renew", fvw_renew_checkbox
-''	  CheckBox 195, y_pos_counter, 25, 10, "End", fvw_end_checkbox
 	  Text 15, y_pos_counter + 20, 55, 10, "Start Date "
 	  EditBox 75, y_pos_counter + 15, 50, 15, fvw_start_date
 	  Text 135, y_pos_counter + 20, 35, 10, "End Date"
@@ -581,12 +563,8 @@ BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Inform
 	  
 	  y_pos_counter = y_pos_counter + 40
   End If
-  
   If ssi_pending_checkbox = checked Then 
 	  GroupBox 5, y_pos_counter, 430, 35, "SSI/RSDI Pending"
-''	  CheckBox 85, y_pos_counter, 30, 10, "New", ssa_app_new_checkbox
-''	  CheckBox 130, y_pos_counter, 35, 10, "Renew", ssa_app_renew_checkbox
-''	  CheckBox 180, y_pos_counter, 25, 10, "End", ssa_app_end_checkbox
 	  Text 15, y_pos_counter + 20, 55, 10, "Application Date"
 	  EditBox 75, y_pos_counter + 15, 50, 15, ssa_app_date
 	  Text 260, y_pos_counter + 20, 70, 10, "Documentation with:"
@@ -594,13 +572,9 @@ BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Inform
 	  CheckBox 370, y_pos_counter + 20, 50, 10, "Financial", ssa_app_docs_with_fas
 	  
 	  y_pos_counter = y_pos_counter + 40
-  End If 
-  
+  End If
   If child_under_one_checkbox = checked Then 
 	  GroupBox 5, y_pos_counter, 430, 55, "Child Under 12 Months"
-''	  CheckBox 100, y_pos_counter, 30, 10, "New", child_under_1_new_checkbox
-''	  CheckBox 145, y_pos_counter, 35, 10, "Renew", child_under_1_renew_checkbox
-''	  CheckBox 195, y_pos_counter, 25, 10, "End", child_under_1_end_checkbox
 	  Text 15, y_pos_counter + 20, 55, 10, "Request Date"
 	  EditBox 75, y_pos_counter + 15, 50, 15, child_under_1_request_date
 	  Text 275, y_pos_counter + 20, 85, 10, "Request made to:"
@@ -615,24 +589,16 @@ BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Inform
 
 	  y_pos_counter = y_pos_counter + 60
   End If 
-  
   If new_imig_checkbox = checked Then 
 	  GroupBox 5, y_pos_counter, 430, 30, "Newly Arrived Immigrant"
-''	  CheckBox 100, y_pos_counter, 30, 10, "New", imig_new_checkbox
-''	  CheckBox 145, y_pos_counter, 35, 10, "Renew", imig_renew_checkbox
-''	  CheckBox 195, y_pos_counter, 25, 10, "End", imig_end_checkbox
 	  Text 15, y_pos_counter + 15, 110, 10, "Spoken Language (SPL) from SU"
 	  EditBox 130, y_pos_counter + 10, 25, 15, spl_listed
 	  CheckBox 170, y_pos_counter + 15, 260, 10, "Check here to confirm that the SU indicates clt is enrolled in ELL/ESL classes", ell_confirm_checkbox
 	  
 	  y_pos_counter = y_pos_counter + 35
   End If 
-  
   If Special_medical_checkbox = checked Then 
 	  GroupBox 5, y_pos_counter, 430, 45, "Special Medical Criteria"
-''	  CheckBox 100, y_pos_counter, 30, 10, "New", smc_new_checkbox
-''	  CheckBox 145, y_pos_counter, 35, 10, "Renew", smc_renew_checkbox
-''	  CheckBox 195, y_pos_counter, 25, 10, "End", smc_end_checkbox
 	  Text 20, y_pos_counter + 15, 100, 10, "Person in HH meeting Criteria"
 	  EditBox 125, y_pos_counter + 10, 20, 15, smc_hh_memb
 	  Text 155, y_pos_counter + 15, 60, 10, "Medical Criteria"
@@ -653,22 +619,23 @@ BeginDialog fss_code_detail, 0, 0, 440, detail_dialog_length, "Update FSS Inform
 	CancelButton 385, y_pos_counter, 50, 15
 EndDialog
 
+'Calls the second dialog
 Do
 	Do
 		err_msg = ""
 		dialog fss_code_detail
 		cancel_confirmation
 		If ButtonPressed = child_under_1_months_calculate Then 
-			If IsDate(child_under_1_request_date) = TRUE Then 
-				For add_month = 1 to number_of_months_available
-					this_month = DatePart("m", DateAdd ("m", add_month, child_under_1_request_date))
-					If len(this_month) = 1 Then this_month = "0" & this_month
-					this_year = DatePart("yyyy", DateAdd("m", add_month, child_under_1_request_date))
-					new_exemption_months = new_exemption_months & "~" & this_month & " / " & this_year
+			If IsDate(child_under_1_request_date) = TRUE Then 	'This creates a list of the future months to be coded as exempt on EMPS.
+				For add_month = 1 to number_of_months_available		'using the count determined in the EMPS 
+					this_month = DatePart("m", DateAdd ("m", add_month, child_under_1_request_date))	'first month is the month after the exemption is requested, then adding all the others after'
+					If len(this_month) = 1 Then this_month = "0" & this_month		'making 2 digit
+					this_year = DatePart("yyyy", DateAdd("m", add_month, child_under_1_request_date))	'creating a year
+					new_exemption_months = new_exemption_months & "~" & this_month & " / " & this_year	'list of all of these months
 				Next
-				new_exemption_months = right(new_exemption_months, len(new_exemption_months) - 1)
-				new_exemption_months_array = split(new_exemption_months, "~")
-				months_to_fill = Join(new_exemption_months_array, ", ")
+				new_exemption_months = right(new_exemption_months, len(new_exemption_months) - 1)		'taking off the extra ~
+				new_exemption_months_array = split(new_exemption_months, "~")							'creating an array of the months to code for future exempt months
+				months_to_fill = Join(new_exemption_months_array, ", ")									'list for the edit box
 			Else 
 				MsgBox "You must enter a valid date to calculate the which months will have an exemption."
 			End If 
@@ -679,15 +646,11 @@ Do
 		If ill_incap_checkbox = checked Then 
 			If IsDate(ill_incap_start_date) = False Then err_msg = err_msg & vbNewLine &"- You must enter a valid date for the start of client Ill/Incap. If one was not provided on the SU, an new SU is required."
 			If ill_incap_docs_with_es = unchecked AND ill_incap_docs_with_fas = unchecked Then err_msg = err_msg & vbNewLine & "- Please indicate if verification of client's ill/incap are held in ES file or Financial File."
-''			If IsDate(ill_incap_end_date) = FALSE AND ill_incap_renew_checkbox = checked Then MsgBox "YOU HAVE NOT ENTERED AN END DATE FOR ILL/INCAP - since this is a renewal of this status the script will defaut the end date to six months from now."
-''			If ISDate(ill_incap_end_date) = FALSE AND ill_incap_end_checkbox = checked Then err_msg = err_msg & vbNewLine & "- If you are ending the ill/incap category, you must enter an end date."
 		End If 
 		If care_of_ill_Incap_checkbox = checked Then 
 			If IsNumeric(disa_HH_memb) = False Then err_msg = err_msg & vbNewLine & "- List the reference number of the household member the client is needed in the home to care for. The person must be listed on the case, if the person has not yet been added to the case, cancel the script and do that first."
 			If IsDate(rel_care_start_date) = False Then err_msg = err_msg & vbNewLine &"- You must enter a valid date for the start need to be at home. If one was not provided on the SU, an new SU is required."
 			If rel_care_docs_with_es = unchecked AND rel_care_docs_with_fas = unchecked Then err_msg = err_msg & vbNewLine & "- Please indicate if verification of need to be at home for care of a family member is held in ES file or Financial File."
-''			If IsDate(rel_care_end_date) = FALSE AND rel_care_renew_checkbox = checked Then MsgBox "YOU HAVE NOT ENTERED AN END DATE FOR CARE OF ILL FAMILY MEMEBER - since this is a renewal of this status the script will defaut the end date to six months from now."
-''			If ISDate(rel_care_end_date) = FALSE AND rel_care_end_checkbox = checked Then err_msg = err_msg & vbNewLine & "- If you are ending the care of ill/incap family member category, you must enter an end date."
 		End If 
 		If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentally_ill_checkbox = checked OR dev_delayed_checkbox = checked OR unemployable_checkbox = checked Then 
 			If IsDate(unemployable_start_date) = False Then err_msg = err_msg & vbNewLine &"- You must enter a valid date for the start of client determined to be unemployable. If one was not provided on the SU, an new SU is required."
@@ -723,108 +686,107 @@ Do
 Loop until are_we_passworded_out = false
 
 Back_to_SELF
+'The footer month/year defaults to the status update date for most of the categories
 MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
 
-If ill_incap_checkbox = checked Then 
+If ill_incap_checkbox = checked Then 		'FSS CATEGORY - CLIENT ILL OR INCAPACITATED
 	STATS_counter = STATS_counter + 1
-	fvw_only = FALSE 
-	fss_category_list = fss_category_list & "; Ill/Incap >60 Days"
-	If ill_incap_end_date = "" Then ill_incap_end_date = DateAdd("m", 6, ill_incap_start_date)
-	CALL update_disa(ref_number, ill_incap_start_date, ill_incap_end_date, "09", "6")		
-	panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "
+	fvw_only = FALSE 							'This variable determines which case notes will happen later
+	fss_category_list = fss_category_list & "; Ill/Incap >60 Days"		'Creates a list of all the categories for case notes
+	If ill_incap_end_date = "" Then ill_incap_end_date = DateAdd("m", 6, ill_incap_start_date)		'Defaults the end date of ill/incap to 6 months from the start date
+	CALL update_disa(ref_number, ill_incap_start_date, ill_incap_end_date, "09", "6")		'Calls the function to update the DISA panel
+	panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "		'Creates a list of panels updated for case notes
 End If 
 
-If care_of_ill_Incap_checkbox = checked Then 
+If care_of_ill_Incap_checkbox = checked Then 		'FSS CATEGORY - CLIENT IS REQUIRED IN HOME TO CARE FOR ILL OR INCAPACITATED HOUSEHOLD MEMBER
 	STATS_counter = STATS_counter + 1
-	fvw_only = FALSE 
-	fss_category_list = fss_category_list & "; Care of Ill/Incap Family Member"
-	If rel_care_end_date = "" Then rel_care_end_date = DateAdd("m", 6, rel_care_start_date)
-	CALL update_disa(disa_HH_memb, rel_care_start_date, rel_care_end_date, "09", "6")			
-	panels_updated = panels_updated & "DISA for Memb " & disa_HH_memb & " & "
+	fvw_only = FALSE 							'This variable determines which case notes will happen later
+	fss_category_list = fss_category_list & "; Care of Ill/Incap Family Member"		'Creates a list of all the categories for case notes
+	If rel_care_end_date = "" Then rel_care_end_date = DateAdd("m", 6, rel_care_start_date)		'Defaults the end date of relative care need to 6 months from the start date if none is defined
+	CALL update_disa(disa_HH_memb, rel_care_start_date, rel_care_end_date, "09", "6")			'Calls the function to update the DISA panel
+	panels_updated = panels_updated & "DISA for Memb " & disa_HH_memb & " & "			'Creates a list of panels updated for case notes
 End If 
 
+'FSS CATEGORY - CLIENT MEETS ONE OF THE UNEMPLOYABLE CATEGORIES
 If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentally_ill_checkbox = checked OR dev_delayed_checkbox = checked OR unemployable_checkbox = checked Then 
 	STATS_counter = STATS_counter + 1
-	fvw_only = FALSE 
-	fss_category_list = fss_category_list & "; Unemployable"
-''	If unemployable_new_checkbox = checked Then fss_category_list = fss_category_list & " - NEW"
-''	if unemployable_renew_checkbox = checked Then fss_category_list = fss_category_list & " - RENEW"
-''	If unemployable_end_checkbox = checked Then fss_category_list = fss_category_list & " - ENDED"
+	fvw_only = FALSE 							'This variable determines which case notes will happen later
+	fss_category_list = fss_category_list & "; Unemployable"		'Creates a list of all the categories for case notes
 	Do
-		Call Navigate_to_MAXIS_screen ("STAT", "EMPS")
+		Call Navigate_to_MAXIS_screen ("STAT", "EMPS")				'Navigates to EMPS and updates based on which unemployable category was selected
 		EMReadScreen nav_check, 4, 2, 50
 	Loop until nav_check = "EMPS"
 	PF9 
 	If unemployable_checkbox = checked Then EMWriteScreen "UN", 11, 76
 	If dev_delayed_checkbox = checked Then 
 		EMWriteScreen "DD", 11, 76
-		fss_category_list = fss_category_list & " - Developmentally Delayed"
+		fss_category_list = fss_category_list & " - Developmentally Delayed"	'Specifics of the unemployable category are added to the list of FSS Category for case note
 		update_disa_for_UN = TRUE 
 	End If 
 	If mentally_ill_checkbox = checked Then 
 		EMWriteScreen "MI", 11, 76
-		fss_category_list = fss_category_list & " - Mentally Ill"
+		fss_category_list = fss_category_list & " - Mentally Ill"			'Specifics of the unemployable category are added to the list of FSS Category for case note
 		update_disa_for_UN = TRUE 
 	End If 
 	If learning_disabled_checkbox = checked Then 
 		EMWriteScreen "LD", 11, 76
-		fss_category_list = fss_category_list & " - Learning Diabled"
+		fss_category_list = fss_category_list & " - Learning Diabled"			'Specifics of the unemployable category are added to the list of FSS Category for case note
 		update_disa_for_UN = TRUE 
 	End If 
 	IF iq_test_checkbox = checked Then 
 		EMWriteScreen "IQ", 11, 76
-		fss_category_list = fss_category_list & " - IQ Tested < 80"
+		fss_category_list = fss_category_list & " - IQ Tested < 80"			'Specifics of the unemployable category are added to the list of FSS Category for case note
 		update_disa_for_UN = TRUE 
 	End If 
 	transmit 
-	panels_updated = panels_updated & "EMPS for Memb " & ref_number & " & "
+	panels_updated = panels_updated & "EMPS for Memb " & ref_number & " & "			'Creates a list of panels updated for case notes
 	If update_disa_for_UN = TRUE Then 
 		CALL update_disa(ref_number, unemployable_start_date, unemployable_end_date, "09", "6")
-		panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "
+		panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "		'Creates a list of panels updated for case notes
 	End IF 
 End If 
 
-If fam_violence_checkbox = checked Then 
+If fam_violence_checkbox = checked Then 				'FSS CATEGORY - HOUSEHOLD HAS A FAMILY VIOLENCE WAIVER
 	STATS_counter = STATS_counter + 1
-	fss_category_list = fss_category_list & "; Family Violence Waiver"
+	fss_category_list = fss_category_list & "; Family Violence Waiver"		'Creates a list of all the categories for case notes
 
-	MAXIS_footer_month = right("00" & DatePart("m", fvw_start_date), 2)
+	MAXIS_footer_month = right("00" & DatePart("m", fvw_start_date), 2)			'Case needs to be updated in the footer month that the waiver starts
 	MAXIS_footer_year = right(DatePart("yyyy", fvw_start_date), 2)
 	Back_to_SELF
 	Do
-		Do
+		Do															'Goes to MEMI for the person to code the family violence waiver
 			Call Navigate_to_MAXIS_screen ("STAT", "MEMI")
 			EMReadScreen nav_check, 4, 2, 50
 		Loop until nav_check = "MEMI"
 		EMWriteScreen ref_number, 20, 76
 		transmit
 		PF9 
-		EMWriteScreen "02", 17, 78
+		EMWriteScreen "02", 17, 78								'Adding the code and the start month/year
 		EMWriteScreen MAXIS_footer_month, 18, 49
 		EMWriteScreen MAXIS_footer_year, 18, 55
 		transmit
 		transmit
-		PF3
+		PF3														'The MEMI panel needs to be checked in every subsequent year to make sure the data did not expire
 		EMWriteScreen "Y", 16, 54
 		transmit
 		EMReadScreen end_wrap, 24, 24, 2
-	Loop until end_wrap = "CONTINUATION NOT ALLOWED"
+	Loop until end_wrap = "CONTINUATION NOT ALLOWED"			'This is what is on the STAT WRAP screen in CM plus 1
 	
-	panels_updated = panels_updated & "MEMI for Memb " & ref_number & " & "
+	panels_updated = panels_updated & "MEMI for Memb " & ref_number & " & "			'Creates a list of panels updated for case notes
 	
-	next_month = DateAdd("m", 1, date)
+	next_month = DateAdd("m", 1, date)							'setting up the date variables needed to loop through all of the fields on time
 	next_mo = right("00" & DatePart("m", next_month) , 2)
 	next_yr = right(DatePart("yyyy", next_month), 2)
 	next_MAXIS_month = next_mo & "/" & next_yr
-	Do
+	Do															'Go to STAT TIME
 		Call Navigate_to_MAXIS_screen ("STAT", "TIME")
 		EMReadScreen nav_check, 4, 2, 46
 	Loop until nav_check = "TIME"
-	EMWriteScreen ref_number, 20, 76
+	EMWriteScreen ref_number, 20, 76							'For the person the SU is for
 	transmit
 	Do 
-		If MAXIS_footer_month = "01" Then fvw_month_col = 15
+		If MAXIS_footer_month = "01" Then fvw_month_col = 15	'Defining where all the fields are on the TIME panel.
 		If MAXIS_footer_month = "02" Then fvw_month_col = 20
 		If MAXIS_footer_month = "03" Then fvw_month_col = 25
 		If MAXIS_footer_month = "04" Then fvw_month_col = 30
@@ -836,109 +798,63 @@ If fam_violence_checkbox = checked Then
 		If MAXIS_footer_month = "10" Then fvw_month_col = 60
 		If MAXIS_footer_month = "11" Then fvw_month_col = 65
 		If MAXIS_footer_month = "12" Then fvw_month_col = 70
-		For row = 5 to 16
+		For row = 5 to 16										'Looks at the years listed on the left to find the year of the first month to check '
 			EMReadScreen find_year, 2, row, 11
-			If MAXIS_footer_year = find_year Then 
+			If MAXIS_footer_year = find_year Then 				'If the year matches, it looks at the col defined above for the month
 				fvw_month_row = row
 				Exit For 
 			End If 
 		Next
-		EMReadScreen is_counted, 2, fvw_month_row, fvw_month_col
-		If is_counted = "SS" OR is_counted = "SF" OR is_counted = "WS" OR is_counted = "WF" Then 
-			If Extension_case = TRUE THEN 
-				PF9 
-				EMWriteScreen "Y0", fvw_month_row, fvw_month_col
-			ElseIf Extension_case = FALSE Then 
-				PF9 
-				EMWriteScreen "WD", fvw_month_row, fvw_month_col
-			End IF 
-			counted_months_changed = counted_months_changed & " & " & MAXIS_footer_month & "/" & MAXIS_footer_year
+		EMReadScreen is_counted, 2, fvw_month_row, fvw_month_col	'Reading the current code at this place in the TIME panel.
+		If is_counted = "SS" OR is_counted = "SF" OR is_counted = "WS" OR is_counted = "WF" Then 		'If a counted month is coded
+			PF9 																						'Edit mode
+			EMWriteScreen "WD", fvw_month_row, fvw_month_col											'Write the FVW code
+			counted_months_changed = counted_months_changed & " & " & MAXIS_footer_month & "/" & MAXIS_footer_year	'Creates a list of the months on TIME that were changed for case note
 		End If 
-		Call month_change(1, MAXIS_footer_month, MAXIS_footer_year, month_ahead, month_yr_ahead)
-		MAXIS_footer_month = month_ahead
+		Call month_change(1, MAXIS_footer_month, MAXIS_footer_year, month_ahead, month_yr_ahead)		'Goes to the next month for the loop
+		MAXIS_footer_month = month_ahead																'Resets the footer month and year for the next loop
 		MAXIS_footer_year = month_yr_ahead 
-	Loop until MAXIS_footer_month & "/" & MAXIS_footer_year = next_MAXIS_month
+	Loop until MAXIS_footer_month & "/" & MAXIS_footer_year = next_MAXIS_month		'compares the month that is being reviewed to the variable set above for CM + 1
 	transmit
-	panels_updated = panels_updated & "TIME for Memb " & ref_number & " & "
+	panels_updated = panels_updated & "TIME for Memb " & ref_number & " & "			'Creates a list of panels updated for case notes
 	EMReadScreen tanf_used, 3, 17, 69
 	EMReadScreen ext_tanf_used, 3, 19, 69
-''	ElseIf fvw_renew_checkbox = checked Then 
-''		fss_category_list = fss_category_list & " - RENEW"
-''		Do
-''			Call Navigate_to_MAXIS_screen ("STAT", "MEMI")
-''			EMReadScreen nav_check, 4, 2, 50
-''		Loop until nav_check = "MEMI"
-''		panels_reviewed = panels_reviewed & "MEMI for Memb " & disa_HH_memb & " & "
-''		EMWriteScreen ref_number, 20, 76
-''		transmit
-''		EMReadScreen fvw_code, 2, 17, 78
-''		If fvw_code <> "02" Then 
-''			MsgBox "The script has attempted to confirm the Family Violence Waiver coding was correct in MEMI for the renewal of the Waiver." & vbNewLine & vbNewLine & "The TANF Exemption is NOT coded as '02'. The script will continue and will case note the renewal but you must review the MEMI and TIME panel manually"
-''			fvw_memi_error = TRUE
-''		End If 
-''	ElseIf fvw_end_date = checked Then 
-''		fss_category_list = fss_category_list & " - ENDED"
-''		MAXIS_footer_month = right("00" & DatePart("m", DateAdd("m", 1, fvw_end_date)), 2)
-''		MAXIS_footer_year = right(DatePart("yyyy", DateAdd("m", 1, fvw_end_date)), 2)
-''		Do
-''			Call Navigate_to_MAXIS_screen ("STAT", "MEMI")
-''			EMReadScreen nav_check, 4, 2, 50
-''		Loop until nav_check = "MEMI"
-''		EMWriteScreen ref_number, 20, 76
-''		transmit
-''		PF9 
-''		EMWriteScreen "  ", 17, 78
-''		EMWriteScreen "  ", 18, 49
-''		EMWriteScreen "  ", 18, 55
-''		transmit
-''		transmit 
-''		Do
-''			CALL Navigate_to_MAXIS_screen ("STAT", "TIME")
-''			EMReadScreen nav_check, 4, 2, 46
-''		Loop until nav_check = "TIME"
-''		EMReadScreen tanf_used, 3, 17, 69
-''		EMReadScreen ext_tanf_used, 19, 69
-''		panels_updated = panels_updated & "TIME for Memb " & ref_number & " & "
-''	End If 		
 End If 
 
 tanf_used = trim(tanf_used)
 ext_tanf_used = trim(ext_tanf_used)
-If counted_months_changed <> "" Then counted_months_changed = right (counted_months_changed, len(counted_months_changed)-3)
+If counted_months_changed <> "" Then counted_months_changed = right (counted_months_changed, len(counted_months_changed)-3)		'reformatting the lsit of months changed for case note
 
-Back_to_SELF
+Back_to_SELF	'Resetting the footer month because FVW changed it
 MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
 
-If ssi_pending_checkbox = checked Then 
+If ssi_pending_checkbox = checked Then 					'FSS CATEGORY - SSI/RSDI ARE PENDING
 	STATS_counter = STATS_counter + 1
-	fvw_only = FALSE 
-	fss_category_list = fss_category_list & "; SSI/RSDI Pending"
-''	IF ssa_app_new_checkbox = checked Then fss_category_list = fss_category_list & " - NEW"
-''	IF ssa_app_renew_checkbox = checked Then fss_category_list = fss_category_list &  " - RENEW"
-''	IF ssa_app_end_checkbox = checked  Then fss_category_list = fss_category_list & " - ENDED"
-	MAXIS_footer_month = right("00" & DatePart("m", ssa_app_date), 2)
+	fvw_only = FALSE 									'This variable determines which case notes will happen later
+	fss_category_list = fss_category_list & "; SSI/RSDI Pending"		'Creates a list of all the categories for case notes
+	MAXIS_footer_month = right("00" & DatePart("m", ssa_app_date), 2)	'Needs to be coded in the month that the app happened
 	MAXIS_footer_year = right(DatePart("yyyy", ssa_app_date), 2)
 	Back_to_SELF
 	Do
-		Call Navigate_to_MAXIS_screen ("STAT", "PBEN")
+		Call Navigate_to_MAXIS_screen ("STAT", "PBEN")					'Go to PBEN for the correct client
 		EMReadScreen nav_check, 4, 2, 49
 	Loop until nav_check = "PBEN"
-	ssa_app_month = right("00" & DatePart("m", ssa_app_date), 2)
+	ssa_app_month = right("00" & DatePart("m", ssa_app_date), 2)		'Setting up the parts of the date for MXIS fields
 	ssa_app_day = right("00" & DatePart("d", ssa_app_date), 2)
 	ssa_app_year = right(DatePart("yyyy", ssa_app_date), 2)
-	pben_row = 8 
+	pben_row = 8 														'Setting the starting point for reading the whole panel
 	Do 
 		EMReadScreen pben_exist, 2, pben_row, 24
-		If pben_exist = "__" Then 
+		If pben_exist = "__" Then 										'looks at the first line and if the type is blank, nothing is listed here
 			EMReadScreen numb_of_panels, 1, 2, 78
-			IF numb_of_panels = "0" Then 
+			IF numb_of_panels = "0" Then 								'putting the panel in edit mode
 				EMWriteScreen "NN", 20, 79
 				transmit
 			Else
 				PF9
 			End IF 
-			EMWriteScreen "01", pben_row, 24
+			EMWriteScreen "01", pben_row, 24							'Adding the SSI app and RSDI app codes to pben as pending
 			EMWriteScreen ssa_app_month, pben_row, 51
 			EMWriteScreen ssa_app_day, pben_row, 54
 			EMWriteScreen ssa_app_year, pben_row, 57
@@ -954,47 +870,48 @@ If ssi_pending_checkbox = checked Then
 			
 			panels_updated = panels_updated & "PBEN for Memb " & ref_number & " & "
 			Exit Do 
-		ElseIf pben_exist = "01" OR pben_exist = "02" Then 
+		ElseIf pben_exist = "01" OR pben_exist = "02" Then 			'if SSI or RSDI are already listed as pending the script will ask if the worker wants to replace it
 			EMReadScreen listed_app_month, 2, pben_row, 51
 			EMReadScreen listed_app_day, 2, pben_row, 54
 			EMReadScreen listed_app_year, 2, pben_row, 57
-			IF listed_app_month = ssa_app_month AND listed_app_day = ssa_app_day AND listed_app_year = ssa_app_year Then 
+			IF listed_app_month = ssa_app_month AND listed_app_day = ssa_app_day AND listed_app_year = ssa_app_year Then 	'Asking the worker if PBEN is correct
 				same_pben_date_msg = MsgBox ("It appears this SSI/RSDI Application information is already listed on PBEN." & vbNewLine & "Review the application information listed on PBEN." & vbNewLine & "Are the SSI and RSDI lines both listed correctly?", vbYesNo + vbQuestion, "PBEN data duplicated?")
-				If same_pben_date_msg = vbYes then 
+				If same_pben_date_msg = vbYes then 	'answering yes says the PBEN is correct and so does not need to be updated'
 					panels_reviewed = panels_reviewed & "PBEN for Memb " & ref_number & " - SSI/RSDI application already listed & "
 					Exit Do
+				ElseIf same_pben_date_msg = vbNo then  
+					EMReadScreen next_pben_exist, 2, pben_row + 1, 24 
+					IF next_pben_exist = "__" OR next_pben_exist = "01" OR next_pben_exist = "02" Then 
+						PF9																					'Adding the SSI app and RSDI app codes to pben as pending
+						EMWriteScreen "01", pben_row, 24
+						EMWriteScreen ssa_app_month, pben_row, 51
+						EMWriteScreen ssa_app_day, pben_row, 54
+						EMWriteScreen ssa_app_year, pben_row, 57
+						EMWriteScreen "5", pben_row, 62
+						EMWriteScreen "P", pben_row, 77
+						
+						EMWriteScreen "02", pben_row + 1, 24
+						EMWriteScreen ssa_app_month, pben_row + 1, 51
+						EMWriteScreen ssa_app_day, pben_row + 1, 54
+						EMWriteScreen ssa_app_year, pben_row + 1, 57
+						EMWriteScreen "5", pben_row + 1, 62
+						EMWriteScreen "P", pben_row + 1, 77
+						
+						panels_updated = panels_updated & "PBEN for Memb " & ref_number & " & "			'Creates a list of panels updated for case notes
+						Exit Do 
+					Else 
+						panels_reviewed = panels_reviewed & "PBEN for Memb " & ref_number & " & "			'Creates a list of panels updated for case notes
+						MsgBox "PBEN could not be updated, and will need to be updated manually"
+					End IF 
 				End If 
-				EMReadScreen next_pben_exist, 2, pben_row + 1, 24 
-				IF next_pben_exist = "__" OR next_pben_exist = "01" OR next_pben_exist = "02" Then 
-					PF9
-					EMWriteScreen "01", pben_row, 24
-					EMWriteScreen ssa_app_month, pben_row, 51
-					EMWriteScreen ssa_app_day, pben_row, 54
-					EMWriteScreen ssa_app_year, pben_row, 57
-					EMWriteScreen "5", pben_row, 62
-					EMWriteScreen "P", pben_row, 77
-					
-					EMWriteScreen "02", pben_row + 1, 24
-					EMWriteScreen ssa_app_month, pben_row + 1, 51
-					EMWriteScreen ssa_app_day, pben_row + 1, 54
-					EMWriteScreen ssa_app_year, pben_row + 1, 57
-					EMWriteScreen "5", pben_row + 1, 62
-					EMWriteScreen "P", pben_row + 1, 77
-					
-					panels_updated = panels_updated & "PBEN for Memb " & ref_number & " & "
-					Exit Do 
-				Else 
-					panels_reviewed = panels_reviewed & "PBEN for Memb " & ref_number & " & "
-					MsgBox "PBEN could not be updated, and will need to be updated manually"
-				End IF 
 			End IF 
 		Else 
-			pben_row = pben_row + 1
+			pben_row = pben_row + 1																			'Or go to the next line
 		End If 
 	Loop until pben_row = 12
 	If pben_row = 12 Then replace_pben_message = MSGBox("It appears the PBEN Panel is full." & vbNewLine & vbNewLine & "The script can overwrite the first 2 lines with the pending SSI/RSDI application." & vbNewLine & vbNewLine & "If you agree to application information being entered on the first 2 lines, press 'Yes'", vbYesNo + vbAlert, "Update PBEN?")
-	If replace_pben_message = vbYes Then 
-		PF9
+	If replace_pben_message = vbYes Then 			'If PBEN is full of things other than SSI and RSDI and the worker wants to replace the first two lines, the script can overwrite
+		PF9											'Rewriting the top two lines with SSI/RSDI pending
 		EMWriteScreen "01", 8, 24
 		EMWriteScreen ssa_app_month, 8, 51
 		EMWriteScreen ssa_app_day, 8, 54
@@ -1009,27 +926,27 @@ If ssi_pending_checkbox = checked Then
 		EMWriteScreen "5", 9, 62
 		EMWriteScreen "P", 9, 77
 		
-		panels_updated = panels_updated & "PBEN for Memb " & ref_number & " & "
+		panels_updated = panels_updated & "PBEN for Memb " & ref_number & " & "		'Creates a list of panels updated for case notes
 	ElseIF replace_pben_message = vbNo Then  
-		panels_reviewed = panels_reviewed & "PBEN for Memb " & disa_HH_memb & " & "
+		panels_reviewed = panels_reviewed & "PBEN for Memb " & disa_HH_memb & " & "		
 	End If 
 	transmit
 	ssa_end_date = DateAdd("m", 6, ssa_app_date)
-	CALL update_disa (ref_number, ssa_app_date, ssa_end_date, "06", "6")
-	panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "
+	CALL update_disa (ref_number, ssa_app_date, ssa_end_date, "06", "6")			'Updating DISA with the pending application dates
+	panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "				'Creates a list of panels updated for case notes
 End If 
 
 Back_to_SELF
 MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
 
-If child_under_one_checkbox = checked Then 
+If child_under_one_checkbox = checked Then 						'FSS CATEGORY - CAREGIVER OF A CHILD UNDER 12 MONTHS
 	STATS_counter = STATS_counter + 1
-	fvw_only = FALSE 
-	fss_category_list = fss_category_list & "; Care of Child < 12 Months"
-	MAXIS_footer_month = left(new_exemption_months_array(0), 2)
+	fvw_only = FALSE 											'This variable determines which case notes will happen later
+	fss_category_list = fss_category_list & "; Care of Child < 12 Months"		'Creates a list of all the categories for case notes
+	MAXIS_footer_month = left(new_exemption_months_array(0), 2)		'getting footer month by using the array of months to be exempt 
 	MAXIS_footer_year = right(new_exemption_months_array(0), 2)
-	Do
+	Do															'Go to EMPS
 		Call Navigate_to_MAXIS_screen ("STAT", "EMPS")
 		EMReadScreen nav_check, 4, 2, 50
 	Loop until nav_check = "EMPS"
@@ -1040,10 +957,10 @@ If child_under_one_checkbox = checked Then
 	EMWriteScreen "X", 12, 39 
 	transmit
 	
-	emps_row = 7
+	emps_row = 7												'setting the first location
 	emps_col = 22
 	Do
-		EMReadScreen month_used, 2, emps_row, emps_col
+		EMReadScreen month_used, 2, emps_row, emps_col			'finding the first blank month to code
 		If month_used = "__" Then Exit Do
 		emps_col = emps_col + 11
 		If emps_col = 66 Then 
@@ -1051,12 +968,12 @@ If child_under_one_checkbox = checked Then
 			emps_row = emps_row + 1
 		End If 
 	Loop Until emps_row = 10
-	IF emps_row = 10 Then 
+	IF emps_row = 10 Then 										'if there are no blank months then error - cannot code an exemption
 		MsgBox "It appears the client has used all of their Exempt Months. EMPS will need to be updated manually."
 		PF3
 		PF10
 	Else 
-		For each exempt_month in new_exemption_months_array
+		For each exempt_month in new_exemption_months_array				'writing each of the months to be exempt in the array into the popup
 			EMWriteScreen left(exempt_month, 2), emps_row, emps_col
 			EMWriteScreen right(exempt_month, 4), emps_row, emps_col + 5
 			emps_col = emps_col + 11
@@ -1067,74 +984,34 @@ If child_under_one_checkbox = checked Then
 		Next
 		PF3
 		transmit
-		panels_updated = panels_updated & "EMPS for Memb " & ref_number & " & "
+		panels_updated = panels_updated & "EMPS for Memb " & ref_number & " & "			'Creates a list of panels updated for case notes
 	End IF 
-	
-	'ElseIF child_under_1_end_checkbox = checked Then 
-	''	fss_category_list = fss_category_list & " - ENDED"
-	''	MAXIS_footer_month = right("00" & DatePart("m", DateAdd("M", 1, SU_date)), 2)
-	''	MAXIS_footer_year = right(DatePart ("yyyy", DateAdd("M", 1, SU_date)), 2)
-	''	Do
-	''		Call Navigate_to_MAXIS_screen ("STAT", "EMPS")
-	''		EMReadScreen nav_check, 4, 2, 50
-	''	Loop until nav_check = "EMPS"
-	''	EMWriteScreen ref_number, 20, 76
-	''	transmit
-	''	PF9
-	''	EMWriteScreen "N", 12, 76
-	''	EMWriteScreen "X", 12, 39 
-	''	transmit
-	''	
-	''	emps_row = 7
-	''	emps_col = 22
-	''	Do while emps_row < 10
-	''		EMReadScreen month_used, 2, emps_row, emps_col
-	''		If month_used = MAXIS_footer_month Then
-	''			EMReadScreen year_used, 2, emps_row, emps_col + 7
-	''			If year_used = MAXIS_footer_year Then 
-	''				Do 
-	''					EMWriteScreen "__", emps_row, emps_col
-	''					EMWriteScreen "____", emps_row, emps_col + 5
-	''					exemption_months_for_future_use = exemption_months_for_future_use + 1
-	''					emps_col = emps_col + 11
-	''					If emps_col = 66 Then 
-	''						emps_col = 22
-	''						emps_row = emps_row + 1
-	''					End If 
-	''				Loop Until emps_row = 10
-	''				panels_updated = panels_updated & "EMPS for Memb " & ref_number & " & "
-	''			End IF 
-	''		End If 
-	''	Loop
-	''	PF3 
-	''	transmit
-	'End If 
 End If
 
 Back_to_SELF
 MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
 
-If new_imig_checkbox = checked Then
+If new_imig_checkbox = checked Then							'FSS CATEGORY - CLIENT IS A NEWLY ARRIVED IMMIGRANT
 	STATS_counter = STATS_counter + 1
-	fvw_only = FALSE 
- 	fss_category_list = fss_category_list & "; Newly Arrived Immigrant"
-	Do
+	fvw_only = FALSE 										'This variable determines which case notes will happen later
+ 	fss_category_list = fss_category_list & "; Newly Arrived Immigrant"			'Creates a list of all the categories for case notes
+	Do														'Go to IMIG
 		Call Navigate_to_MAXIS_screen ("STAT", "IMIG")
 		EMReadScreen nav_check, 4, 2, 49
 	Loop until nav_check = "IMIG"
 	EMWriteScreen ref_number, 20, 76
 	transmit
 	EMReadScreen numb_of_panels, 1, 2, 78
-	IF numb_of_panels = "0" Then 
+	IF numb_of_panels = "0" Then 							'If there is no IMIG panel the script stops because this can't be done
 		MsgBox "No IMIG Panel exists for this person. This coding cannot be completed for someone without an IMIG panel. The script will now end."
 		script_end_procedure("")
 	Else
 		PF9
 	End IF 
-	EMWriteScreen "Y", 18, 56
+	EMWriteScreen "Y", 18, 56								'Edit the panel amd add Yes code to the ELL code
 	transmit
-	panels_updated = panels_updated & "IMIG for Memb " & ref_number & " & "
+	panels_updated = panels_updated & "IMIG for Memb " & ref_number & " & "			'Creates a list of panels updated for case notes
 End If
 
 If IsDate(smc_diagnosis_date) = TRUE Then 
@@ -1142,19 +1019,18 @@ If IsDate(smc_diagnosis_date) = TRUE Then
 	MAXIS_footer_year = right (DatePart("yyyy", smc_diagnosis_date), 2)
 End IF 
 
-If Special_medical_checkbox = checked Then 
+If Special_medical_checkbox = checked Then 							'FSS CATEGORY - SOMEONE IN THE HOUSEHOLD MEETS SPECIAL MEDICAL CRITERIA 
 	STATS_counter = STATS_counter + 1
-	fvw_only = FALSE 
-	fss_category_list = fss_category_list & "; Special Medical Criteria"
-
-	Do 
+	fvw_only = FALSE 												'This variable determines which case notes will happen later
+	fss_category_list = fss_category_list & "; Special Medical Criteria"		'Creates a list of all the categories for case notes
+	Do 																'Go to EMPS
 		Call Navigate_to_MAXIS_screen ("STAT", "EMPS")
 		EMReadScreen nav_check, 4, 2, 50
 	Loop until nav_check = "EMPS"
 	EMWriteScreen ref_number, 20, 76
 	transmit
 	PF9
-	Select Case medical_criteria
+	Select Case medical_criteria									'Logic to write the code based on the dropdown from the previous dialog
 	Case "1 - Home-Health/Waiver Services"
 		EMWriteScreen "1", 8, 76
 	Case "2 - Child who meets SED Criteria"
@@ -1165,7 +1041,7 @@ If Special_medical_checkbox = checked Then
 	transmit
 	panels_updated = panels_updated & "EMPS for Memb " & ref_number & " & "
 	
-	next_MAXIS_month = CM_plus_1_mo & "/" & CM_plus_1_yr
+	next_MAXIS_month = CM_plus_1_mo & "/" & CM_plus_1_yr			'Going to STAT TIME to code in any banked months from specidal madical criteria
 	TANF_banked_month = MAXIS_footer_month
 	TANF_banked_year = MAXIS_footer_year
 	Do 
@@ -1175,7 +1051,7 @@ If Special_medical_checkbox = checked Then
 	EMWriteScreen ref_number, 20, 76
 	transmit
 	PF9
-	Do 
+	Do 																'Setting the locations of the fields on TIME
 		If TANF_banked_month = "01" Then smc_month_col = 15
 		If TANF_banked_month = "02" Then smc_month_col = 20
 		If TANF_banked_month = "03" Then smc_month_col = 25
@@ -1188,7 +1064,7 @@ If Special_medical_checkbox = checked Then
 		If TANF_banked_month = "10" Then smc_month_col = 60
 		If TANF_banked_month = "11" Then smc_month_col = 65
 		If TANF_banked_month = "12" Then smc_month_col = 70
-		For row = 5 to 16
+		For row = 5 to 16											'Looking in each of the field coordinates to find the month currently looking at 
 			EMReadScreen find_year, 2, row, 11
 			If TANF_banked_year = find_year Then 
 				smc_month_row = row
@@ -1196,35 +1072,34 @@ If Special_medical_checkbox = checked Then
 			End If 
 		Next
 		EMReadScreen is_counted, 2, smc_month_row, smc_month_col
-		If is_counted = "SF" OR is_counted = "WF" Then 
-			EMWriteScreen "FM", smc_month_row, smc_month_col
+		If is_counted = "SF" OR is_counted = "WF" Then 					'Fed funded months to change
+			EMWriteScreen "FM", smc_month_row, smc_month_col				
 			tanf_banked_months_coded = tanf_banked_months_coded + 1
-			banked_months_changed = banked_months_changed & " & " & TANF_banked_month & "/" & TANF_banked_year
-		ElseIF is_counted = "SS" OR is_counted = "WS" Then 
+			banked_months_changed = banked_months_changed & " & " & TANF_banked_month & "/" & TANF_banked_year	'Create a list of months changed to case note
+		ElseIF is_counted = "SS" OR is_counted = "WS" Then 				'State funded months to change
 			EMWriteScreen "SM", smc_month_row, smc_month_col
 			tanf_banked_months_coded = tanf_banked_months_coded + 1
-			banked_months_changed = banked_months_changed & " & " & TANF_banked_month & "/" & TANF_banked_year
+			banked_months_changed = banked_months_changed & " & " & TANF_banked_month & "/" & TANF_banked_year	'Create a list of months changed to case note
 		End If 
-		Call month_change(1, TANF_banked_month, TANF_banked_year, TANF_banked_month, TANF_banked_year)
-	Loop until TANF_banked_month & "/" & TANF_banked_year = next_MAXIS_month
+		Call month_change(1, TANF_banked_month, TANF_banked_year, TANF_banked_month, TANF_banked_year)	'go to the next month
+	Loop until TANF_banked_month & "/" & TANF_banked_year = next_MAXIS_month		'Loop until we get to cm + 1
 	transmit
 	panels_updated = panels_updated & "TIME for Memb " & ref_number & " & "
-	If banked_months_changed <> "" Then banked_months_changed = right(banked_months_changed, len(banked_months_changed)-3)
-
+	If banked_months_changed <> "" Then banked_months_changed = right(banked_months_changed, len(banked_months_changed)-3)	'Formatting the list for case noting
 End If 
 
 inhibiting_error = FALSE 
 month_to_start = CM_mo
 year_to_start = CM_yr
 
-Do
+Do															'Going to STAT SUMM and sending it through background for getting MFIP results.
 	Call Navigate_to_MAXIS_screen ("STAT", "SUMM")
 	EMReadScreen nav_check, 4, 2, 46
 Loop until nav_check = "SUMM"
 EMWriteScreen "BGTX", 20, 71
 transmit
-Call date_array_generator (month_to_start, year_to_start, stat_date_array)
-For Each version in stat_date_array
+Call date_array_generator (month_to_start, year_to_start, stat_date_array)	'creating an array of months of result to check 
+For Each version in stat_date_array											'Looking if a REVW is pending
 	MAXIS_footer_month = right("00" & datepart("m", version), 2)
 	MAXIS_footer_year = right(datepart("yyyy", version), 2)
 	Do 
@@ -1233,15 +1108,15 @@ For Each version in stat_date_array
 	Loop until revw_panel_check = "REVW"
 	If er_due <> TRUE Then 
 		EMReadScreen er_code, 1, 7, 40
-		Select Case er_code
-		Case "_", "A"
+		Select Case er_code		
+		Case "_", "A"			'If this is _ or A this case will not be held up for processing a review
 			er_due = FALSE
-		Case "I", "N"
+		Case "I", "N"			'If it is coded like this then case cannot be approved due to an ER due
 			er_due = TRUE
 			er_due_month = MAXIS_footer_month & "/" & MAXIS_footer_year
 		End Select
 	End If 
-	If mont_due <> TRUE Then 
+	If mont_due <> TRUE Then 			'Looking for HRF due - because no approval can be done
 		Call Navigate_to_MAXIS_screen ("STAT", "MONT")
 		EMReadScreen mont_code, 1, 11, 43
 		Select Case mont_code
@@ -1255,19 +1130,22 @@ For Each version in stat_date_array
 	Back_to_SELF
 Next 
 
+'Adding verbiage to reasons not approved if HRF or ER are due
 If er_due = TRUE Then notes_not_approved = notes_not_approved & "ER due for " & er_due_month & "; "
 IF mont_due = TRUE Then notes_not_approved = notes_not_approved & "HRF due for " & mont_due_month & "; "
 
 month_to_start = CM_mo
 year_to_start = CM_yr
 
+'Reformatting all the lists created
 fss_category_list = right(fss_category_list, len(fss_category_list) - 1) & ""
 If panels_updated <> "" Then panels_updated = left(panels_updated, len(panels_updated)-3)
 If panels_reviewed <> "" Then panels_reviewed = left(panels_reviewed, len(panels_reviewed)-3)
 If other_notes <> "" THEN other_notes = left(other_notes, len(other_notes)-1) & ""
 If notes_not_approved <> "" Then notes_not_approved = left (notes_not_approved, len(notes_not_approved)-2)
-Call Read_MFIP_Results(month_to_start, year_to_start, MFIP_results)
+Call Read_MFIP_Results(month_to_start, year_to_start, MFIP_results)		'Getting the detail about MFIP results
 
+'Runs the final dialog
 Do
 	Do 
 		err_msg = ""
@@ -1287,12 +1165,13 @@ Do
 	call check_for_password(are_we_passworded_out)
 Loop until are_we_passworded_out = false
 
+'Writing a TIKL if needed
 Call navigate_to_MAXIS_screen ("DAIL", "WRIT")
-IF child_under_one_checkbox = checked Then 
-	last_exemption_month = left(new_exemption_months_array(ubound(new_exemption_months_array)), 2)
+IF child_under_one_checkbox = checked Then 			'only TIKLing for child under one
+	last_exemption_month = left(new_exemption_months_array(ubound(new_exemption_months_array)), 2)		'Finds the last listed exemption month
 	last_exemption_year = right(new_exemption_months_array(ubound(new_exemption_months_array)), 2)
 	
-	tikl_writen_date = last_exemption_month & "/01/" & last_exemption_year
+	tikl_writen_date = last_exemption_month & "/01/" & last_exemption_year	
 	fss_end_date = DateAdd ("d", -1, DateAdd("m", 1, tikl_writen_date))
 	TIKL_message = "^^ FSS END DATE ^^ " & fss_end_date & ". Child under one year exemption to end this month. Case needs to be sent through background "
 
@@ -1311,15 +1190,13 @@ IF child_under_one_checkbox = checked Then
 	PF3	
 End If 
 
+'Case note for the Family Violence Waiver
 IF fam_violence_checkbox = checked Then 
 	CALL start_a_blank_CASE_NOTE
-	IF new_fvw = TRUE Then 
+	IF new_fvw = TRUE Then 		'For new waivers being added
 		CALL write_variable_in_CASE_NOTE ("***** DOMESTIC VIOLENCE WAIVER *****")
-	ElseIF new_fvw = FALSE Then
+	ElseIF new_fvw = FALSE Then		'For renewal of waiver
 		CALL write_variable_in_CASE_NOTE ("***** DVW RENEWED *****")
-''	ElseIF fvw_end_checkbox = checked Then 
-''		CALL write_variable_in_CASE_NOTE ("***** DVW ENDS *****")
-''		CALL write_bullet_and_variable_in_CASE_NOTE ("End Date", fvw_end_date)
 	End IF 
 	CALL write_bullet_and_variable_in_CASE_NOTE ("Effective Date", fvw_start_date)
 	CALL write_bullet_and_variable_in_CASE_NOTE ("ES Worker", es_worker)
@@ -1335,15 +1212,13 @@ IF fam_violence_checkbox = checked Then
 	CALL write_variable_in_CASE_NOTE (worker_signature)
 End IF 
 
+'Case note for any other FSS category
 If fvw_only = FALSE Then 
 	CALL start_a_blank_CASE_NOTE
-	IF new_fss = TRUE Then 
+	IF new_fss = TRUE Then 		'For new FSS cases
 		CALL write_variable_in_CASE_NOTE ("**** FSS ELIGIBLE ****")
 		CALL write_bullet_and_variable_in_CASE_NOTE ("Approved change to state funding effective", month_to_start & "/" & year_to_start)
-''	ElseIF end_category = TRUE AND new_category = FALSE AND renew_category = FALSE Then 
-''		CALL write_variable_in_CASE_NOTE ("**** FSS ENDED ****")
-''		CALL write_bullet_and_variable_in_CASE_NOTE ("Approved change to federal funding effective", month_to_start & "/" & year_to_start)
-	ElseIF new_fss = FALSE Then  
+	ElseIF new_fss = FALSE Then  		'For cases already coded as FSS to extend
 		CALL write_variable_in_CASE_NOTE ("**** FSS EXTENDED ****")
 		CALL write_bullet_and_variable_in_CASE_NOTE ("Approved continued state funding effective", month_to_start & "/" & year_to_start)
 	End IF 
