@@ -435,7 +435,7 @@ For cases_to_make = 1 to how_many_cases_to_make
 					client_dob = DatePart("M", MEMB_dob_mm_dd) & "/" & DatePart("D", MEMB_dob_mm_dd) & "/" & year_of_birth
 				END IF
 				client_dob = DateAdd("D", 0, client_dob)
-				IF DateDiff("D", date, client_dob) =< (365 * (abs(MEMB_age) + 1)) THEN client_dob = DateAdd("YYYY", -1, client_dob)
+				IF DateDiff("D", date, client_dob) =< (365 * abs(MEMB_age)) THEN client_dob = DateAdd("YYYY", -1, client_dob)
 				CALL create_MAXIS_friendly_date_with_YYYY(client_dob, 0, 8, 42)
 			'Continuing as normal
 			EMWriteScreen MEMB_DOB_verif, 8, 68
