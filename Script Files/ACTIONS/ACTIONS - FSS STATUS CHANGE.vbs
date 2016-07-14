@@ -401,6 +401,7 @@ END FUNCTION
 
 EMConnect ""
 
+IF worker_county_code = "x162" Then Ramsey_County_case = TRUE 
 Call MAXIS_case_number_finder(MAXIS_case_number)		'Looks for a case number
 
 If MAXIS_case_number <> "" Then							'If one is found, will get case information using M01 as default
@@ -689,6 +690,7 @@ Back_to_SELF
 'The footer month/year defaults to the status update date for most of the categories
 MAXIS_footer_month = right("00" & DatePart("m", SU_date), 2)
 MAXIS_footer_year = right(DatePart ("yyyy", SU_date), 2)
+TIKL_date = SU_date
 
 If ill_incap_checkbox = checked Then 		'FSS CATEGORY - CLIENT ILL OR INCAPACITATED
 	STATS_counter = STATS_counter + 1
@@ -697,6 +699,7 @@ If ill_incap_checkbox = checked Then 		'FSS CATEGORY - CLIENT ILL OR INCAPACITAT
 	If ill_incap_end_date = "" Then ill_incap_end_date = DateAdd("m", 6, ill_incap_start_date)		'Defaults the end date of ill/incap to 6 months from the start date
 	CALL update_disa(ref_number, ill_incap_start_date, ill_incap_end_date, "09", "6")		'Calls the function to update the DISA panel
 	panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "		'Creates a list of panels updated for case notes
+	If DateDiff("d", TIKL_date, ill_incap_end_date) > 0 Then TIKL_date = ill_incap_end_date
 End If 
 
 If care_of_ill_Incap_checkbox = checked Then 		'FSS CATEGORY - CLIENT IS REQUIRED IN HOME TO CARE FOR ILL OR INCAPACITATED HOUSEHOLD MEMBER
@@ -706,19 +709,23 @@ If care_of_ill_Incap_checkbox = checked Then 		'FSS CATEGORY - CLIENT IS REQUIRE
 	If rel_care_end_date = "" Then rel_care_end_date = DateAdd("m", 6, rel_care_start_date)		'Defaults the end date of relative care need to 6 months from the start date if none is defined
 	CALL update_disa(disa_HH_memb, rel_care_start_date, rel_care_end_date, "09", "6")			'Calls the function to update the DISA panel
 	panels_updated = panels_updated & "DISA for Memb " & disa_HH_memb & " & "			'Creates a list of panels updated for case notes
+	If DateDiff("d", TIKL_date, rel_care_end_date) > 0 Then TIKL_date = rel_care_end_date
 End If 
 
 'FSS CATEGORY - CLIENT MEETS ONE OF THE UNEMPLOYABLE CATEGORIES
 If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentally_ill_checkbox = checked OR dev_delayed_checkbox = checked OR unemployable_checkbox = checked Then 
 	STATS_counter = STATS_counter + 1
 	fvw_only = FALSE 							'This variable determines which case notes will happen later
-	fss_category_list = fss_category_list & "; Unemployable"		'Creates a list of all the categories for case notes
+	fss_category_list = fss_category_list & "; Hard to Employ"		'Creates a list of all the categories for case notes
 	Do
 		Call Navigate_to_MAXIS_screen ("STAT", "EMPS")				'Navigates to EMPS and updates based on which unemployable category was selected
 		EMReadScreen nav_check, 4, 2, 50
 	Loop until nav_check = "EMPS"
 	PF9 
-	If unemployable_checkbox = checked Then EMWriteScreen "UN", 11, 76
+	If unemployable_checkbox = checked Then 
+		EMWriteScreen "UN", 11, 76
+		fss_category_list = fss_category_list & " - Unemployable"	'Specifics of the unemployable category are added to the list of FSS Category for case note
+	End If 
 	If dev_delayed_checkbox = checked Then 
 		EMWriteScreen "DD", 11, 76
 		fss_category_list = fss_category_list & " - Developmentally Delayed"	'Specifics of the unemployable category are added to the list of FSS Category for case note
@@ -731,7 +738,7 @@ If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentall
 	End If 
 	If learning_disabled_checkbox = checked Then 
 		EMWriteScreen "LD", 11, 76
-		fss_category_list = fss_category_list & " - Learning Diabled"			'Specifics of the unemployable category are added to the list of FSS Category for case note
+		fss_category_list = fss_category_list & " - Learning Disabled"			'Specifics of the unemployable category are added to the list of FSS Category for case note
 		update_disa_for_UN = TRUE 
 	End If 
 	IF iq_test_checkbox = checked Then 
@@ -745,6 +752,7 @@ If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentall
 		CALL update_disa(ref_number, unemployable_start_date, unemployable_end_date, "09", "6")
 		panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "		'Creates a list of panels updated for case notes
 	End IF 
+	If DateDiff("d", TIKL_date, unemployable_end_date) > 0 Then TIKL_date = unemployable_end_date
 End If 
 
 If fam_violence_checkbox = checked Then 				'FSS CATEGORY - HOUSEHOLD HAS A FAMILY VIOLENCE WAIVER
@@ -819,6 +827,7 @@ If fam_violence_checkbox = checked Then 				'FSS CATEGORY - HOUSEHOLD HAS A FAMI
 	panels_updated = panels_updated & "TIME for Memb " & ref_number & " & "			'Creates a list of panels updated for case notes
 	EMReadScreen tanf_used, 3, 17, 69
 	EMReadScreen ext_tanf_used, 3, 19, 69
+	If DateDiff("d", TIKL_date, fvw_end_date) > 0 Then TIKL_date = fvw_end_date
 End If 
 
 tanf_used = trim(tanf_used)
@@ -934,6 +943,7 @@ If ssi_pending_checkbox = checked Then 					'FSS CATEGORY - SSI/RSDI ARE PENDING
 	ssa_end_date = DateAdd("m", 6, ssa_app_date)
 	CALL update_disa (ref_number, ssa_app_date, ssa_end_date, "06", "6")			'Updating DISA with the pending application dates
 	panels_updated = panels_updated & "DISA for Memb " & ref_number & " & "				'Creates a list of panels updated for case notes
+	If DateDiff("d", TIKL_date, ssa_end_date) > 0 Then TIKL_date = ssa_end_date
 End If 
 
 Back_to_SELF
@@ -1199,6 +1209,7 @@ IF fam_violence_checkbox = checked Then
 		CALL write_variable_in_CASE_NOTE ("***** DVW RENEWED *****")
 	End IF 
 	CALL write_bullet_and_variable_in_CASE_NOTE ("Effective Date", fvw_start_date)
+	CALL write_bullet_and_variable_in_CASE_NOTE ("End Date", fvw_end_date)
 	CALL write_bullet_and_variable_in_CASE_NOTE ("ES Worker", es_worker)
 	CALL write_bullet_and_variable_in_CASE_NOTE ("ES Agency", es_agency)
 	CALL write_variable_in_CASE_NOTE ("* All documentation needed for the waiver is with Employment Services, including advocate information and review details.")
@@ -1219,7 +1230,7 @@ If fvw_only = FALSE Then
 		CALL write_variable_in_CASE_NOTE ("**** FSS ELIGIBLE ****")
 		CALL write_bullet_and_variable_in_CASE_NOTE ("Approved change to state funding effective", month_to_start & "/" & year_to_start)
 	ElseIF new_fss = FALSE Then  		'For cases already coded as FSS to extend
-		CALL write_variable_in_CASE_NOTE ("**** FSS EXTENDED ****")
+		CALL write_variable_in_CASE_NOTE ("**** FSS CONTINUES ****")
 		CALL write_bullet_and_variable_in_CASE_NOTE ("Approved continued state funding effective", month_to_start & "/" & year_to_start)
 	End IF 
 	CALL write_bullet_and_variable_in_CASE_NOTE ("Eligibility of Category", fss_category_list)
@@ -1228,19 +1239,27 @@ If fvw_only = FALSE Then
 	If ill_incap_checkbox = checked Then 
 		IF ill_incap_docs_with_es = checked Then CALL write_variable_in_CASE_NOTE ("* Documentation of clt Ill/Incap is with Employment Services.")
 		IF ill_incap_docs_with_fas = checked Then CALL write_variable_in_CASE_NOTE ("* Documentation of clt Ill/Incap is with Financial Case File.")
+		CALL write_bullet_and_variable_in_CASE_NOTE ("Ill/Incap Start Date", ill_incap_start_date)
+		CALL write_bullet_and_variable_in_CASE_NOTE ("Ill/Incap End Date", ill_incap_end_date)
 	End If 
 	If care_of_ill_Incap_checkbox = checked Then
 		IF rel_care_docs_with_es = checked Then CALL write_variable_in_CASE_NOTE ("* Documentation of Ill/Incap HH Member is with Employment Services.")
 		IF rel_care_docs_with_fas = checked Then CALL write_variable_in_CASE_NOTE ("* Documentation of Ill/Incap HH Member is with Financial Case File.")
 		CALL write_variable_in_CASE_NOTE ("* Caregiver is required in the home to care for " & disa_HH_memb)
+		CALL write_bullet_and_variable_in_CASE_NOTE ("Relative Care Start Date", rel_care_start_date)
+		CALL write_bullet_and_variable_in_CASE_NOTE ("Relative Care End Date", rel_care_end_date)
 	End If 
 	If iq_test_checkbox = checked OR learning_disabled_checkbox = checked OR mentally_ill_checkbox = checked OR dev_delayed_checkbox = checked OR unemployable_checkbox = checked Then
 		IF unemployable_docs_with_es = checked Then CALL write_variable_in_CASE_NOTE ("* Documentation of Unemployability is with Employment Services.")
 		IF unemployable_docs_with_fas = checked Then CALL write_variable_in_CASE_NOTE ("* Documentation of Unemployability is with Financial Case File.")
+		CALL write_bullet_and_variable_in_CASE_NOTE ("Hard to Employ Start Date", unemployable_start_date)
+		CALL write_bullet_and_variable_in_CASE_NOTE ("Hard to Employ End Date", unemployable_end_date)
 	End IF 
 	If ssi_pending_checkbox = checked Then
 		IF ssa_app_docs_with_es = checked Then CALL write_variable_in_CASE_NOTE ("* Documentation of Application for SSI/RSDI is with Employment Services.")
 		IF ssa_app_docs_with_fas = checked Then CALL write_variable_in_CASE_NOTE ("* Documentation of Application for SSI/RSDI is with Financial Case File.")
+		CALL write_bullet_and_variable_in_CASE_NOTE ("SSA App Date", ssa_app_date)
+		CALL write_bullet_and_variable_in_CASE_NOTE ("End Date of SSA App category", ssa_end_date)
 	End If 
 	If child_under_one_checkbox = checked Then
 		IF child_under_1_at_es = checked Then CALL write_variable_in_CASE_NOTE ("* Request to take the Child Under 12 Months exemption was made to ES Worker.")
@@ -1264,9 +1283,29 @@ If fvw_only = FALSE Then
 	CALL write_variable_in_CASE_NOTE ("---")
 	IF results_approved_checkbox = checked Then CALL write_bullet_and_variable_in_CASE_NOTE ("MFIP Results Approved", MFIP_results)
 	IF not_approved_checkbox = checked Then Call write_bullet_and_variable_in_CASE_NOTE ("New MFIP NOT Approved Due To", notes_not_approved)
+	tikl_wording = "REVIEW FSS CATEGORY ** Family Cash with state funding due to: " & fss_category_list & " has potentially ended - REVIEW"
+	set_tikl_msg = MsgBox ("STAT panels updated and case note has been written." & vbnewline & vbnewline & "Would you like the script to set a TIKL to review the FSS Category?" & vbnewline & "TIKL would say:" & vbnewline & vbnewline & tikl_wording & vbnewline & vbnewline & "TIKL will be set for " & TIKL_date, vbYesNo + vbQuestion, "Set a TIKL?")
+	If set_tikl_msg = vbYes Then CALL write_variable_in_CASE_NOTE ("* TIKL set to review on " & TIKL_date)
 	CALL write_variable_in_CASE_NOTE ("---")
 	CALL write_variable_in_CASE_NOTE (worker_signature)
 End If 
 
+If set_tikl_msg = VBYes Then 
+	CALL Navigate_to_MAXIS_screen ("DAIL", "WRIT")
+	CALL create_MAXIS_friendly_date(TIKL_date, 0, 5, 18)
+	transmit
+	EMReadScreen tikl_corr, 4, 24, 2 
+	IF tikl_corr = "DATE" then 
+		PF10
+		PF3
+		tikl_set = False 
+		MsgBox "*** ALERT !!! ***" & vbCr & "The TIKL to close SNAP BANKED MONTHS was not set for some reason!" & vbCr & "You must set a TIKL Manually"
+	Else 
+		CALL Write_variable_in_TIKL (tikl_wording)
+		transmit
+		PF3
+	End If 
+End If 	
+
 STATS_counter = STATS_counter - 1
-script_end_procedure("Success!")
+script_end_procedure("Success! STAT updated and Case Note entered for FSS.")
