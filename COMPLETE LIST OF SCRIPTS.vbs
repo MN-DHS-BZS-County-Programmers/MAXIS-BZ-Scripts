@@ -138,12 +138,12 @@ script_array(script_num).release_date           = #10/01/2000#
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array(script_num)		'Resets the array to add one more element to it
 Set script_array(script_num) = new script_bowie		'Set this array element to be a new script_bowie. Script details below...
-script_array(script_num).script_name			= "FSS STATUS CHANGE"
-script_array(script_num).description			= "Updates STAT panels and case notes based on Status Updae indicating a change in MFIP Funding Source."
+script_array(script_num).script_name			= "FSS Status Change"
+script_array(script_num).description			= "Updates correct STAT panels to code Family Cash case for State Funding."
 script_array(script_num).category               = "ACTIONS"
 script_array(script_num).workflows              = ""
 script_array(script_num).subcategory            = array("")
-script_array(script_num).release_date           = #06/27/2016#
+script_array(script_num).release_date           = #07/14/2016#
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array(script_num)		'Resets the array to add one more element to it
@@ -2212,8 +2212,8 @@ script_array(script_num).release_date           = #10/01/2000#
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array(script_num)		'Resets the array to add one more element to it
 Set script_array(script_num) = new script_bowie		'Set this array element to be a new script_bowie. Script details below...
-script_array(script_num).script_name 			= "Phone Number or Name Lookup"
-script_array(script_num).description 			= "Checks every case on PND1, PND2, ACTV, REVW, or INAC, to find a case number when you have a phone number. *OR* Searches for a specific case on multiple REPT screens by last name."
+script_array(script_num).script_name 			= "Phone Number or Name Look Up"
+script_array(script_num).description 			= "Checks every case on REPT screens to find a case number when you have a phone number. *OR* Searches for a specific case on multiple REPT screens by last name."
 script_array(script_num).category               = "UTILITIES"
 script_array(script_num).workflows              = ""
 script_array(script_num).subcategory            = array("")
