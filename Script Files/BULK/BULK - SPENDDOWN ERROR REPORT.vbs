@@ -101,20 +101,22 @@ BeginDialog find_spenddowns_dialog, 0, 0, 221, 150, "Pull REPT data into Excel d
   Text 5, 65, 210, 25, "** If a supervisor 'x1 number' is entered, the script will add the 'x1 numbers' of all workers listed in MAXIS under that supervisor number."
 EndDialog
 
-BeginDialog find_spenddowns_month_spec_dialog, 0, 0, 221, 170, "Pull REPT data into Excel dialog"
+BeginDialog find_spenddowns_month_spec_dialog, 0, 0, 221, 180, "Pull REPT data into Excel dialog"
   EditBox 85, 20, 130, 15, worker_number
-  DropListBox 130, 130, 80, 45, "ALL"+chr(9)+"January"+chr(9)+"February"+chr(9)+"March"+chr(9)+"April"+chr(9)+"May"+chr(9)+"June"+chr(9)+"July"+chr(9)+"August"+chr(9)+"September"+chr(9)+"October"+chr(9)+"November"+chr(9)+"December", revw_month_list
+  DropListBox 125, 85, 80, 45, "ALL"+chr(9)+"January"+chr(9)+"February"+chr(9)+"March"+chr(9)+"April"+chr(9)+"May"+chr(9)+"June"+chr(9)+"July"+chr(9)+"August"+chr(9)+"September"+chr(9)+"October"+chr(9)+"November"+chr(9)+"December", revw_month_list
+  CheckBox 5, 105, 150, 10, "Check here to have the script check MMIS", MMIS_checkbox
+  CheckBox 5, 120, 150, 10, "Check here to run this query county-wide.", all_workers_check
   ButtonGroup ButtonPressed
-    OkButton 110, 150, 50, 15
-    CancelButton 165, 150, 50, 15
+    OkButton 110, 160, 50, 15
+    CancelButton 165, 160, 50, 15
   Text 50, 5, 125, 10, "*** REPT ON MAXIS SPENDDOW ***"
   Text 5, 25, 65, 10, "Worker(s) to check:"
   Text 5, 40, 210, 20, "Enter 7 digits of your workers' x1 numbers (ex: x######), separated by a comma."
-  Text 5, 65, 210, 25, "** If a supervisor 'x1 number' is entered, the script will add the 'x1 numbers' of all workers listed in MAXIS under that supervisor number."
-  CheckBox 5, 95, 150, 10, "Check here to run this query county-wide.", all_workers_check
-  Text 5, 110, 210, 20, "NOTE: running queries county-wide can take a significant amount of time and resources. This should be done after hours."
-  Text 5, 135, 120, 10, "Only pull cases with next review in:"
+  Text 5, 60, 210, 25, "** If a supervisor 'x1 number' is entered, the script will add the 'x1 numbers' of all workers listed in MAXIS under that supervisor number."
+  Text 5, 90, 120, 10, "Only pull cases with next review in:"
+  Text 5, 135, 210, 20, "NOTE: running queries county-wide can take a significant amount of time and resources. This should be done after hours."
 EndDialog
+
 
 'THE SCRIPT-------------------------------------------------------------------------
 'Determining specific county for multicounty agencies...
@@ -127,7 +129,7 @@ one_month_only = FALSE
 MAXIS_footer_month = right("00" & datepart("m", date), 2)
 MAXIS_footer_year = right("00" & datepart("yyyy", date), 2)
 
-MsgBox MAXIS_footer_month & "/" & MAXIS_footer_year
+'MsgBox MAXIS_footer_month & "/" & MAXIS_footer_year
 
 'Shows dialog
 'Dialog find_spenddowns_dialog
@@ -220,18 +222,19 @@ Const next_revw = 2
 Const clt_name  = 3
 Const ref_numb  = 4
 Const clt_pmi   = 5
-Const mobl_spdn = 6
-Const spd_pd    = 7
-Const hc_excess = 8
-Const mmis_spdn = 9
-Const add_xcl   = 10
+Const hc_type   = 6
+Const mobl_spdn = 7
+Const spd_pd    = 8
+Const hc_excess = 9
+Const mmis_spdn = 10
+Const add_xcl   = 11
 
 
 Dim clts_with_spdwn_array()
 ReDim clts_with_spdwn_array (3, 0)
 
 Dim spenddown_error_array ()
-ReDim spenddown_error_array (11, 0)
+ReDim spenddown_error_array (12, 0)
 
 'Setting the variable for what's to come
 excel_row = 2
@@ -330,7 +333,7 @@ For hc_case = 0 to UBound(clts_with_spdwn_array, 2)
 				If cname = "" Then EMReadScreen cname, 21, row - 1, 10
 				cname = trim(cname)
 				
-				ReDim Preserve spenddown_error_array (11, spd_case)
+				ReDim Preserve spenddown_error_array (12, spd_case)
 				
 				spenddown_error_array (wrk_num,   spd_case) = clts_with_spdwn_array(wrk_num, hc_case)
 				spenddown_error_array (case_num,  spd_case) = MAXIS_case_number
@@ -348,31 +351,8 @@ For hc_case = 0 to UBound(clts_with_spdwn_array, 2)
 	End If 	
 Next
 
-'Opening the Excel file
-Set objExcel = CreateObject("Excel.Application")
-objExcel.Visible = True
-Set objWorkbook = objExcel.Workbooks.Add()
-objExcel.DisplayAlerts = True
-
-'Setting the first 4 col as worker, case number, name, and APPL date
-ObjExcel.Cells(1, 1).Value = "WORKER"
-objExcel.Cells(1, 1).Font.Bold = TRUE
-ObjExcel.Cells(1, 2).Value = "CASE NUMBER"
-objExcel.Cells(1, 2).Font.Bold = TRUE
-ObjExcel.Cells(1, 3).Value = "REF NO"
-objExcel.Cells(1, 3).Font.Bold = TRUE
-ObjExcel.Cells(1, 4).Value = "NAME"
-objExcel.Cells(1, 4).Font.Bold = TRUE
-ObjExcel.Cells(1, 5).Value = "NEXT REVW DATE"
-objExcel.Cells(1, 5).Font.Bold = TRUE
-ObjExcel.Cells(1, 6).Value = "SPDWN ON MOBL"
-objExcel.Cells(1, 6).Font.Bold = TRUE
-ObjExcel.Cells(1, 7).Value = "HC OVERAGE"
-objExcel.Cells(1, 7).Font.Bold = TRUE
-ObjExcel.Cells(1, 8).Value = "MMIS SPDWN"
-objExcel.Cells(1, 8).Font.Bold = TRUE
-
 For spd_case = 0 to UBound(spenddown_error_array, 2)
+	spd_amt = 0
 	MAXIS_case_number = spenddown_error_array(case_num, spd_case)				'Setting the case number for global functions
 	spenddown_error_array(add_xcl, spd_case) = TRUE 
 	Call navigate_to_MAXIS_screen ("CASE", "PERS")
@@ -396,14 +376,14 @@ For spd_case = 0 to UBound(spenddown_error_array, 2)
 	Loop until row = 18
 	IF spenddown_error_array(add_xcl, spd_case) = TRUE Then 
 		Call navigate_to_MAXIS_screen ("ELIG", "HC")								'Need a closer look at HC
-		EMWriteScreen "BSUM", 20, 71												'Navigating to the HC ELIG for the right clt
-		EMWriteScreen spenddown_error_array (ref_numb, spd_case), 20, 76
-		transmit
-		EMReadScreen bsum_check, 4, 3, 57
-		If bsum_check <> "BSUM" Then	
-			EMWriteScreen "    ", 20, 71
-			EMWriteScreen "  ", 20, 76
-			transmit
+''		EMWriteScreen "BSUM", 20, 71												'Navigating to the HC ELIG for the right clt
+''		EMWriteScreen spenddown_error_array (ref_numb, spd_case), 20, 76
+''		transmit
+''		EMReadScreen bsum_check, 4, 3, 57
+''		If bsum_check <> "BSUM" Then	
+''			EMWriteScreen "    ", 20, 71
+''			EMWriteScreen "  ", 20, 76
+''			transmit
 			row = 8
 			Do 
 				EMReadScreen person, 2, row, 3
@@ -411,12 +391,44 @@ For spd_case = 0 to UBound(spenddown_error_array, 2)
 					Do 
 						EMReadScreen prog, 2, row, 28
 						If prog = "MA" Then 
-							Call write_value_and_transmit("x", row, 26)
-							Exit Do 
+							counter = 1
+							Do 
+								EMReadScreen app_indc, 5, row, 68
+								app_indc = trim(app_indc)
+								If app_indc = "APP" Then
+									Call write_value_and_transmit("x", row, 26)
+									Exit Do 
+								End If 
+								EMReadScreen this_version, 2, row, 58
+''								IF this_version = "  " Then 
+									
+								If this_version <> "01" Then 
+									prev_verision = right("00" & (abs(this_version)-1), 2)
+									EMWriteScreen prev_verision, row, 58 
+									transmit
+								Else 
+									EMReadScreen elig_month, 2, 20, 56
+									If elig_month <> "01" Then
+										last_month = right("00" & (abs(elig_month)-1), 2)
+										EMWriteScreen last_month, 20, 56
+										transmit
+									Else 
+										last_month = "12"
+										EMReadScreen elig_year, 2, 20, 59
+										last_year = right("00" & (abs(elig_year)-1), 2)
+										EMWriteScreen last_month, 20, 56
+										EMWriteScreen last_year, 20, 59
+									End If
+									counter = counter + 1
+								End If 
+							Loop until counter = 6
 						ELSE
 							row = row + 1
 							EMReadScreen person, 2, row, 3
-							If person <> "  "  Then Exit Do
+							If person <> "  "  Then 
+								spenddown_error_array(hc_type, spd_case) = "NO HC VERSION"
+								Exit Do
+							End If 
 						End If 
 					Loop Until row = 20
 					Exit Do 
@@ -424,52 +436,210 @@ For spd_case = 0 to UBound(spenddown_error_array, 2)
 					row = row + 1
 				End If 
 			Loop until row = 20 
+''		End If 
+		EMReadScreen bsum_check, 4, 3, 57
+		If bsum_check = "BSUM" Then
+			col = 19
+			Do
+				EMReadScreen span_month, 2, 6, col 
+				If span_month = MAXIS_footer_month Then 
+					EMReadScreen pers_type, 2, 12, col - 2
+					EMReadScreen std, 1, 12, col + 3
+					EMReadScreen meth, 1, 13, col + 2
+					Exit Do
+				End If 
+				col = col + 11
+			Loop until col = 85
+			If pers_type = "" Then 
+				spenddown_error_array(hc_type, spd_case) = "ELIG Type Not Found"
+			Else 
+				spenddown_error_array(hc_type, spd_case) = pers_type & "-" & std & " Method: " & meth 
+				pers_type = ""
+				std = ""
+				meth = ""
+			End If 
+			spd_amt = 0
+			col = 18
+			Do 
+				EMReadScreen month_net_inc, 8, 15, col 
+				EMReadScreen month_std_inc, 8, 16, col
+				month_net_inc = trim(month_net_inc)
+				If month_net_inc = "" Then month_net_inc = 0
+				month_std_inc = trim(month_std_inc)
+				If month_std_inc = "" Then month_std_inc = 0
+				tot_net_inc = tot_net_inc + abs(month_net_inc)
+				tot_std_inc = tot_std_inc + abs(trim(month_std_inc))
+				col = col + 11
+			Loop until col = 84
+			spd_amt =  tot_net_inc - tot_std_inc
+			If spd_amt < 0 Then spd_amt = 0
+			spenddown_error_array(hc_excess, spd_case) = spd_amt
+''			If spd_amt = 0 Then spenddown_error_array(add_xcl,   spd_case) = TRUE
 		End If 
-		spd_amt = 0
-		col = 18
-		Do 
-			EMReadScreen month_net_inc, 8, 15, col 
-			EMReadScreen month_std_inc, 8, 16, col
-			month_net_inc = trim(month_net_inc)
-			If month_net_inc = "" Then month_net_inc = 0
-			month_std_inc = trim(month_std_inc)
-			If month_std_inc = "" Then month_std_inc = 0
-			tot_net_inc = tot_net_inc + abs(month_net_inc)
-			tot_std_inc = tot_std_inc + abs(trim(month_std_inc))
-			col = col + 11
-		Loop until col = 84
-		spd_amt =  tot_net_inc - tot_std_inc
-		If spd_amt < 0 Then spd_amt = 0
-		spenddown_error_array(hc_excess, spd_case) = spd_amt
-		If spd_amt = 0 Then spenddown_error_array(add_xcl,   spd_case) = TRUE 
-
-		'If spenddown_error_array(add_xcl, spd_case) = TRUE Then 
-			ObjExcel.Cells(excel_row, 1).Value = spenddown_error_array(wrk_num, spd_case)
-			ObjExcel.Cells(excel_row, 2).Value = spenddown_error_array(case_num, spd_case)
-			ObjExcel.Cells(excel_row, 3).Value = "Memb " & spenddown_error_array(ref_numb, spd_case)
-			ObjExcel.Cells(excel_row, 4).Value = spenddown_error_array(clt_name, spd_case)
-			ObjExcel.Cells(excel_row, 5).Value = spenddown_error_array(next_revw, spd_case)
-			ObjExcel.Cells(excel_row, 6).Value = spenddown_error_array(mobl_spdn, spd_case) & " for " & spenddown_error_array(spd_pd, spd_case)
-			ObjExcel.Cells(excel_row, 7).Value = spenddown_error_array(hc_excess, spd_case)
-
-			excel_row = excel_row + 1
-		'End If 
+		
+		Call navigate_to_MAXIS_screen ("STAT", "MEMB")
+		EMWriteScreen spenddown_error_array(ref_numb, spd_case), 20, 76
+		transmit
+		EMReadScreen pmi, 8, 4, 46
+		spenddown_error_array(clt_pmi, spd_case) = right("00000000" & replace(pmi, "_", ""), 8)
 	End If 
 	back_to_self
 Next
 
+If MMIS_checkbox = checked Then 
+	'Now it will look for MMIS on both screens, and enter into it.. 
+	attn
+	EMReadScreen MMIS_A_check, 7, 15, 15
+	If MMIS_A_check = "RUNNING" then
+		EMSendKey "10"
+		transmit
+	Else
+		attn
+		EMConnect "B"
+		attn
+		EMReadScreen MMIS_B_check, 7, 15, 15
+		If MMIS_B_check <> "RUNNING" then 
+			MMIS_checkbox = unchecked  
+			script_continue = MsgBox ("MMIS does not appear to be running." & vbNewLine & "Do you wish to have the report without the MMIS Spenddown Indicator checked?", vbYesNo + vbQuestion, "MMIS not running")
+			IF script_continue = vbNo Then script_end_procedure
+		Else
+			EMSendKey "10"
+			transmit
+		End if
+	End if
+End If 
+
+If MMIS_checkbox = checked Then 
+	EMFocus 'Bringing window focus to the second screen if needed.
+
+	'Sending MMIS back to the beginning screen and checking for a password prompt
+	Do 
+		PF6
+		EMReadScreen password_prompt, 38, 2, 23
+	  	IF password_prompt = "ACF2/CICS PASSWORD VERIFICATION PROMPT" then 
+		  	MMIS_checkbox = unchecked  
+		  	script_continue = MsgBox ("MMIS does not appear to be running." & vbNewLine & "Do you wish to have the report without the MMIS Spenddown Indicator checked?", vbYesNo + vbQuestion, "MMIS not running")
+		  	IF script_continue = vbNo Then script_end_procedure
+			Exit Do 
+		End If 
+	  	EMReadScreen session_start, 18, 1, 7
+	Loop until session_start = "SESSION TERMINATED"
+End If 
+	
+If MMIS_checkbox = checked Then 
+	'Getting back in to MMIS and transmitting past the warning screen (workers should already have accepted the warning screen when they logged themself into MMIS the first time!)
+	EMWriteScreen "mw00", 1, 2
+	transmit
+	transmit
+
+	'Finding the right MMIS, if needed, by checking the header of the screen to see if it matches the security group selector
+	EMReadScreen MMIS_security_group_check, 21, 1, 35 
+	If MMIS_security_group_check = "MMIS MAIN MENU - MAIN" then
+		EMSendKey "x"
+		transmit
+	End if
+
+	'Now it finds the recipient file application feature and selects it.
+	row = 1
+	col = 1
+	EMSearch "RECIPIENT FILE APPLICATION", row, col
+	EMWriteScreen "x", row, col - 3
+	transmit
+
+	For spd_case = 0 to UBound(spenddown_error_array, 2)
+		indicator = ""
+		'Now we are in RKEY, and it navigates into the case, transmits, and makes sure we've moved to the next screen.
+		EMWriteScreen "i", 2, 19
+		EMWriteScreen spenddown_error_array(clt_pmi, spd_case), 4, 19
+		transmit
+		EMReadscreen RKEY_check, 4, 1, 52
+		If RKEY_check = "RKEY" then 
+			spenddown_error_array (mmis_spdn, spd_case) = "Not Found"
+		Else 
+			EMWriteScreen "RELG", 1, 8
+			transmit
+			row = 7
+			Do 
+				EMReadscreen elig_end, 8, row, 36
+				IF elig_end <> "99/99/99" Then after_now = DateDiff("d", date, elig_end)
+				If elig_end = "99/99/99" OR after_now < 0 Then 
+					EMReadscreen prg, 2, row-1, 10
+					IF prg = "MA" Then 
+						EMReadscreen indicator, 1, row + 1, 62
+						Exit Do 
+					End If 
+				End If 
+				row = row + 4 
+			Loop until row = 23
+			
+			PF6
+			EMWriteScreen "        ", 4, 19
+			
+			If indicator = "" Then 
+				spenddown_error_array (mmis_spdn, spd_case) = "Not Found"
+			Else 
+				spenddown_error_array (mmis_spdn, spd_case) = indicator
+			End If 
+		End If 
+		
+	Next
+End If 
+
+'Opening the Excel file
+Set objExcel = CreateObject("Excel.Application")
+objExcel.Visible = True
+Set objWorkbook = objExcel.Workbooks.Add()
+objExcel.DisplayAlerts = True
+
+'Setting the first 4 col as worker, case number, name, and APPL date
+ObjExcel.Cells(1, 1).Value = "WORKER"
+objExcel.Cells(1, 1).Font.Bold = TRUE
+ObjExcel.Cells(1, 2).Value = "CASE NUMBER"
+objExcel.Cells(1, 2).Font.Bold = TRUE
+ObjExcel.Cells(1, 3).Value = "REF NO"
+objExcel.Cells(1, 3).Font.Bold = TRUE
+ObjExcel.Cells(1, 4).Value = "NAME"
+objExcel.Cells(1, 4).Font.Bold = TRUE
+ObjExcel.Cells(1, 5).Value = "NEXT REVW DATE"
+objExcel.Cells(1, 5).Font.Bold = TRUE
+ObjExcel.Cells(1, 6).Value = "ELIG TYPE"
+objExcel.Cells(1, 6).Font.Bold = TRUE
+ObjExcel.Cells(1, 7).Value = "SPDWN ON MOBL"
+objExcel.Cells(1, 7).Font.Bold = TRUE
+ObjExcel.Cells(1, 8).Value = "HC OVERAGE"
+objExcel.Cells(1, 8).Font.Bold = TRUE
+If MMIS_checkbox = checked Then 
+	ObjExcel.Cells(1, 9).Value = "MMIS SPDWN"
+	objExcel.Cells(1, 9).Font.Bold = TRUE
+End If 
+
+For spd_case = 0 to UBound(spenddown_error_array, 2)
+	If spenddown_error_array(add_xcl, spd_case) = TRUE Then 
+		ObjExcel.Cells(excel_row, 1).Value = spenddown_error_array (wrk_num,   spd_case)
+		ObjExcel.Cells(excel_row, 2).Value = spenddown_error_array (case_num,  spd_case)
+		ObjExcel.Cells(excel_row, 3).Value = "Memb " & spenddown_error_array(ref_numb, spd_case)
+		ObjExcel.Cells(excel_row, 4).Value = spenddown_error_array (clt_name,  spd_case)
+		ObjExcel.Cells(excel_row, 5).Value = spenddown_error_array (next_revw, spd_case)
+		ObjExcel.Cells(excel_row, 6).Value = spenddown_error_array (hc_type,   spd_case)
+		ObjExcel.Cells(excel_row, 7).Value = spenddown_error_array (mobl_spdn, spd_case) & " for " & spenddown_error_array(spd_pd, spd_case)
+		ObjExcel.Cells(excel_row, 8).Value = spenddown_error_array (hc_excess, spd_case)
+		ObjExcel.Cells(excel_row, 9).Value = spenddown_error_array (mmis_spdn, spd_case)
+
+		excel_row = excel_row + 1
+	End If 
+Next
 
 'Query date/time/runtime info
-objExcel.Cells(1, 9).Font.Bold = TRUE
-objExcel.Cells(2, 9).Font.Bold = TRUE
-ObjExcel.Cells(1, 9).Value = "Query date and time:"	'Goes back one, as this is on the next row
-ObjExcel.Cells(1, 10).Value = now
-ObjExcel.Cells(2, 9).Value = "Query runtime (in seconds):"	'Goes back one, as this is on the next row
-ObjExcel.Cells(2, 10).Value = timer - query_start_time
+objExcel.Cells(1, 10).Font.Bold = TRUE
+objExcel.Cells(2, 10).Font.Bold = TRUE
+ObjExcel.Cells(1, 10).Value = "Query date and time:"	'Goes back one, as this is on the next row
+ObjExcel.Cells(1, 11).Value = now
+ObjExcel.Cells(2, 10).Value = "Query runtime (in seconds):"	'Goes back one, as this is on the next row
+ObjExcel.Cells(2, 11).Value = timer - query_start_time
 
 
 'Autofitting columns
-For col_to_autofit = 1 to 10
+For col_to_autofit = 1 to 11
 	ObjExcel.columns(col_to_autofit).AutoFit()
 Next
 
