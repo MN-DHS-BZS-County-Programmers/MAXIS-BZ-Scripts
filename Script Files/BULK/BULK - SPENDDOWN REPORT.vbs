@@ -486,7 +486,7 @@ If MMIS_checkbox = checked Then
 		If MMIS_B_check <> "RUNNING" then 
 			MMIS_checkbox = unchecked  
 			script_continue = MsgBox ("MMIS does not appear to be running." & vbNewLine & "Do you wish to have the report without the MMIS Spenddown Indicator checked?", vbYesNo + vbQuestion, "MMIS not running")
-			IF script_continue = vbNo Then script_end_procedure
+			IF script_continue = vbNo Then script_end_procedure ("Script has ended with no report generated. To have MMIS information gathered, be sure to have MMIS running and not be passworded out.")
 		Else
 			EMSendKey "10"
 			transmit
@@ -504,7 +504,7 @@ If MMIS_checkbox = checked Then
 	  	IF password_prompt = "ACF2/CICS PASSWORD VERIFICATION PROMPT" then 
 		  	MMIS_checkbox = unchecked  
 		  	script_continue = MsgBox ("MMIS does not appear to be running." & vbNewLine & "Do you wish to have the report without the MMIS Spenddown Indicator checked?", vbYesNo + vbQuestion, "MMIS not running")
-		  	IF script_continue = vbNo Then script_end_procedure
+		  	IF script_continue = vbNo Then script_end_procedure ("Script has ended with no report generated. To have MMIS information gathered, be sure to have MMIS running and not be passworded out.")
 			Exit Do 
 		End If 
 	  	EMReadScreen session_start, 18, 1, 7
