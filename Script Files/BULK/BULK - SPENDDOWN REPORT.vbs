@@ -2,7 +2,7 @@
 name_of_script = "BULK - SPENDDOWN REPORT.vbs"
 start_time = timer
 STATS_counter = 1                          'sets the stats counter at one
-STATS_manualtime = 13                      'manual run time in seconds
+STATS_manualtime = 72                      'manual run time in seconds
 STATS_denomination = "C"       							'C is for each CASE
 'END OF stats block==============================================================================================
 
@@ -277,7 +277,6 @@ For each worker in worker_array
 
 
 				MAXIS_row = MAXIS_row + 1
-				STATS_counter = STATS_counter + 1                      'adds one instance to the stats counter
 			Loop until MAXIS_row = 19
 			PF8
 		Loop until last_page_check = "THIS IS THE LAST PAGE"
@@ -360,6 +359,7 @@ For spd_case = 0 to UBound(spenddown_error_array, 2)
 		End If 
 	Loop until row = 18
 	IF spenddown_error_array(add_xcl, spd_case) = TRUE Then 						'If clt is actve HC
+		STATS_counter = STATS_counter + 1                      'adds one instance to the stats counter
 		Call navigate_to_MAXIS_screen ("ELIG", "HC")								'Need a closer look at HC
 		row = 8
 		Do 
@@ -634,4 +634,4 @@ Next
 
 'Logging usage stats
 STATS_counter = STATS_counter - 1                      'subtracts one from the stats (since 1 was the count, -1 so it's accurate)
-script_end_procedure("")
+script_end_procedure("Success! All cases for selected workers that appear to have a Spenddown indicated in MAXIS have been added to the Excell Spreadsheet.")
