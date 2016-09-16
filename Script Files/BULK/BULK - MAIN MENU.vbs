@@ -1,3 +1,19 @@
+Skip to content
+This repository
+Search
+Pull requests
+Issues
+Gist
+ @C-Love
+ Watch 11
+  Unstar 16
+ Fork 48 MN-Script-Team/DHS-MAXIS-Scripts
+ Code  Issues 13  Pull requests 3  Projects 0  Wiki  Pulse  Graphs
+Branch: master Find file Copy pathDHS-MAXIS-Scripts/Script Files/BULK/BULK - MAIN MENU.vbs
+e05eb08  4 days ago
+@IlseFerris IlseFerris Put BULK main menu in alpha order
+7 contributors @theVKC @CDPotter @IlseFerris @RobertFewins-Kalb @C-Love @courtrightd @StormageddonDLOA
+RawBlameHistory     397 lines (339 sloc)  29.3 KB
 'STATS GATHERING----------------------------------------------------------------------------------------------------
 name_of_script = "BULK - MAIN MENU.vbs"
 start_time = timer
@@ -216,8 +232,8 @@ script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array_BULK_enhanced_list(script_num)		'Resets the array to add one more element to it
 Set script_array_BULK_enhanced_list(script_num) = new script		'Set this array element to be a new script. Script details below...
 script_array_BULK_enhanced_list(script_num).script_name 			= "Spenddown Report"
-script_array_BULK_enhanced_list(script_num).file_name			= "BULK - SPENDDOWN REPORT.vbs"
-script_array_BULK_enhanced_list(script_num).description 			= "Creates a list of HC Cases from a caseload(s) with a Spenddown indicated on MOBL."
++script_array_BULK_enhanced_list(script_num).file_name			= "BULK - SPENDDOWN REPORT.vbs"
++script_array_BULK_enhanced_list(script_num).description 			= "Creates a list of HC Cases from a caseload(s) with a Spenddown indicated on MOBL."
 
 '-------------------------------------------------------------------------------------------------------------------------BULK STAT list
 'Resetting the variable
@@ -401,4 +417,5 @@ For i = 0 to ubound(script_array_BULK_stat_list)
 	If ButtonPressed = script_array_BULK_stat_list(i).button then call run_from_GitHub(script_repository & "/BULK/" & script_array_BULK_stat_list(i).file_name)
 Next
 stopscript
-
+Contact GitHub API Training Shop Blog About
+© 2016 GitHub, Inc. Terms Privacy Security Status Help
