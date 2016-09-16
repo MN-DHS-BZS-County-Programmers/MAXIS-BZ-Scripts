@@ -1,19 +1,3 @@
-Skip to content
-This repository
-Search
-Pull requests
-Issues
-Gist
- @C-Love
- Watch 11
-  Unstar 16
- Fork 48 MN-Script-Team/DHS-MAXIS-Scripts
- Code  Issues 13  Pull requests 3  Projects 0  Wiki  Pulse  Graphs
-Branch: master Find file Copy pathDHS-MAXIS-Scripts/Script Files/BULK/BULK - MAIN MENU.vbs
-e05eb08  4 days ago
-@IlseFerris IlseFerris Put BULK main menu in alpha order
-7 contributors @theVKC @CDPotter @IlseFerris @RobertFewins-Kalb @C-Love @courtrightd @StormageddonDLOA
-RawBlameHistory     397 lines (339 sloc)  29.3 KB
 'STATS GATHERING----------------------------------------------------------------------------------------------------
 name_of_script = "BULK - MAIN MENU.vbs"
 start_time = timer
