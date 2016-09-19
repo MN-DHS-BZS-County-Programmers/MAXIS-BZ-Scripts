@@ -181,43 +181,43 @@ script_num = 0
 ReDim Preserve script_array_BULK_enhanced_list(script_num)		'Resets the array to add one more element to t
 Set script_array_BULK_enhanced_list(script_num) = new script		'Set this array element to be a new script. Script details below...
 script_array_BULK_enhanced_list(script_num).script_name 			= " Check SNAP for GA/RCA "													'needs spaces to generate button width properly.
-script_array_BULK_enhanced_list(script_num).file_name			= "BULK - CHECK SNAP FOR GA RCA.vbs"
+script_array_BULK_enhanced_list(script_num).file_name				= "BULK - CHECK SNAP FOR GA RCA.vbs"
 script_array_BULK_enhanced_list(script_num).description 			= "Compares the amount of GA and RCA FIAT'd into SNAP and creates a list of the results."
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array_BULK_enhanced_list(script_num)		'Resets the array to add one more element to it
 Set script_array_BULK_enhanced_list(script_num) = new script		'Set this array element to be a new script. Script details below...
 script_array_BULK_enhanced_list(script_num).script_name 			= " EXP SNAP Review "
-script_array_BULK_enhanced_list(script_num).file_name			= "BULK - EXP SNAP REVIEW.vbs"
+script_array_BULK_enhanced_list(script_num).file_name				= "BULK - EXP SNAP REVIEW.vbs"
 script_array_BULK_enhanced_list(script_num).description 			= "Creates a list of PND1/PND2 cases that need to reviewed for EXP SNAP criteria."
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array_BULK_enhanced_list(script_num)		'Resets the array to add one more element to it
 Set script_array_BULK_enhanced_list(script_num) = new script		'Set this array element to be a new script. Script details below...
 script_array_BULK_enhanced_list(script_num).script_name 			= "Find Updated Panels"
-script_array_BULK_enhanced_list(script_num).file_name			= "BULK - FIND PANEL UPDATE DATE.vbs"
+script_array_BULK_enhanced_list(script_num).file_name				= "BULK - FIND PANEL UPDATE DATE.vbs"
 script_array_BULK_enhanced_list(script_num).description 			= "Creates a list of cases from a caseload(s) showing when selected panels have been updated."
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array_BULK_enhanced_list(script_num)		'Resets the array to add one more element to it
 Set script_array_BULK_enhanced_list(script_num) = new script		'Set this array element to be a new script. Script details below...
 script_array_BULK_enhanced_list(script_num).script_name 			= "Housing Grant Exemption Finder"
-script_array_BULK_enhanced_list(script_num).file_name			= "BULK - HOUSING GRANT EXEMPTION FINDER.vbs"
+script_array_BULK_enhanced_list(script_num).file_name				= "BULK - HOUSING GRANT EXEMPTION FINDER.vbs"
 script_array_BULK_enhanced_list(script_num).description 			= "Creates a list the rolling 12 months of housing grant issuances for MFIP recipients who've met an exemption."
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array_BULK_enhanced_list(script_num)		'Resets the array to add one more element to it
 Set script_array_BULK_enhanced_list(script_num) = new script		'Set this array element to be a new script. Script details below...
 script_array_BULK_enhanced_list(script_num).script_name 			= "MA-EPD/Medi Pt B CEI"
-script_array_BULK_enhanced_list(script_num).file_name			= "BULK - FIND MAEPD MEDI CEI.vbs"
+script_array_BULK_enhanced_list(script_num).file_name				= "BULK - FIND MAEPD MEDI CEI.vbs"
 script_array_BULK_enhanced_list(script_num).description 			= "Creates a list of cases and clients active on MA-EPD and Medicare Part B that are eligible for Part B reimbursement."
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array_BULK_enhanced_list(script_num)		'Resets the array to add one more element to it
 Set script_array_BULK_enhanced_list(script_num) = new script		'Set this array element to be a new script. Script details below...
 script_array_BULK_enhanced_list(script_num).script_name 			= "Spenddown Report"
-+script_array_BULK_enhanced_list(script_num).file_name			= "BULK - SPENDDOWN REPORT.vbs"
-+script_array_BULK_enhanced_list(script_num).description 			= "Creates a list of HC Cases from a caseload(s) with a Spenddown indicated on MOBL."
+script_array_BULK_enhanced_list(script_num).file_name				= "BULK - SPENDDOWN REPORT.vbs"
+script_array_BULK_enhanced_list(script_num).description 			= "Creates a list of HC Cases from a caseload(s) with a Spenddown indicated on MOBL."
 
 '-------------------------------------------------------------------------------------------------------------------------BULK STAT list
 'Resetting the variable
@@ -401,5 +401,3 @@ For i = 0 to ubound(script_array_BULK_stat_list)
 	If ButtonPressed = script_array_BULK_stat_list(i).button then call run_from_GitHub(script_repository & "/BULK/" & script_array_BULK_stat_list(i).file_name)
 Next
 stopscript
-Contact GitHub API Training Shop Blog About
-© 2016 GitHub, Inc. Terms Privacy Security Status Help
