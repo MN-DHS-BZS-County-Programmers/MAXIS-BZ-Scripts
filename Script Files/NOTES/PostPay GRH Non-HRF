@@ -1,0 +1,380 @@
+'STATS GATHERING----------------------------------------------------------------------------------------------------
+name_of_script = "NOTES - PostPay GRH Non-HRF.vbs"
+start_time = timer
+
+'dimming some variables used down below.
+dim GRH_month
+dim GRH_year
+dim SSA_Income
+
+'special thanks to CLove for the help.
+'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
+IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded once
+	IF run_locally = FALSE or run_locally = "" THEN		'If the scripts are set to run locally, it skips this and uses an FSO below.
+		IF use_master_branch = TRUE THEN			'If the default_directory is C:\DHS-MAXIS-Scripts\Script Files, you're probably a scriptwriter and should use the master branch.
+			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/master/MASTER%20FUNCTIONS%20LIBRARY.vbs"
+		Else																		'Everyone else should use the release branch.
+			FuncLib_URL = "https://raw.githubusercontent.com/MN-Script-Team/BZS-FuncLib/RELEASE/MASTER%20FUNCTIONS%20LIBRARY.vbs"
+		End if
+		SET req = CreateObject("Msxml2.XMLHttp.6.0")				'Creates an object to get a FuncLib_URL
+		req.open "GET", FuncLib_URL, FALSE							'Attempts to open the FuncLib_URL
+		req.send													'Sends request
+		IF req.Status = 200 THEN									'200 means great success
+			Set fso = CreateObject("Scripting.FileSystemObject")	'Creates an FSO
+			Execute req.responseText								'Executes the script code
+		ELSE														'Error message, tells user to try to reach github.com, otherwise instructs to contact Veronica with details (and stops script).
+			MsgBox 	"Something has gone wrong. The code stored on GitHub was not able to be reached." & vbCr &_
+					vbCr & _
+					"Before contacting Veronica Cary, please check to make sure you can load the main page at www.GitHub.com." & vbCr &_
+					vbCr & _
+					"If you can reach GitHub.com, but this script still does not work, ask an alpha user to contact Veronica Cary and provide the following information:" & vbCr &_
+					vbTab & "- The name of the script you are running." & vbCr &_
+					vbTab & "- Whether or not the script is ""erroring out"" for any other users." & vbCr &_
+					vbTab & "- The name and email for an employee from your IT department," & vbCr & _
+					vbTab & vbTab & "responsible for network issues." & vbCr &_
+					vbTab & "- The URL indicated below (a screenshot should suffice)." & vbCr &_
+					vbCr & _
+					"Veronica will work with your IT department to try and solve this issue, if needed." & vbCr &_
+					vbCr &_
+					"URL: " & FuncLib_URL
+					script_end_procedure("Script ended due to error connecting to GitHub.")
+		END IF
+	ELSE
+		FuncLib_URL = "C:\BZS-FuncLib\MASTER FUNCTIONS LIBRARY.vbs"
+		Set run_another_script_fso = CreateObject("Scripting.FileSystemObject")
+		Set fso_command = run_another_script_fso.OpenTextFile(FuncLib_URL)
+		text_from_the_other_script = fso_command.ReadAll
+		fso_command.Close
+		Execute text_from_the_other_script
+	END IF
+END IF
+'END FUNCTIONS LIBRARY BLOCK================================================================================================
+
+'Required for statistical purposes==========================================================================================
+STATS_counter = 1                     	'sets the stats counter at one
+STATS_manualtime = 90                	'manual run time in seconds
+STATS_denomination = "C"       			'C is for each case
+'END OF stats block=========================================================================================================
+
+'The Dialog
+BeginDialog PostPay_Non_HRF_dialog, 0, 0, 311, 110, "PostPay Non-HRF"
+  EditBox 90, 10, 65, 15, case_number
+  EditBox 95, 40, 20, 15, GRH_month
+  EditBox 125, 40, 20, 15, GRH_year
+  EditBox 85, 90, 95, 15, worker_signature
+  ButtonGroup ButtonPressed
+    OkButton 190, 90, 50, 15
+    CancelButton 245, 90, 50, 15
+  Text 60, 15, 25, 10, "Case #:"
+  Text 120, 45, 5, 10, "/"
+  Text 5, 45, 80, 10, "PostPay month (mm/yy):"
+  Text 15, 95, 65, 10, "Worker's Signature:"
+  Text 175, 20, 120, 10, "This script is for NON-HRF PostPay."
+  Text 175, 30, 125, 10, "It will go through the following panels:"
+  Text 185, 45, 20, 10, "* FACI"
+  Text 185, 55, 30, 10, "* ADDR"
+  Text 185, 65, 25, 10, "* JOBS"
+  Text 240, 45, 25, 10, "* UNEA"
+  Text 240, 55, 25, 10, "* PBEN"
+  Text 240, 65, 50, 10, "* CASE NOTE"
+  GroupBox 170, 10, 135, 70, "Description:"
+EndDialog
+
+'Thought of a 2nd dialog box to fill out for case note.
+'BeginDialog non_postpay_dialog, 0, 0, 206, 130, "non postpay note dialog"
+'  EditBox 60, 20, 140, 15, facility_name
+'  EditBox 125, 40, 75, 15, iaas_date_pben
+'  EditBox 70, 55, 130, 15, change_reported
+'  EditBox 70, 70, 130, 15, other_notes
+'  EditBox 70, 85, 130, 15, action_taken
+'  ButtonGroup ButtonPressed
+'    OkButton 95, 110, 50, 15
+'    CancelButton 150, 110, 50, 15
+'  Text 5, 5, 75, 10, "Fields for Case Notes:"
+'  Text 5, 60, 60, 10, "Change Reported:"
+'  Text 20, 75, 45, 10, "Other Notes:"
+'  Text 15, 90, 45, 10, "Action Taken:"
+'  Text 5, 45, 115, 10, "IAAS from PBEN is current through:"
+'  Text 10, 25, 50, 10, "Facility Name:"
+'EndDialog
+
+
+'The Script...............................................
+
+'connecting to MAXIS
+EMConnect "A"
+EMFocus
+
+call check_for_MAXIS(False)	'checking for an active MAXIS session
+
+'Grabbing case number and putting in the month and year entered from dialog box.
+call MAXIS_case_number_finder(case_number)
+
+'Showing case number, postpay month & year...checking for valid entries of these info.  It'll loop until workers enter the right condition.
+Do
+	err_msg = ""
+	Dialog PostPay_Non_HRF_dialog
+	cancel_confirmation
+	If case_number = "" then err_msg = err_msg & vbCr & "You must have a case number to continue."
+	If len(case_number) > 8 then err_msg = err_msg & vbCr & "Your case number need to be 8 digits or less." 
+	If GRH_month = "" OR len(GRH_month) <> 2 then err_msg = err_msg & vbCr & "You must enter a valid month value of: MM"
+	If GRH_year = "" OR len(GRH_year) <> 2 then err_msg = err_msg & vbCr & "You must enter a valid year value of: YY"
+	If err_msg <> "" then Msgbox err_msg
+	call check_for_password (are_we_passworded_out) 'adding functionality for MAXIS v.6 Password Out issue'
+Loop until err_msg = ""
+
+EMWriteScreen GRH_month, 20, 43
+EMWriteScreen GRH_year, 20, 46
+
+'navigating to FACI panel.
+CALL navigate_to_MAXIS_screen ("STAT", "FACI")
+
+'tells script to read if there are FACI panel or not.
+EMReadScreen faci_panel, 1, 2, 78
+
+'check if there's a FACI panel.  If none, then the script stop.  IF there is one, then it proceed to the next part of the script.
+IF faci_panel = "0" then script_end_procedure ("Script will end here.  There is no active facility panel created.  Please manually review client status and facility needs.")
+
+'this loops in FACI panel in case there are multiple FACI panels and it'll stop when panel shows client is in facility and no date out is listed.
+For faci_to_review = 1 to faci_panel            'this tells the loop to go onto the next faci screen if more than one exist, for screen "01", "02", "03", etc.
+	EMWriteScreen "0" & faci_to_review, 20, 79
+	transmit                                    'this transmit the function to go to the next screen within FACI.
+	EMReadScreen faci_postpay, 1, 13, 71        'it reads if the faci is "Y" or "N"
+	IF faci_postpay = "Y" then                  'if "Y" then it follows the below processing
+		For maxis_row = 14 to 18                'it reviews for all the rows #14 through 18 to see if there are any date-in & date-out, if there are any still currently active.
+			EMReadScreen faci_date_in, 10, maxis_row, 47  'this tells script to read the date in between row 14-18
+			EMReadScreen faci_date_out, 10, maxis_row, 71 'this tells script to read the date out between row 14-18
+			IF faci_date_in <> "__ __ ____" AND faci_date_out = "__ __ ____" Then  'if condition are met where there is a date in (not blank), and there is a blank date out..then that means there is an active faci panel.
+				EMReadScreen faci_location, 22, 6, 43                              'if the above line is met, it'd read the faci location (name of the faci), store this info and it'll go to ADDR next.
+				Exit For 
+			End If 
+		Next
+	END IF
+Next 
+
+Call navigate_to_MAXIS_screen ("STAT", "ADDR")
+transmit
+
+'should've navigated to STAT/ADDR, reads the location in ADDR.
+EMReadScreen faci_address, 22, 6, 43
+
+'this allow the worker to see if the ADDR and FACI location are the same in the messagebox.  If no, then it will stop script and tell worker to assess manually.  
+'If it's yes, then script will continue to run after, pressing "OK".
+faci_addr=MsgBox(" Location from FACI panel: "& faci_location & VbCrLf & "Location from ADDR panel: "& faci_address & VbCrLf & VbCrLf & "Does the ADDR and FACI panels have the client at the same location?  Caution: FACI name my differ from the actual mailing address, but may still be of the same location." & VbCrLf & VbCrLf & "If you select No: Manually review client's eligibility for PostPay." & VbCrLf & VbCrLf & "If you select Yes: continue on with the script" & VbCrLf & "If you select Cancel: The script will stop here.",3,"")
+	If faci_addr = vbCancel then 
+		msgbox "You've hit cancel, the script will stop at this point.  Re-run the script if this was an accident.  Thanks"
+		StopScript 'stop script from continuing.  I think this build-in is required, because being with bluezone 6.1 - the messagebox locks out MAXIS.
+	ELSEIf faci_addr = vbNo then 
+		'msgbox created to inform worker.
+		msgbox "Please manually review if client is still at the same location for possible postpay approval.  Script will send the case through background (BGTX)."
+		EMWriteScreen "BGTX", 20, 71
+		transmit   'this send case to initial background.
+		transmit   '2nd transmit is required to initiate the background.
+		StopScript 'stop script from continuing.  I think this build-in is needed, because being with bluezone 6.1 - the messagebox locks out MAXIS.
+	Else MsgBox "YES:  Continue with the script" 'continues to JOBS panel.
+	'call check_for_password (are_we_passworded_out)  'adding functionality for MAXIS v.6 Password Out issue that was for dialog, but using it for msgbox - tried to test this out, doesn't work.
+	End If
+	call check_for_password (are_we_passworded_out)
+		If are_we_passworded_out = true then StopScript
+		
+'check to see if client has a job.  If a job panel does not exist, message box reminds worker to check other areas such as EDMS for possible reporting of jobs.
+'If no changes reported, then it'll continue to UNEA panel, otherwise if job exist...then it'll tell worker to process like New Hire and the case will be a HRF GRH.
+CALL navigate_to_MAXIS_screen("STAT", "JOBS")
+EMReadScreen jobs_income, 1, 2, 78  'reads the panel 0 of 0, reading the total panel value..if it's zero or 1+
+
+If jobs_income <> "0" then                   'this looks at the job panel to see if Panels exist.  If it does, it follow the  next step.
+	jobs_income_true=MsgBox("There is at least a job panel active.  Please review in order to continue or stop at this point."& VbCrLf & VbCrLf & "*Yes* You've reviewed the job(s) and script should continue will continue to run, else," & VbCrLf & VbCrLf & "*No* will end this script at this time and you will have to run the HRF GRH script.",4,"")
+	If jobs_income_true = vbYes then                        'this created a msgbox informing worker to check for JOBS info, and if it should stop here or continue to UNEA.
+		msgbox "Yes: This script will continue to UNEA panel."  'if worker choose "YES" on the msgbox even though there is a job panel, then script will navigate to UNEA panel.
+	ELSE                                                        'because only two options on msgbox, either it's A else it's B options.  If it's A, do this action...else if it's B, do this action.
+		msgbox("No: There is at least an active job panel.  Please run the HRF GRH script instead.  The script will send the case through background and stop here.")
+		EMWriteScreen "BGTX", 20, 71    'writes BGTX on command line to send through background.
+		transmit
+		transmit                        'initiate by sending case through background.
+		StopScript                      'stop script from continuing.  I think this build-in is needed, because being with bluezone 6.1 - the messagebox locks out MAXIS.
+	End If
+ELSE 
+	If jobs_income = "0" THEN           'if there is no job panel, it'll ask the worker to review for possible reporting jobs on MAXIS - Case Notes or LF.
+		'a msgbox is created to guide workers to proceed to the next via 'yes' or 'no' options.
+		jobs_income_false=MsgBox("There is no job panel.  Please review: "& VbCrLf & VbCrLf & " * EDMS"& VbCrLf & " * Case Notes"& VbCrLf & VbCrLf & "to see if there are any earned incomes now reported to agency."& VbCrLf &"Click YES, if new earned incomes reported.  Otherwise, click NO",4,"")
+		If jobs_income_false = vbNo Then 'if there is no jobs and worker answered "NO" on msgbox, then script will continue to UNEA panel.
+			msgbox "No: The script will continue to UNEA panel"
+		ELSE
+			MsgBox "YES:  Process the new income(s) now known to agency as new HIRE."& VbCrLf & VbCrLf & "Process this new change/report manually.  And this will now be a HRF GRH.  This will send the case through the background and the script will stop."
+			EMWriteScreen "BGTX", 20, 71    'sending case through background.
+			transmit
+			transmit                        'initiate case through background
+			StopScript                      'stop script from continuing at this point.
+		End If
+	End If
+End If
+
+'This looks at UNEA panel.  It determines if there is UNEA panel(s).  If no, it'll send the case through background via BGTX.
+'If there is a UNEA panel, it gives worker option to either send it through BGTX or continues to PBEN panel.
+
+Call navigate_to_MAXIS_screen ("STAT", "UNEA")
+EMReadScreen unea_incomes, 1, 2, 78
+EMReadScreen unea_income_type, 2, 5, 37
+
+'setting condition that if the types on UNEA panels equals to 01, 02, or 03, then it's consider true.
+IF unea_income_type = "01" OR unea_income_type = "02" OR unea_income_type = "03" Then SSA_Income = TRUE
+
+'This shows that if UNEA panels has existing panel or not.  If it does not, it does...this, 
+'ELSEIf it does have a UNEA panel, but the incomes type is not "01", "02", or "03"...then go to PBEN
+'Else if UNEA exist and one of the existing panel is "01", "02" or "03", then go through each UNEA screen, then check for...
+'if it has a current panel of the UNEA.  If it does - worker has the choice to navigate to a different PBEN or BGTX depending on the
+'above conditions.
+
+'I've also did a long "IF, ELSEIF, ELSE,..." because each conditions has a different message for the worker.
+
+If unea_incomes = "0" then                             'this condition if no UNEA panel exist.
+	call navigate_to_MAXIS_screen("STAT", "PBEN")      'if no UNEA panel, then script navigate to PBEN next.
+	EMReadScreen pben_screen, 4, 2, 49
+	If pben_screen <> "PBEN" then                      'check to see if we're in the PBEN screen, if not, then it navigate to PBEN.
+		Call navigate_to_MAXIS_screen("STAT", "PBEN")  'if not in PBEN panel, this will redirect it back to PBEN.
+	End if
+	'Once in PBEN, script reads off the "IAA DATE" from the PBEN panel if UNEA exist.  And reports this on the MSGBOX listing.
+	EMReadScreen pben_line_01, 8, 8, 66
+	EMReadScreen pben_line_02, 8, 9, 66
+	EMReadScreen pben_line_03, 8, 10, 66
+	EMReadScreen pben_line_04, 8, 11, 66
+	EMReadScreen pben_line_05, 8, 12, 66
+	EMReadScreen pben_line_06, 8, 13, 66
+	'this shows that once in the PBEN panel, to display the following msgbox.
+	If pben_screen = "PBEN" then
+		'explains why they're being directed here in PBEN.  Creating msgbox with Yes/No option for worker to choose their pathway.
+		pben_dates=MsgBox ("You are in PBEN because there is no UNEA panel.  Are the following IAA Dates listed below with 12 months or current?"& VbCrLf & VbCrLf & pben_line_01 & VbCrLf & pben_line_02 & VbCrLf & pben_line_03 & VbCrLf & pben_line_04 & VbCrLf & pben_line_05 & VbCrLf & pben_line_06 & VbCrLf & VbCrLf &"Select YES, if there is a date less than 12 months"& VbCrLf &"Select NO, if all the dates listed are expired",4,"")
+			If pben_dates = vbNo then   'because there are only two options.  If worker choose 'yes' then it does the "else" function, otherwise, if choose "no" it excute the msgbox no option, which leads to stopping the script.
+			MsgBox ("NO: You will need to request client to apply for new benefits.  The script will stop here.")  'if worker choose "no" then this message will appear for worker informing of the next steps.
+			StopScript
+			ELSE                        'if worker choose 'yes' on the msgbox then this message will appear for worker, informing worker the next step.
+			msgbox ("YES: This will now send case through background via BGTX.  There will be a few moment pauses as case is being sent throughthe background.")
+			End If
+		EMWriteScreen "BGTX", 20, 71    'if worker choose to 'yes' it'll send case through background
+		transmit
+	End If
+ElseIf SSA_Income <> TRUE then                         'this condition if UNEA does not equal to "01", "02", or "03" in the UNEA type.
+	call navigate_to_MAXIS_screen("STAT", "PBEN")      'If it does not equal to any of the three codes noted above this line, it'll go to PBEN.
+	EMReadScreen pben_screen, 4, 2, 49
+	If pben_screen <> "PBEN" then                      'double check if navigate to PBEN, if not, then it's to nevigate to PBEN.
+		Call navigate_to_MAXIS_screen("STAT", "PBEN")
+	End if
+	'reading off the "IAA DATE" from the PBEN panel if UNEA exist.
+	EMReadScreen pben_line_01, 8, 8, 66
+	EMReadScreen pben_line_02, 8, 9, 66
+	EMReadScreen pben_line_03, 8, 10, 66
+	EMReadScreen pben_line_04, 8, 11, 66
+	EMReadScreen pben_line_05, 8, 12, 66
+	EMReadScreen pben_line_06, 8, 13, 66
+	If pben_screen = "PBEN" then
+		'explains why they're being directed here in PBEN.  Mainly - because workers wants to direct to PBEN, or if there are UNEA types, but not of codes: "01", "02", or "03".
+		'Once in PBEN it then open a msgbox for the following questions/statement to worker to inform them how it should proceed via Yes or No options.
+		pben_dates=MsgBox ("You are in PBEN because UNEA panel exist but no SSI/RSDI types, client may need to be refer over to SSA.  Are the following IAA Dates listed below with 12 months or current?"& VbCrLf & VbCrLf & pben_line_01 & VbCrLf & pben_line_02 & VbCrLf & pben_line_03 & VbCrLf & pben_line_04 & VbCrLf & pben_line_05 & VbCrLf & pben_line_06 & VbCrLf & VbCrLf &"Select YES, if there is a date less than 12 months"& VbCrLf &"Select NO, if all the dates listed are expired",4,"")
+			If pben_dates = vbNo then MsgBox ("NO: You will need to request client to apply for new benefits.  The script will stop here.")
+			StopScript                       'If worker choose 'no' then script will stop.
+			ELSE
+			EMWriteScreen "BGTX", 20, 71     'if worker choose 'yes' then script will send case through background.
+			transmit
+			End If
+ELSE
+'reviews UNEA panel, if one exist or multiple unea panels, it'd go through the panels, looking to see if it meets the condition where, UNEA panel exist, and it's coded as "01", "02", or "03" for the types.  If so, it'll then look at the end dates.
+'if UNEA panel ends date exist, it would transmit to the next panel, ie: 1 of 2 -> 02 of 02, and etc...
+'from what I'm told, there can only be 5 max panels of each type - for UNEA, JOBS, FACI, and etc.
+	For unea_to_review = 1 to unea_incomes          'Unea panel exist, it's to check each panel..if it's 1 of 3, it'll keep checking for condition noted below until it's 3 of 3 or until the condition is met.
+		EMWriteScreen "0" & unea_to_review, 20, 79  'tells it where to write the panels to, such as after going through 01 of 03, it'll write 02 of 03 and so on next to the command line.
+		transmit
+		EMReadScreen unea_incomes_panel, 8, 7, 68   'each UNEA panel it goes through, it's to read the 'end' date of the unea.
+		If unea_incomes_panel = "__ __ __" AND SSA_Income = true then  'if unea exist for for the condition that there is a blank end date for the UNEA and the type of UNEA is codes '01', '02', or '03'.
+			'if the above condition are met, it'll display message box for workers informing them of how to proceed to the next stage via 'yes' or 'no' options.
+			unea_incomes_options=MsgBox("UNEA Income exist for this individual, with SSI and/or RSDI incomes."& VbCrLf & VbCrLf & "Select YES, to navigate to PBEN next."& VbCrLf & VbCrLf & "Select NO, to send case through background - BGTX", 4, "")
+				If unea_incomes_options = vbNo Then     'if worker choose no, then the script will send case through background.
+				msgbox ("No: This will now send case through background via BGTX.  There will be a few moment pauses as case is being sent throughthe background.")
+				EMWriteScreen "BGTX", 20, 71            'sends case through background.
+				transmit
+				ELSE
+				msgbox "Yes: script will be navigating to PBEN panel"  'if worker choose 'yes', then the script will navigate to PBEN.  This allows worker to have the 'option' of control if they should go to PBEN or not.
+				Call navigate_to_MAXIS_screen("STAT", "PBEN")          'navigates to PBEN.
+				Exit For                                'once the condition is met, it exit or stop the loop - and continues with either BGTX or PBEN.
+				End if
+		End If
+	Next                                                 'this tells the script to keep looping for the condition.
+	EMReadScreen pben_screen, 4, 2, 49
+	If pben_screen <> "PBEN" then                        'navigate to PBEN, checks, and if not on PBEN.
+		Call navigate_to_MAXIS_screen("STAT", "PBEN")
+	End if
+	'reading off the "IAA DATE" from the PBEN panel if UNEA exist.
+	EMReadScreen pben_line_01, 8, 8, 66
+	EMReadScreen pben_line_02, 8, 9, 66
+	EMReadScreen pben_line_03, 8, 10, 66
+	EMReadScreen pben_line_04, 8, 11, 66
+	EMReadScreen pben_line_05, 8, 12, 66
+	EMReadScreen pben_line_06, 8, 13, 66
+
+	'explains why they're being directed here in PBEN.  If screen reads PBEN it'll display the following msgbox
+	If pben_screen = "PBEN" then
+		'once in PBEN it would display messagebox for worker to choose from 'yes' or 'no' - it shows and directs worker depending on what they choose.
+		pben_dates=MsgBox ("You are in PBEN.  Are the following IAA Dates listed below with 12 months or current?"& VbCrLf & VbCrLf & pben_line_01 & VbCrLf & pben_line_02 & VbCrLf & pben_line_03 & VbCrLf & pben_line_04 & VbCrLf & pben_line_05 & VbCrLf & pben_line_06 & VbCrLf & VbCrLf &"Select YES, if there is a date less than 12 months"& VbCrLf &"Select NO, if all the dates listed are expired",4,"")
+			If pben_dates = vbNo then 
+			'part of the messagebox options that allows the function of directive for the 'yes' and 'no'
+			msgbox ("NO: You will need to request client to apply for new benefits.  The script will stop here.  The case will be sent through background.")
+			EMWriteScreen "BGTX", 20, 71   'if worker chose 'no' then case is sent through background.
+			transmit
+			transmit
+			StopScript                      'script will stop here.
+			ELSE                            'otherwise case will go through BGTX, and continue onto case note.
+			msgbox ("YES: This will now send case through background via BGTX.  There will be a few moment pauses as case is being sent throughthe background.")
+			End If
+	End If
+	EMWriteScreen "BGTX", 20, 71  'sending case through background.
+	transmit
+End If
+
+transmit
+
+MAXIS_background_check              'navigate through background and waiting for it to return from background.
+
+'*****
+'this part is from the GRH HRF note script...it's to read the ELIG/GRH eligibility and captures the info from there to display on case note.
+call navigate_to_MAXIS_screen("elig", "grh")
+EMReadScreen GRPR_check, 4, 3, 47
+
+If GRPR_check <> "GRPR" then
+	MsgBox "The script couldn't find ELIG/GRH. It will now jump to case note."
+	Else
+	EMWriteScreen "GRSM", 20, 71
+End If
+
+transmit
+
+'reads elig/grh info from GRSM for inputting into case note.
+If GRPR_check = "GRPR" then EMReadScreen GRSM_line_01, 69, 10, 3
+If GRPR_check = "GRPR" then EMReadScreen GRSM_line_02, 69, 11, 3
+If GRPR_check = "GRPR" then EMReadScreen GRSM_line_03, 69, 12, 3
+If GRPR_check = "GRPR" then EMReadScreen GRSM_line_04, 69, 13, 3
+If GRPR_check = "GRPR" then EMReadScreen GRSM_Obligation, 9, 18, 31
+'If GRSM_Obligation = "" then GRSM_Obligation = "$0"  'trying to show that when the client obligation is "blank" or "$0", this would show in the cas enote as "$0" rather than just blank on this line.
+'*****
+
+'starting a blank case note format at this point for worker.  Once the case comes from background, worker could fill in the blank.
+'message box at the ends wil say that it's successful and to go back and review/fill in the blanked areas of this case note format.
+'I did not use the call_write_bullet_and_variable_in_CASE_NOTE ("bullet", variable), because half of the case note is a format for the worker to fill in manually.
+
+Call start_a_blank_CASE_NOTE
+Call write_variable_in_CASE_NOTE(faci_location & " Billings for " & GRH_month & "/" &GRH_year)      'need to work on how to tell script to stop short of the full listing values indicated, and only stop short of the FACI's name. 
+call write_variable_in_CASE_NOTE("---")                                                             'because for facility that has short name, there'd be a long line on the case note headers.
+call write_variable_in_CASE_NOTE("Approved GRH PostPay: ")
+If GRPR_check = "GRPR" then call write_variable_in_CASE_NOTE("   " & GRSM_line_01)
+If GRPR_check = "GRPR" then call write_variable_in_CASE_NOTE("   " & GRSM_line_02)
+If GRPR_check = "GRPR" then call write_variable_in_CASE_NOTE("   " & GRSM_line_03)
+If GRPR_check = "GRPR" then call write_variable_in_CASE_NOTE("   " & GRSM_line_04)
+If GRPR_check = "GRPR" then call write_variable_in_CASE_NOTE("Client Obligation: $" & GRSM_Obligation)
+call write_variable_in_CASE_NOTE("---")
+If pben_dates = vbYes then Call write_variable_in_CASE_NOTE("IAAS from PBEN is current through: ")   'this is only available of worker answered "yes" that the PBEN IAAS dates are less than 12 months - from above condition.
+call write_variable_in_CASE_NOTE("Changes Report: ")
+call write_variable_in_CASE_NOTE("Other Notes: ")
+call write_variable_in_CASE_NOTE("Actions taken: ")
+call write_variable_in_CASE_NOTE("---")
+call write_variable_in_CASE_NOTE(worker_signature)
+
+'reminding workers to go back to fill in the items that may have left to be fill during the first run.
+call script_end_procedure("Success!!! The script will stop here.  Please remember to review, fill-in, postpay code, and complete the case note with needed information."& VbCrLf & VbCrLf &"Thank you!")
