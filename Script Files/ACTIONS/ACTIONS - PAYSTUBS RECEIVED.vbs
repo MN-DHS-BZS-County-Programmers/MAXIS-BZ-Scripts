@@ -304,6 +304,10 @@ DO
 	END IF
 LOOP UNTIL err_msg = ""
 
+'Checking for MAXIS. It could take a while to enter all the pay information
+'Making it false because it would be turbo irritating to shut down the script after entering all that information
+CALL check_for_MAXIS(false)
+
 'Turns on edit mode
 PF9
 
