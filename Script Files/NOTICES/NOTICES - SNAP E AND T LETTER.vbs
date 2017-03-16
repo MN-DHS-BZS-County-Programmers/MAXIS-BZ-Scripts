@@ -1116,34 +1116,67 @@ End if
 
 'Manual referral creation if banked months are used
 If manual_referral <> "Select one..." then 					'if banked months or student are noted, then a manual referral to E & T is needed
-	Call navigate_to_MAXIS_screen("INFC", "WF1M")			'navigates to WF1M to create the manual referral'
-	EMWriteScreen "01", 4, 47													'this is the manual referral code that DHS has approved
-	EMWriteScreen "FS", 8, 46													'this is a program for ABAWD's for SNAP is the only option for banked months
-	EMWriteScreen member_number, 8, 9									'enters member number
-	Call create_MAXIS_friendly_date(appointment_date, 0, 8, 65)			'enters the E & T referral date
-	If manual_referral = "Banked months" then 
-		EMWriteScreen "Banked ABAWD month referral, initial month", 17, 6	'DHS wants these referrals marked, this marks them
-	ELSEIF manual_referral = "Student" then
-		EMWriteScreen "Student", 17, 6
-	ELSEIF manual_referral = "Working with CBO" then 
-		EMWriteScreen "Working with Community Based Organization", 17, 6
-	ELSEIF manual_referral = "Other manual referral" then 
-		EMWriteScreen other_referral_notes, 17, 6
-	END IF 
-	EMWriteScreen "x", 8, 53																				'selects the ES provider
-	transmit																												'navigates to the ES provider selection screen
-		If worker_county_code = "x127" then				'HENNEPIN CO specific info'
-			EMWriteScreen "x", 5, 9									'selects the 1st option'
-			transmit																'transmits back to the main WF1M
-			EMWriteScreen appointment_date & ", " & appointment_time_prefix_editbox & ":" & appointment_time_post_editbox & " " & AM_PM & ", " & SNAPET_name, 18, 6		'enters the location, date and time for Hennepin Co ES providers (per request)'
-			PF3																			'saves referral
-			EMWriteScreen "Y", 11, 64								'Y to confirm save
-			transmit																'confirms saving the referral
-			script_end_procedure("Your orientation letter, manual referral, and a 30 day TIKL has been made. Navigate to SPEC/WCOM if you want to review the notice sent to the client." & _
-			vbNewLine & vbNewLine & "Make sure that you have sent the form ""ABAWD FS RULES"" to the client AND a verification request form.")
-		Else
-			script_end_procedure("Please select your agency's ES provider, and PF3 to save your referral.")		'if agency is not Hennepin, then user is asked to select the ES provider and save'
-		END IF
+	
+	'Checking for current referrals (many workers are creating manual referrals when they are not necessary)
+	create_referral = ""				
+	Call navigate_to_MAXIS_screen("INFC", "WORK")
+	EMReadScreen WORK_check, 4, 2, 51
+	If WORK_check = "WORK" then  
+		MAXIS_row = 7
+		Do 
+			EMReadscreen referral_member_number, 2, MAXIS_row, 3
+			If referral_member_number = "  " then exit do
+			If referral_member_number = member_number then 
+				EMReadScreen referral_appt_date, 8, MAXIS_row, 59		'checking appointment date and giving the user the option to opt out of creating a manual referral. 
+				If referral_appt_date <> "__ __ __" then 
+					confirm_referral = msgbox ("There appears to be a referral date already listed for member " & member_number & ". Do you want to continue to make the manual referral?", vbYesNo, "Referral date found")
+					If confirm_referral = vbNo then 
+						create_referral = False 
+						script_end_procedure("A manual referral was not made. Please check SPEC/WCOM to ensure that the correct orientation information is on the client's notice.")
+					Elseif confirm_referral = vbYes then 
+						create_referral = True
+						exit dore
+					End if 
+				END IF  
+			Else 	
+				MAXIS_row = MAXIS_row + 1
+			END IF 
+		LOOP until referral_member_number = member_number or MAXIS_row = 13
+		PF3	'to exit out of INFC/WORK
+ 	ELse 
+	 	create_referral = TRUE
+	End if 
+	
+	IF create_referral = True then 
+	    Call navigate_to_MAXIS_screen("INFC", "WF1M")			'navigates to WF1M to create the manual referral'
+	    EMWriteScreen "01", 4, 47													'this is the manual referral code that DHS has approved
+	    EMWriteScreen "FS", 8, 46													'this is a program for ABAWD's for SNAP is the only option for banked months
+	    EMWriteScreen member_number, 8, 9									'enters member number
+	    Call create_MAXIS_friendly_date(appointment_date, 0, 8, 65)			'enters the E & T referral date
+	    If manual_referral = "Banked months" then 
+	    	EMWriteScreen "Banked ABAWD month referral, initial month", 17, 6	'DHS wants these referrals marked, this marks them
+	    ELSEIF manual_referral = "Student" then
+	    	EMWriteScreen "Student", 17, 6
+	    ELSEIF manual_referral = "Working with CBO" then 
+	    	EMWriteScreen "Working with Community Based Organization", 17, 6
+	    ELSEIF manual_referral = "Other manual referral" then 
+	    	EMWriteScreen other_referral_notes, 17, 6
+	    END IF 
+	    EMWriteScreen "x", 8, 53																				'selects the ES provider
+	    transmit																												'navigates to the ES provider selection screen
+	    If worker_county_code = "x127" then				'HENNEPIN CO specific info'
+	    	EMWriteScreen "x", 5, 9									'selects the 1st option'
+	    	transmit																'transmits back to the main WF1M
+	    	EMWriteScreen appointment_date & ", " & appointment_time_prefix_editbox & ":" & appointment_time_post_editbox & " " & AM_PM & ", " & SNAPET_name, 18, 6		'enters the location, date and time for Hennepin Co ES providers (per request)'
+	    	PF3																			'saves referral
+	    	EMWriteScreen "Y", 11, 64								'Y to confirm save
+	    	transmit																'confirms saving the referral
+	    	script_end_procedure("Your orientation letter, manual referral, and a 30 day TIKL has been made. Navigate to SPEC/WCOM if you want to review the notice sent to the client." & _
+	    	vbNewLine & vbNewLine & "Make sure that you have sent the form ""ABAWD FS RULES"" to the client AND a verification request form.")
+	    Else
+	    	script_end_procedure("Please select your agency's ES provider, and PF3 to save your referral.")		'if agency is not Hennepin, then user is asked to select the ES provider and save'
+	    END If
+	End if 
 END IF
 
 If worker_county_code = "x127" then			'specific closing message to Hennepin County message
