@@ -43,9 +43,6 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
-'these variables are needed to display the total amount of assets
-DIM total_counted_assets, total_excluded_assets, total_unavailable_assets
-
 'these variables are needed to input the values of each individual amount to the ELIG/HC FIAT
 DIM ttl_CASH_counted, ttl_CASH_excluded, ttl_CASH_unavail
 DIM ttl_ACCT_counted, ttl_ACCT_excluded, ttl_ACCT_unavail
@@ -103,17 +100,181 @@ class asset_object
 	end function
 end class
 
-' this class is going t
+' this class is going to be used for grabbing information from UNEA, JOBS, and BUSI
 class income_object
-	public unearned_income
-	public earned_income
+	' variables for income objects
+	public income_amt
+	public hc_income_amt
+	public retro_income_amt
+	public prosp_income_amt
+	public snap_pic_income_amt
+	public grh_pic_income_amt
+	public income_category			' "UNEARNED", "EARNED", "DEEMED UNEARNED", "DEEMED EARNED"
+	public income_type				' type read from panel
+	public income_frequency
+	public income_start_date
+	public income_end_date
 	
-	public function add_to_gross_unea(amount_to_add)
-		gross_unea = gross_unea + (amount_to_add * 1)
+	' === member functions for income object ===
+
+	' private member function for identifying UNEA
+	private sub are_we_at_unea 
+		row = 1																																		' }
+		col = 1																																		' }		
+		EMSearch "(UNEA)", row, col																													' }		
+		IF row = 0 THEN 																															' } safeguarding that the script				
+			MsgBox "Invalid function application. The script cannot confirm you are on UNEA. The script will now stop.", vbCritical 				' }	finds UNEA					
+			stopscript																																' }		
+		END IF																																		' }
+	end sub
+
+	' private member function for identifying JOBS	
+	private sub are_we_at_jobs
+		row = 1
+		col = 1
+		EMSearch "(JOBS)", row, col
+		IF row = 0 THEN 
+			MsgBox "Invalid function application. The script cannot confirm you are on JOBS. The script will now stop.", vbCritical		' }	finds JOBS			
+			stopscript																													' }		
+		END IF																															' }
+	end sub			
+
+	' private member function for identifying BUSI
+	private sub are_we_at_busi
+		row = 1
+		col = 1
+		EMSearch "(BUSI)", row, col
+		IF row = 0 THEN 
+			MsgBox "Invalid function application. The script cannot confirm you are on BUSI. The script will now stop.", vbCritical		' }	finds BUSI											' }					
+			stopscript																													' }		
+		END IF																															' }
+	end sub		
+	
+	public function set_income_category(specific_income_category)
+		income_category = specific_income_category
 	end function
+	
+	public sub read_income_type
+		IF income_category = "" THEN MsgBox "No category has been set for this income type. The script will not perform optimally."
+		row = 1
+		col = 1
+		EMSearch "Inc Type: ", row, col
+		IF row <> 0 THEN 			' } Then we are on the JOBS panel...
+			EMReadScreen specific_income_type, 1, row, col + 10
+			IF specific_income_type = "J" THEN 
+				specific_income_type = "WIOA"
+			ELSEIF specific_income_type = "W" THEN 
+				specific_income_type = "Wages"
+			ELSEIF specific_income_type = "E" THEN 
+				specific_income_type = "EITC"
+			ELSEIF specific_income_type = "G" THEN 
+				specific_income_type = "Experience Works"
+			ELSEIF specific_income_type = "F" THEN 
+				specific_income_type = "Federal Work Study" 
+			ELSEIF specific_income_type = "S" THEN 
+				specific_income_type = "State Work Study"
+			ELSEIF specific_income_type = "O" THEN 
+				specific_income_type = "Other"
+			ELSEIF specific_income_type = "C" THEN 
+				specific_income_type = "Contract Income"
+			ELSEIF specific_income_type = "T" THEN 
+				specific_income_type = "Training Program"
+			ELSEIF specific_income_type = "P" THEN 
+				specific_income_type = "Service Program"
+			ELSEIF specific_income_type = "R" THEN 
+				specific_income_type = "Rehab Program"
+			END IF
+		ELSE						' } THEN we are on either BUSI or UNEA
+			row = 1
+			col = 1
+			EMSearch "Income Type: ", row, col
+			IF income_category = "EARNED" OR income_category = "DEEMED EARNED" THEN 			' } THEN WE ARE ON BUSI
+				EMReadScreen specific_income_type, 2, row, col + 13
+				IF specific_income_type = "01" THEN 
+					specific_income_type = "01 Farming"
+				ELSEIF specific_income_type = "02" THEN 
+					specified_income_type = "02 Real Estate"
+				ELSEIF specific_income_type = "03" THEN 
+					specific_income_type = "03 Home Product Sales"
+				ELSEIF specific_income_type = "04" THEN 
+					specific_income_type = "04 Other Sales"
+				ELSEIF specific_income_type = "05" THEN 
+					specific_income_type = "05 Personal Services"
+				ELSEIF specific_income_type = "06" THEN 
+					specific_income_type = "06 Paper Route"
+				ELSEIF specific_income_type = "07" THEN 
+					specific_income_type = "07 In-Home Daycare"
+				ELSEIF specific_income_type = "08" THEN 
+					specific_income_type = "08 Rental Income"
+				ELSEIF specific_income_type = "09" THEN 
+					specific_income_type = "09 Other"
+				END IF
+			ELSEIF income_category = "UNEARNED"	or income_category = "DEEMED UNEARNED" THEN 		' } THEN WE ARE ON UNEA
+				EMReadScreen specific_income_type, 20, row, col + 13
+				specific_income_type = trim(specific_income_type)
+			END IF
+		END IF
+		income_type = specific_income_type
+	end sub
+	
+	' member functions for reading from JOBS
+	public sub read_jobs_for_hc
+		are_we_at_jobs
+		row = 1
+		col = 1
+		EMSearch "HC Income Estimate", row, col
+		IF row = 0 THEN 
+			row = 1
+			col = 1
+			EMSearch "_ HC Est", row, col
+			CALL write_value_and_transmit("X", row, col)
+		END IF
+		EMReadScreen hc_jobs_amount, 8, 11, 63
+		hc_jobs_amount = replace(hc_jobs_amount, "_", "")
+		hc_jobs_amount = trim(hc_jobs_amount)
+		IF hc_jobs_amount = "" THEN hc_jobs_amount = 0.00
+		transmit
+		hc_income_amt = hc_jobs_amount
+	end sub
+	
+	' member functions for reading from UNEA	
+	public sub read_unea_for_hc
+		are_we_at_unea
+		row = 1
+		col = 1
+		EMSearch "_ HC Income Estimate", row, col
+		IF row <> 0 THEN CALL write_value_and_transmit("X", row, col)
+
+		EMReadScreen hc_income_info, 8, 9, 65
+		EMReadScreen hc_inc_est_pay_freq, 1, 10, 63
+		hc_income_info = replace(hc_income_info, "_", "")
+		hc_income_info = trim(hc_income_info)
+		IF hc_income_info = "" THEN hc_income_info = 0.00
+
+		transmit							' } to close the pop-up
+		hc_income_amt = hc_income_info		' } assigning value
+	end sub
+	
+	public sub read_unea_for_snap
+		are_we_at_unea
+		row = 1
+		col = 1 
+		EMSearch "SNAP Prospective Income", row, col
+		IF row = 0 THEN 
+			row = 1
+			col = 1
+			EMSearch "SNAP Prosp Inc", row, col
+			CALL write_value_and_transmit("X", row, col - 2)
+		END IF
+			
+		EMReadScreen snap_income_info, 8, 18, 56
+		EMReadScreen snap_income_pay_frequency, 1, 5, 64
+		snap_income_info = trim(snap_income_info)
+		transmit
+		snap_pic_income_amt = snap_income_info		
+		income_frequency = snap_income_pay_frequency
+	end sub
 end class
-
-
 
 
 'FUNCTION ======================================
@@ -342,14 +503,14 @@ END IF																	' }
 
 CALL calculate_assets(asset_array)
 
-stopscript
-
-
+CALL check_for_MAXIS(false) 	' checking for MAXIS again again
 
 
 ' ==============
 ' ... Income ...
 ' ==============
+num_income = -1
+redim income_array(0)
 ' ====================
 ' ...earned income ...
 ' ====================
@@ -360,6 +521,20 @@ stopscript
 CALL navigate_to_MAXIS_screen("STAT", "JOBS")
 EMWriteScreen hh_memb, 20, 76
 CALL write_value_and_transmit("01", 20, 79)
+EMReadScreen number_of_jobs, 1, 2, 78
+IF number_of_jobs <> "0" THEN 
+	DO
+		num_income = num_income + 1
+		redim preserve income_array(num_income)
+		set income_array(num_income) = new income_object
+		CALL income_array(num_income).set_income_category("EARNED")
+		income_array(num_income).read_jobs_for_hc
+		income_array(num_income).read_income_type
+		transmit
+		EMReadScreen enter_a_valid, 21, 24, 2
+		IF enter_a_valid = "ENTER A VALID COMMAND" THEN EXIT DO		
+	LOOP
+END IF
 
 ' ==================
 ' ... BUSI PANEL ...
@@ -378,8 +553,26 @@ CALL write_value_and_transmit("01", 20, 79)
 CALL navigate_to_MAXIS_screen("STAT", "UNEA")
 EMWriteScreen hh_memb, 20, 76
 CALL write_value_and_transmit("01", 20, 79)
+EMReadScreen number_of_unea, 1, 2, 78
+IF number_of_unea <> "0" THEN 
+	DO
+		num_income = num_income + 1
+		redim preserve income_array(num_income)
+		set income_array(num_income) = new income_object
+		CALL income_array(num_income).set_income_category("UNEARNED")
+		income_array(num_income).read_unea_for_hc
+		income_array(num_income).read_income_type
+		transmit													' }
+		EMReadScreen enter_a_valid, 21, 24, 2						' } navigating to the next UNEA
+		IF enter_a_valid = "ENTER A VALID COMMAND" THEN EXIT DO		' }
+	LOOP
+END IF
 
+FOR i = 0 to ubound(income_array)
+	MsgBox "Income Category: " & income_array(i).income_category & vbNewLine & "Income Type: " & income_array(i).income_type & vbNewLine & "Income Budgetted for HC: " & income_array(i).hc_income_amt
+NEXT
 
+stopscript
 
 CALL check_for_MAXIS(false) 	' checking for MAXIS again again
 
