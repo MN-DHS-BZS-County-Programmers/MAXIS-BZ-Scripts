@@ -53,6 +53,9 @@ DIM ttl_OTHR_counted, ttl_OTHR_excluded, ttl_OTHR_unavail
 DIM ttl_BURY_counted, ttl_BURY_excluded, ttl_BURY_unavail
 DIM ttl_SPON_counted, ttl_SPON_excluded, ttl_SPON_unavail
 
+'these variables are needed to input the values for each amount to the budget in ELIG/HC FIAT
+DIM ttl_unearned_amt, ttl_earned_amt, ttl_unearned_deemed, ttl_earned_deemed
+
 'these variables are needed for to input values to the FIAT of income
 
 'this class is needed for to keep track of data for individual assets
@@ -103,17 +106,19 @@ end class
 ' this class is going to be used for grabbing information from UNEA, JOBS, and BUSI
 class income_object
 	' variables for income objects
-	public income_amt
-	public hc_income_amt
+	public income_amt				' this is used to store the value of the per-pay-check income
+	public monthly_income_amt		' this is used to store the value of the monthly income
+	public income_frequency			' this is used to store the values "Monthly", "Semi-Monthly"... to reflect pay frequency
 	public retro_income_amt
 	public prosp_income_amt
 	public snap_pic_income_amt
 	public grh_pic_income_amt
 	public income_category			' "UNEARNED", "EARNED", "DEEMED UNEARNED", "DEEMED EARNED"
 	public income_type				' type read from panel
-	public income_frequency
 	public income_start_date
 	public income_end_date
+	private pay_freq				' read from the panel...private because it is only used to calculate the monthly values
+	private income_multiplier		' extrapolated from the pay_freq...private because it is only used to calculate the monthly values
 	
 	' === member functions for income object ===
 
@@ -148,7 +153,12 @@ class income_object
 			MsgBox "Invalid function application. The script cannot confirm you are on BUSI. The script will now stop.", vbCritical		' }	finds BUSI											' }					
 			stopscript																													' }		
 		END IF																															' }
-	end sub		
+	end sub	
+
+	' private member function for calculating monthly_income_amt
+	public sub calculate_monthly_income
+		monthly_income_amt = income_multiplier * (income_amt * 1)
+	end sub
 	
 	public function set_income_category(specific_income_category)
 		income_category = specific_income_category
@@ -210,7 +220,7 @@ class income_object
 					specific_income_type = "09 Other"
 				END IF
 			ELSEIF income_category = "UNEARNED"	or income_category = "DEEMED UNEARNED" THEN 		' } THEN WE ARE ON UNEA
-				EMReadScreen specific_income_type, 20, row, col + 13
+				EMReadScreen specific_income_type, 17, row, col + 16
 				specific_income_type = trim(specific_income_type)
 			END IF
 		END IF
@@ -234,7 +244,31 @@ class income_object
 		hc_jobs_amount = trim(hc_jobs_amount)
 		IF hc_jobs_amount = "" THEN hc_jobs_amount = 0.00
 		transmit
-		hc_income_amt = hc_jobs_amount
+		income_amt = hc_jobs_amount
+		
+		'reading pay frequency
+		EMReadScreen pay_freq, 1, 18, 35
+		IF pay_freq = "1" THEN 
+			income_multiplier = 1
+			income_frequency = "MONTHLY"
+		ELSEIF pay_freq = "2" THEN 
+			income_multiplier = 2
+			income_frequency = "SEMI-MONTHLY"
+		ELSEIF pay_freq = "3" THEN 
+			income_multiplier = 2.16
+			income_frequency = "BI-WEEKLY"
+		ELSEIF pay_freq = "4" THEN 
+			income_multiplier = 4.3
+			income_frequency = "WEEKLY"
+		ELSEIF pay_freq = "5" THEN 
+			income_multiplier = 1
+			income_multiplier = "OTHER/MONTHLY"
+		ELSEIF pay_freq = "_" THEN 
+			msgbox "The script cannot continue. This case needs a pay frequency on JOBS. THe script will now stop.", vbCritical
+			script_end_procedure ("Script failed. Case requires updating.")
+		END IF
+		
+		calculate_monthly_income
 	end sub
 	
 	' member functions for reading from UNEA	
@@ -250,29 +284,33 @@ class income_object
 		hc_income_info = replace(hc_income_info, "_", "")
 		hc_income_info = trim(hc_income_info)
 		IF hc_income_info = "" THEN hc_income_info = 0.00
+		
+		'reading pay frequency
+		EMReadScreen pay_freq, 1, 10, 63
+		IF pay_freq = "1" THEN 
+			income_multiplier = 1
+			income_frequency = "MONTHLY"
+		ELSEIF pay_freq = "2" THEN 
+			income_multiplier = 2
+			income_frequency = "SEMI-MONTHLY"
+		ELSEIF pay_freq = "3" THEN 
+			income_multiplier = 2.16
+			income_frequency = "BI-WEEKLY"
+		ELSEIF pay_freq = "4" THEN 
+			income_multiplier = 4.3
+			income_frequency = "WEEKLY"
+		ELSEIF pay_freq = "5" THEN 
+			income_multiplier = 1
+			income_multiplier = "OTHER/MONTHLY"
+		ELSEIF pay_freq = "_" THEN 
+			msgbox "The script cannot continue. This case needs a pay frequency on JOBS. THe script will now stop.", vbCritical
+			script_end_procedure ("Script failed. Case requires updating.")
+		END IF
 
 		transmit							' } to close the pop-up
-		hc_income_amt = hc_income_info		' } assigning value
-	end sub
-	
-	public sub read_unea_for_snap
-		are_we_at_unea
-		row = 1
-		col = 1 
-		EMSearch "SNAP Prospective Income", row, col
-		IF row = 0 THEN 
-			row = 1
-			col = 1
-			EMSearch "SNAP Prosp Inc", row, col
-			CALL write_value_and_transmit("X", row, col - 2)
-		END IF
-			
-		EMReadScreen snap_income_info, 8, 18, 56
-		EMReadScreen snap_income_pay_frequency, 1, 5, 64
-		snap_income_info = trim(snap_income_info)
-		transmit
-		snap_pic_income_amt = snap_income_info		
-		income_frequency = snap_income_pay_frequency
+		income_amt = hc_income_info			' } assigning value
+
+		calculate_monthly_income
 	end sub
 end class
 
@@ -331,8 +369,25 @@ FUNCTION calculate_assets(input_array)
 					CALL input_array(i).set_asset_type(parallel_array(i, 1))
 				NEXT
 			END IF
-		
 	LOOP UNTIL ButtonPressed = -1
+				
+	'Re-Calculating the values of assets
+	FOR i = 0 TO number_of_assets
+		parallel_array(i, 0) = input_array(i).asset_amount
+		parallel_array(i, 1) = input_array(i).asset_type
+	
+		IF input_array(i).asset_type = "COUNTED" THEN asset_counted_total = asset_counted_total + (input_array(i).asset_amount * 1)
+		IF input_array(i).asset_type = "EXCLUDED" THEN asset_excluded_total = asset_excluded_total + (input_array(i).asset_amount * 1)
+		IF input_array(i).asset_type = "UNAVAILABLE" THEN asset_unavailable_total = asset_unavailable_total + (input_array(i).asset_amount * 1)
+	NEXT
+		
+	FOR i = 0 TO number_of_assets	
+		CALL input_array(i).set_asset_amount(parallel_array(i, 0))
+		CALL input_array(i).set_asset_type(parallel_array(i, 1))
+	NEXT
+END FUNCTION
+
+FUNCTION calculate_income(input_array)
 
 END FUNCTION
 
@@ -381,9 +436,10 @@ DO
 LOOP UNTIL ubound(HH_member_array) = 0
 
 FOR EACH person in HH_member_array
-	hh_memb = left(person, 2)
+	hc_memb = left(person, 2)
 	EXIT FOR
 NEXT
+
 
 ' ==============
 ' ... ASSETS ...
@@ -406,7 +462,7 @@ redim asset_array(0)
 
 'asset_acct_amt = 0													' }
 CALL navigate_to_MAXIS_screen("STAT", "ACCT")						' }
-EMWriteScreen hh_memb, 20, 76										' }
+EMWriteScreen hc_memb, 20, 76										' }
 CALL write_value_and_transmit("01", 20, 79)							' }
 EMReadScreen num_acct, 1, 2, 78										' }
 IF num_acct <> "0" THEN 											' }
@@ -427,7 +483,7 @@ END IF
 ' ... CASH PANEL ...
 ' ==================
 CALL navigate_to_MAXIS_screen("STAT", "CASH")						' }	
-CALL write_value_and_transmit(hh_memb, 20, 76)						' }
+CALL write_value_and_transmit(hc_memb, 20, 76)						' }
 EMReadScreen number_of_cash, 1, 2, 78								' }
 IF number_of_cash <> "0" THEN 										' }
 	num_assets = num_assets + 1										' }
@@ -442,7 +498,7 @@ END IF																' }
 ' ... OTHR PANEL ...
 ' ==================	
 CALL navigate_to_MAXIS_screen("STAT", "OTHR")							' }				
-EMWriteScreen hh_memb, 20, 76											' }		
+EMWriteScreen hc_memb, 20, 76											' }		
 CALL write_value_and_transmit("01", 20, 79)								' }		
 EMReadScreen number_of_other, 1, 2, 78									' }
 IF number_of_other <> "0" THEN 											' }
@@ -463,7 +519,7 @@ END IF																	' }
 ' ... SECU PANEL ...
 ' ==================
 CALL navigate_to_MAXIS_screen("STAT", "SECU")							' } 
-EMWriteScreen hh_memb, 20, 76											' }	
+EMWriteScreen hc_memb, 20, 76											' }	
 CALL write_value_and_transmit("01", 20, 79)								' }						
 EMReadScreen number_of_secu, 1, 2, 78									' }							
 IF number_of_secu <> "0" THEN 											' }			
@@ -484,7 +540,7 @@ END IF																	' }
 ' ... CARS PANEL ...
 ' ==================
 CALL navigate_to_MAXIS_screen("STAT", "CARS")							' }
-EMWriteScreen hh_memb, 20, 76											' }			
+EMWriteScreen hc_memb, 20, 76											' }			
 CALL write_value_and_transmit("01", 20, 79)								' }						
 EMReadScreen number_of_cars, 1, 2, 78									' }			
 IF number_of_cars <> "0" THEN 											' }				
@@ -503,8 +559,54 @@ END IF																	' }
 
 CALL calculate_assets(asset_array)
 
-CALL check_for_MAXIS(false) 	' checking for MAXIS again again
+' creating totals for the ttl_whatever variables for to FIAT the assets
+FOR i = 0 TO ubound(asset_array)
+	IF asset_array(i).asset_type = "COUNTED" 		THEN 
+		IF asset_array(i).asset_panel = "ACCT" THEN 
+			ttl_ACCT_counted = ttl_ACCT_counted + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
+			ttl_CARS_counted = ttl_CARS_counted + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
+			ttl_CASH_counted = ttl_CASH_counted + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
+			ttl_OTHR_counted = ttl_OTHR_counted + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "REST" THEN 
+			ttl_REST_counted = ttl_REST_counted + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
+			ttl_SECU_counted = ttl_SECU_counted + asset_array(i).asset_amount
+		END IF
+	ELSEIF asset_array(i).asset_type = "EXCLUDED" 		THEN 
+		IF asset_array(i).asset_panel = "ACCT" THEN 
+			ttl_ACCT_excluded = ttl_ACCT_excluded + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
+			ttl_CARS_excluded = ttl_CARS_excluded + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
+			ttl_CASH_excluded = ttl_CASH_excluded + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
+			ttl_OTHR_excluded = ttl_OTHR_excluded + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "REST" THEN 
+			ttl_REST_excluded = ttl_REST_excluded + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
+			ttl_SECU_excluded = ttl_SECU_excluded + asset_array(i).asset_amount		
+		END IF
+	ELSEIF asset_array(i).asset_type = "UNAVAILABLE" 	THEN 
+		IF asset_array(i).asset_panel = "ACCT" THEN 
+			ttl_ACCT_unavailable = ttl_ACCT_unavailable + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
+			ttl_CARS_unavailable = ttl_CARS_unavailable + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
+			ttl_CASH_unavailable = ttl_CASH_unavailable + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
+			ttl_OTHR_unavailable = ttl_OTHR_unavailable + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "REST" THEN 
+			ttl_REST_unavailable = ttl_REST_unavailable + asset_array(i).asset_amount
+		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
+			ttl_SECU_unavailable = ttl_SECU_unavailable + asset_array(i).asset_amount
+		END IF
+	END IF
+NEXT
 
+CALL check_for_MAXIS(false) 	' checking for MAXIS again again
 
 ' ==============
 ' ... Income ...
@@ -519,7 +621,7 @@ redim income_array(0)
 ' ... JOBS PANEL ...
 ' ==================
 CALL navigate_to_MAXIS_screen("STAT", "JOBS")
-EMWriteScreen hh_memb, 20, 76
+EMWriteScreen hc_memb, 20, 76
 CALL write_value_and_transmit("01", 20, 79)
 EMReadScreen number_of_jobs, 1, 2, 78
 IF number_of_jobs <> "0" THEN 
@@ -540,7 +642,7 @@ END IF
 ' ... BUSI PANEL ...
 ' ==================
 CALL navigate_to_MAXIS_screen("STAT", "BUSI")
-EMWriteScreen hh_memb, 20, 76
+EMWriteScreen hc_memb, 20, 76
 CALL write_value_and_transmit("01", 20, 79)
 
 ' =====================
@@ -551,7 +653,7 @@ CALL write_value_and_transmit("01", 20, 79)
 ' ... UNEA PANEL ...
 ' ==================
 CALL navigate_to_MAXIS_screen("STAT", "UNEA")
-EMWriteScreen hh_memb, 20, 76
+EMWriteScreen hc_memb, 20, 76
 CALL write_value_and_transmit("01", 20, 79)
 EMReadScreen number_of_unea, 1, 2, 78
 IF number_of_unea <> "0" THEN 
@@ -568,11 +670,30 @@ IF number_of_unea <> "0" THEN
 	LOOP
 END IF
 
+' assigning values to the ttl_whatever variables for to FIAT the budget
 FOR i = 0 to ubound(income_array)
-	MsgBox "Income Category: " & income_array(i).income_category & vbNewLine & "Income Type: " & income_array(i).income_type & vbNewLine & "Income Budgetted for HC: " & income_array(i).hc_income_amt
+	IF income_array(i).income_category = "UNEARNED" 		THEN ttl_unearned_amt = ttl_unearned_amt + (income_array(i).monthly_income_amt * 1)
+	IF income_array(i).income_category = "EARNED" 			THEN ttl_earned_amt = ttl_earned_amt + (income_array(i).monthly_income_amt * 1)
+	IF income_array(i).income_category = "DEEMED UNEARNED" 	THEN ttl_unearned_deemed = ttl_unearned_deemed + (income_array(i).monthly_income_amt * 1)
+	IF income_array(i).income_category = "DEEMED EARNED" 	THEN ttl_earned_deemed = ttl_earned_deemed + (income_array(i).monthly_income_amt * 1)
 NEXT
 
-stopscript
+
+
+'case noting information to see what we are working with
+CALL navigate_to_MAXIS_screen("CASE", "NOTE")
+PF9
+CALL write_variable_in_case_note("Testing the GRH MSA MA FIAT thingy")
+FOR i = 0 to ubound(asset_array)
+	CALL write_variable_in_case_note(asset_array(i).asset_panel & ": " & formatcurrency(asset_array(i).asset_amount) & ", " & asset_array(i).asset_type)
+NEXT
+
+FOR i = 0 to ubound(income_array)
+	CALL write_variable_in_case_note(income_array(i).income_category & ": " & formatcurrency(income_array(i).monthly_income_amt) & ", " & income_array(i).income_type)
+NEXT
+
+
+msgbox "ready to fiat hc?"
 
 CALL check_for_MAXIS(false) 	' checking for MAXIS again again
 
@@ -582,7 +703,7 @@ CALL navigate_to_MAXIS_screen("ELIG", "HC")
 'finding the correct household member
 FOR hhmm_row = 8 to 19
 	EMReadScreen hhmm_pers, 2, hhmm_row, 3
-	IF hhmm_pers = hh_memb THEN EXIT FOR
+	IF hhmm_pers = hc_memb THEN EXIT FOR
 NEXT
 
 EMReadScreen ma_case, 4, hhmm_row, 26				' }
@@ -591,16 +712,62 @@ IF ma_case <> "_ MA" THEN msgbox "error"			' } looking to see that the client ha
 CALL write_value_and_transmit("X", hhmm_row, 26)	' navigating to BSUM for that client's MA
 
 PF9													' } 
-EMSendKey "04"										' } FIAT 500 for POLICY CHANGE
-transmit											' } 
+msgbox 1											' }
+'checking if FIAT already...						' }
+EMReadScreen cannot_fiat, 20, 24, 2					' }
+IF cannot_fiat <> "PF9 IS NOT PERMITTED" THEN 		' }
+	EMSendKey "04"									' } FIAT 500 for POLICY CHANGE
+	transmit										' } 
+END IF												' }
+
+msgbox 2
+
+'FIAT Millecento Assets
+CALL write_value_and_transmit("X", 7, 17)			' } gets to MAPT
+CALL write_value_and_transmit("X", 7, 3)			' } gets to ASSETS popup
+
+msgbox 3
+
+EMWriteScreen ttl_CASH_counted, 10, 35
+EMWriteScreen ttl_CASH_excluded, 10, 49
+EMWriteScreen ttl_CASH_unavailable, 10, 63
+EMWriteScreen ttl_ACCT_counted, 11, 35
+EMWriteScreen ttl_ACCT_excluded, 11, 49
+EMWriteScreen ttl_ACCT_unavailable, 11, 63
+EMWriteScreen ttl_SECU_counted, 12, 35
+EMWriteScreen ttl_SECU_excluded, 12, 49
+EMWriteScreen ttl_SECU_unavailable, 12, 63
+EMWriteScreen ttl_CARS_counted, 13, 35
+EMWriteScreen ttl_CARS_excluded, 13, 49
+EMWriteScreen ttl_CARS_unavailable, 13, 63
+EMWriteScreen ttl_REST_counted, 14, 35
+EMWriteScreen ttl_REST_excluded, 14, 49
+EMWriteScreen ttl_REST_unavailable, 14, 63
+EMWriteScreen ttl_OTHR_counted, 15, 35
+EMWriteScreen ttl_OTHR_excluded, 15, 49
+EMWriteScreen ttl_OTHR_unavailable, 15, 63
+
+msgbox 4
+
+transmit
+transmit
+PF3 
 
 ' updating budget method away from B
 FOR i = 0 to 5
 	EMWriteScreen "B", 13, (21 + (i * 11))
+	EMWriteScreen "DX", 12, (17 + (i * 11))
+	EMWriteScreen "E", 12, (22 + (i * 11))
 NEXT
+
+msgbox 5
 
 ' going through and updating the budget with income and assets
 FOR i = 0 TO 5
 	CALL write_value_and_transmit("X", 9, (21 + (i * 11)))			' pooting the X on the BUDGET field for that month in the benefit period
-
 NEXT
+
+msgbox 6
+
+transmit
+
