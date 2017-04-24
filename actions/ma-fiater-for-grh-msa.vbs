@@ -115,6 +115,7 @@ class income_object
 	public grh_pic_income_amt
 	public income_category			' "UNEARNED", "EARNED", "DEEMED UNEARNED", "DEEMED EARNED"
 	public income_type				' type read from panel
+	public income_type_code				' 2-digit code read from panel
 	public income_start_date
 	public income_end_date
 	private pay_freq				' read from the panel...private because it is only used to calculate the monthly values
@@ -173,26 +174,37 @@ class income_object
 			EMReadScreen specific_income_type, 1, row, col + 10
 			IF specific_income_type = "J" THEN 
 				specific_income_type = "WIOA"
+				income_type_code = "01"
 			ELSEIF specific_income_type = "W" THEN 
 				specific_income_type = "Wages"
+				income_type_code = "02"
 			ELSEIF specific_income_type = "E" THEN 
 				specific_income_type = "EITC"
+				income_type_code = "03"
 			ELSEIF specific_income_type = "G" THEN 
 				specific_income_type = "Experience Works"
+				income_type_code = "04"
 			ELSEIF specific_income_type = "F" THEN 
 				specific_income_type = "Federal Work Study" 
+				income_type_code = "05"
 			ELSEIF specific_income_type = "S" THEN 
 				specific_income_type = "State Work Study"
+				income_type_code = "06"
 			ELSEIF specific_income_type = "O" THEN 
 				specific_income_type = "Other"
+				income_type_code = "07"
 			ELSEIF specific_income_type = "C" THEN 
 				specific_income_type = "Contract Income"
+				income_type_code = "10"
 			ELSEIF specific_income_type = "T" THEN 
 				specific_income_type = "Training Program"
+				income_type_code = "16"				' <<<<< NO OTHER CORRESPONDING CODE IN FIAT/HC
 			ELSEIF specific_income_type = "P" THEN 
 				specific_income_type = "Service Program"
+				income_type_code = "16"				' <<<<< NO OTHER CORRESPONDING CODE IN FIAT/HC
 			ELSEIF specific_income_type = "R" THEN 
 				specific_income_type = "Rehab Program"
+				income_type_code = "16"				' <<<<< NO OTHER CORRESPONDING CODE IN FIAT/HC
 			END IF
 		ELSE						' } THEN we are on either BUSI or UNEA
 			row = 1
@@ -202,26 +214,91 @@ class income_object
 				EMReadScreen specific_income_type, 2, row, col + 13
 				IF specific_income_type = "01" THEN 
 					specific_income_type = "01 Farming"
+					income_type_code = "11"
 				ELSEIF specific_income_type = "02" THEN 
 					specified_income_type = "02 Real Estate"
+					income_type_code = "14"
 				ELSEIF specific_income_type = "03" THEN 
 					specific_income_type = "03 Home Product Sales"
+					income_type_code = "15"
 				ELSEIF specific_income_type = "04" THEN 
 					specific_income_type = "04 Other Sales"
+					income_type_code = "16"
 				ELSEIF specific_income_type = "05" THEN 
 					specific_income_type = "05 Personal Services"
+					income_type_code = "17"
 				ELSEIF specific_income_type = "06" THEN 
 					specific_income_type = "06 Paper Route"
+					income_type_code = "18"
 				ELSEIF specific_income_type = "07" THEN 
 					specific_income_type = "07 In-Home Daycare"
+					income_type_code = "19"
 				ELSEIF specific_income_type = "08" THEN 
 					specific_income_type = "08 Rental Income"
+					income_type_code = "20"
 				ELSEIF specific_income_type = "09" THEN 
 					specific_income_type = "09 Other"
+					income_type_code = "21"
 				END IF
 			ELSEIF income_category = "UNEARNED"	or income_category = "DEEMED UNEARNED" THEN 		' } THEN WE ARE ON UNEA
-				EMReadScreen specific_income_type, 17, row, col + 16
-				specific_income_type = trim(specific_income_type)
+				EMReadScreen specific_income_type, 20, row, col + 13
+				income_type_code = left(specific_income_type, 2)
+				IF income_type_code = "11" THEN 			' } Updating these values for when they are FIAT'd
+					income_type_code = "09"				' } Because of course there are values that do not match
+				ElSEIF income_type_code = "12" THEN 
+					income_type_code = "10"
+				ELSEIF income_type_code = "13" THEN 
+					income_type_code = "11"
+				ELSEIF income_type_code = "14" THEN 
+					income_type_code = "12"
+				ELSEIF income_type_code = "15" THEN 
+					income_type_code = "13" 
+				ELSEIF income_type_code = "16" THEN 
+					income_type_code = "14"
+				ELSEIF income_type_code = "17" THEN 
+					income_type_code = "15"
+				ELSEIF income_type_code = "18" THEN 
+					income_type_code = "16"
+				ELSEIF income_type_code = "19" THEN 
+					income_type_code = "17"
+				ELSEIF income_type_code = "20" THEN 	
+					income_type_code = "19"			
+				ELSEIF income_type_code = "22" THEN 
+					income_type_code = "20"
+				ELSEIF income_type_code = "23" THEN 
+					income_type_code = "21"
+				ELSEIF income_type_code = "24" THEN 
+					income_type_code = "22"
+				ELSEIF income_type_code = "25" THEN 
+					income_type_code = "23"
+				ELSEIF income_type_code = "26" THEN 
+					income_type_code = "24"
+				ELSEIF income_type_code = "27" THEN 
+					income_type_code = "25"
+				ELSEIF income_type_code = "28" THEN 
+					income_type_code = "26"
+				ELSEIF income_type_code = "29" THEN 
+					income_type_code = "27"
+				ELSEIF income_type_code = "30" THEN 
+					income_type_code = "28"
+				ELSEIF income_type_code = "31" THEN 
+					income_type_code = "29"
+				ELSEIF income_type_code = "35" THEN 
+					income_type_code = "08"
+				ELSEIF income_type_code = "36" THEN 
+					income_type_code = "05"
+				ELSEIF income_type_code = "37" THEN 
+					income_type_code = "07"
+				ELSEIF income_type_code = "38" THEN 
+					income_type_code = "34"
+				ELSEIF income_type_code = "39" THEN 
+					income_type_code = "36"
+				ELSEIF income_type_code = "40" THEN 
+					income_type_code = "36"
+				ELSEIF income_type_code = "44" THEN 
+					income_type_code = "30"
+				END IF
+				specific_income_type = trim(right(specific_income_type, 17))
 			END IF
 		END IF
 		income_type = specific_income_type
@@ -268,6 +345,14 @@ class income_object
 			script_end_procedure ("Script failed. Case requires updating.")
 		END IF
 		
+		calculate_monthly_income
+	end sub
+	
+	' member function for reading from BUSI
+	public sub read_busi_for_hc
+		are_we_at_busi
+		EMReadScreen income_amt, 8, 12, 69
+		income_multiplier = 1
 		calculate_monthly_income
 	end sub
 	
@@ -372,23 +457,84 @@ FUNCTION calculate_assets(input_array)
 	LOOP UNTIL ButtonPressed = -1
 				
 	'Re-Calculating the values of assets
+	asset_counted_total = 0
+	asset_excluded_total = 0
+	asset_unavailable_total = 0
 	FOR i = 0 TO number_of_assets
 		parallel_array(i, 0) = input_array(i).asset_amount
 		parallel_array(i, 1) = input_array(i).asset_type
 	
-		IF input_array(i).asset_type = "COUNTED" THEN asset_counted_total = asset_counted_total + (input_array(i).asset_amount * 1)
-		IF input_array(i).asset_type = "EXCLUDED" THEN asset_excluded_total = asset_excluded_total + (input_array(i).asset_amount * 1)
-		IF input_array(i).asset_type = "UNAVAILABLE" THEN asset_unavailable_total = asset_unavailable_total + (input_array(i).asset_amount * 1)
+		IF input_array(i).asset_type = "COUNTED" THEN
+			asset_counted_total = asset_counted_total + (input_array(i).asset_amount * 1)
+		ElSEIF input_array(i).asset_type = "EXCLUDED" THEN 
+			asset_excluded_total = asset_excluded_total + (input_array(i).asset_amount * 1)
+		ElSEIF input_array(i).asset_type = "UNAVAILABLE" THEN 
+			asset_unavailable_total = asset_unavailable_total + (input_array(i).asset_amount * 1)
+		END IF
 	NEXT
 		
 	FOR i = 0 TO number_of_assets	
 		CALL input_array(i).set_asset_amount(parallel_array(i, 0))
 		CALL input_array(i).set_asset_type(parallel_array(i, 1))
 	NEXT
+
+	IF asset_counted_total >= 3000 THEN 
+		MsgBox "The client appears to exceed $3,000 in counted assets." & vbNewLine &  "Follow instructions in DHS Bulletin (send DHS-4431 and TIKL for 10 days for return).", vbExclamation
+		script_end_procedure("Script ended.")
+	END IF
 END FUNCTION
 
 FUNCTION calculate_income(input_array)
+	number_of_incomes = ubound(input_array)
+	
+	number_client_incomes = 0
+	number_deemed_incomes = 0
+	
+	FOR i = 0 TO number_of_incomes
+		IF InStr(input_array(i).income_category, "DEEMED") = 0 THEN 
+			number_client_incomes = number_client_incomes + 1
+		ELSEIF InStr(input_array(i).income_category, "DEEMED") <> 0 THEN 
+			number_deemed_incomes = number_deemed_incomes + 1
+		END IF
+	NEXT		
+	
+	'dynamically determining the height of the monthly income dialog
+	height_multiplier = 0
+	IF number_client_incomes >= number_deemed_incomes THEN 
+		height_multiplier = number_client_incomes
+	ELSEIF number_deemed_incomes > number_client_incomes THEN 
+		height_multiplier = number_deemed_incomes
+	END IF
+	
+	dlg_height = 105 + (20 * height_multiplier)
 
+    BeginDialog Dialog1, 0, 0, 461, dlg_height, "Monthly Income"
+	  client_incomes_row = 25
+	  deemed_incomes_row = 25
+	  FOR i = 0 TO number_of_incomes
+		IF InStr(input_array(i).income_category, "DEEMED") = 0 THEN 
+	        Text 15, client_incomes_row, 45, 10, "Income Type:"
+			Text 60, client_incomes_row, 40, 10, input_array(i).income_category
+			Text 105, client_incomes_row, 50, 10, input_array(i).income_type
+			Text 160, client_incomes_row, 40, 10, FormatCurrency(input_array(i).monthly_income_amt)
+			client_incomes_row = client_incomes_row + 20
+		ELSEIF InStr(input_array(i).income_category, "DEEMED") <> 0 THEN   
+	        Text 225, deemed_incomes_row, 45, 10, "Income Type:"
+			Text 275, deemed_incomes_row, 75, 10, input_array(i).income_category
+			Text 355, deemed_incomes_row, 60, 10, input_array(i).income_type
+			Text 420, deemed_incomes_row, 40, 10, FormatCurrency(input_array(i).monthly_income_amt)
+			deemed_incomes_row = deemed_incomes_row + 20
+		END IF
+	  NEXT
+      ButtonGroup ButtonPressed
+        OkButton 345, (dlg_height - 20), 50, 15
+        CancelButton 395, (dlg_height - 20), 50, 15
+      GroupBox 5, 5, 210, (20 + (number_client_incomes * 20)), "Client Income"
+      IF number_deemed_incomes <> 0 THEN GroupBox 220, 5, 240, (20 + (number_deemed_incomes * 20)), "Deemed Income"
+    EndDialog
+
+	DIALOG Dialog1
+		cancel_confirmation	
 END FUNCTION
 
 ' DIALOGS
@@ -563,45 +709,45 @@ CALL calculate_assets(asset_array)
 FOR i = 0 TO ubound(asset_array)
 	IF asset_array(i).asset_type = "COUNTED" 		THEN 
 		IF asset_array(i).asset_panel = "ACCT" THEN 
-			ttl_ACCT_counted = ttl_ACCT_counted + asset_array(i).asset_amount
+			ttl_ACCT_counted = ttl_ACCT_counted + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
-			ttl_CARS_counted = ttl_CARS_counted + asset_array(i).asset_amount
+			ttl_CARS_counted = ttl_CARS_counted + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
-			ttl_CASH_counted = ttl_CASH_counted + asset_array(i).asset_amount
+			ttl_CASH_counted = ttl_CASH_counted + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
-			ttl_OTHR_counted = ttl_OTHR_counted + asset_array(i).asset_amount
+			ttl_OTHR_counted = ttl_OTHR_counted + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "REST" THEN 
-			ttl_REST_counted = ttl_REST_counted + asset_array(i).asset_amount
+			ttl_REST_counted = ttl_REST_counted + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
-			ttl_SECU_counted = ttl_SECU_counted + asset_array(i).asset_amount
+			ttl_SECU_counted = ttl_SECU_counted + (1 * asset_array(i).asset_amount)
 		END IF
 	ELSEIF asset_array(i).asset_type = "EXCLUDED" 		THEN 
 		IF asset_array(i).asset_panel = "ACCT" THEN 
-			ttl_ACCT_excluded = ttl_ACCT_excluded + asset_array(i).asset_amount
+			ttl_ACCT_excluded = ttl_ACCT_excluded + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
-			ttl_CARS_excluded = ttl_CARS_excluded + asset_array(i).asset_amount
+			ttl_CARS_excluded = ttl_CARS_excluded + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
-			ttl_CASH_excluded = ttl_CASH_excluded + asset_array(i).asset_amount
+			ttl_CASH_excluded = ttl_CASH_excluded + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
-			ttl_OTHR_excluded = ttl_OTHR_excluded + asset_array(i).asset_amount
+			ttl_OTHR_excluded = ttl_OTHR_excluded + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "REST" THEN 
-			ttl_REST_excluded = ttl_REST_excluded + asset_array(i).asset_amount
+			ttl_REST_excluded = ttl_REST_excluded + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
-			ttl_SECU_excluded = ttl_SECU_excluded + asset_array(i).asset_amount		
+			ttl_SECU_excluded = ttl_SECU_excluded + (1 * asset_array(i).asset_amount)
 		END IF
 	ELSEIF asset_array(i).asset_type = "UNAVAILABLE" 	THEN 
 		IF asset_array(i).asset_panel = "ACCT" THEN 
-			ttl_ACCT_unavailable = ttl_ACCT_unavailable + asset_array(i).asset_amount
+			ttl_ACCT_unavailable = ttl_ACCT_unavailable + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
-			ttl_CARS_unavailable = ttl_CARS_unavailable + asset_array(i).asset_amount
+			ttl_CARS_unavailable = ttl_CARS_unavailable + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
-			ttl_CASH_unavailable = ttl_CASH_unavailable + asset_array(i).asset_amount
+			ttl_CASH_unavailable = ttl_CASH_unavailable + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
-			ttl_OTHR_unavailable = ttl_OTHR_unavailable + asset_array(i).asset_amount
+			ttl_OTHR_unavailable = ttl_OTHR_unavailable + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "REST" THEN 
-			ttl_REST_unavailable = ttl_REST_unavailable + asset_array(i).asset_amount
+			ttl_REST_unavailable = ttl_REST_unavailable + (1 * asset_array(i).asset_amount)
 		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
-			ttl_SECU_unavailable = ttl_SECU_unavailable + asset_array(i).asset_amount
+			ttl_SECU_unavailable = ttl_SECU_unavailable + (1 * asset_array(i).asset_amount)
 		END IF
 	END IF
 NEXT
@@ -670,17 +816,104 @@ IF number_of_unea <> "0" THEN
 	LOOP
 END IF
 
+
+' asking the user if there is income deeming on this case. 
+'		if the user says YES then the script asks for the household member. 
+'		the script checks to make sure the user did not select the same person as hc_memb
+'		then the script grabs all income information from that individual
+
+is_there_income_deeming = MsgBox ("The script has finished grabbing income information for the client." & vbNewLine & "Is there deeming income on this case?" & vbNewLine & vbTab & "Press YES to get the deemed income." & vbNewLine & vbTab & "Press NO to continue." & vbNewLine & vbTab & "Press CANCEL to stop the script.", vbYesNoCancel + vbInformation)
+IF is_there_income_deeming = vbCancel THEN 	
+	script_end_procedure("Script cancelled.")
+ELSEIF is_there_income_deeming = vbYes THEN 
+	' grabbing the ref num of the deeming individual
+	' and confirming it is not the same as the applicant
+	DO 
+		DO
+			' Getting the individual on the case
+			CALL HH_member_custom_dialog(HH_member_array)
+			IF ubound(HH_member_array) <> 0 THEN MsgBox "Please pick one and only one person for this."
+		LOOP UNTIL ubound(HH_member_array) = 0
+		
+		FOR EACH person in HH_member_array
+			deem_memb = left(person, 2)
+			EXIT FOR
+		NEXT
+		
+		IF hc_memb = deem_memb THEN
+			MsgBox "You have selected the same household member. Pick a different household member whose income will deem.", vbExclamation
+		ELSEIF hc_memb <> deem_memb THEN 
+			EXIT DO
+		END IF
+	LOOP 
+	
+	' ==================
+	' ... JOBS PANEL ...
+	' ==================
+	CALL navigate_to_MAXIS_screen("STAT", "JOBS")
+	EMWriteScreen deem_memb, 20, 76
+	CALL write_value_and_transmit("01", 20, 79)
+	EMReadScreen number_of_jobs, 1, 2, 78
+	IF number_of_jobs <> "0" THEN 
+		DO
+			num_income = num_income + 1
+			redim preserve income_array(num_income)
+			set income_array(num_income) = new income_object
+			CALL income_array(num_income).set_income_category("DEEMED EARNED")
+			income_array(num_income).read_jobs_for_hc
+			income_array(num_income).read_income_type
+			transmit
+			EMReadScreen enter_a_valid, 21, 24, 2
+			IF enter_a_valid = "ENTER A VALID COMMAND" THEN EXIT DO		
+		LOOP
+	END IF
+	
+	' ==================
+	' ... BUSI PANEL ...
+	' ==================
+	CALL navigate_to_MAXIS_screen("STAT", "BUSI")
+	EMWriteScreen deem_memb, 20, 76
+	CALL write_value_and_transmit("01", 20, 79)
+	
+	' =====================
+	' ...unearned income...
+	' =====================
+	
+	' ==================
+	' ... UNEA PANEL ...
+	' ==================
+	CALL navigate_to_MAXIS_screen("STAT", "UNEA")
+	EMWriteScreen deem_memb, 20, 76
+	CALL write_value_and_transmit("01", 20, 79)
+	EMReadScreen number_of_unea, 1, 2, 78
+	IF number_of_unea <> "0" THEN 
+		DO
+			num_income = num_income + 1
+			redim preserve income_array(num_income)
+			set income_array(num_income) = new income_object
+			CALL income_array(num_income).set_income_category("DEEMED UNEARNED")
+			income_array(num_income).read_unea_for_hc
+			income_array(num_income).read_income_type
+			transmit													' }
+			EMReadScreen enter_a_valid, 21, 24, 2						' } navigating to the next UNEA
+			IF enter_a_valid = "ENTER A VALID COMMAND" THEN EXIT DO		' }
+		LOOP
+	END IF	
+END IF
+	
 ' assigning values to the ttl_whatever variables for to FIAT the budget
 FOR i = 0 to ubound(income_array)
 	IF income_array(i).income_category = "UNEARNED" 		THEN ttl_unearned_amt = ttl_unearned_amt + (income_array(i).monthly_income_amt * 1)
 	IF income_array(i).income_category = "EARNED" 			THEN ttl_earned_amt = ttl_earned_amt + (income_array(i).monthly_income_amt * 1)
 	IF income_array(i).income_category = "DEEMED UNEARNED" 	THEN ttl_unearned_deemed = ttl_unearned_deemed + (income_array(i).monthly_income_amt * 1)
-	IF income_array(i).income_category = "DEEMED EARNED" 	THEN ttl_earned_deemed = ttl_earned_deemed + (income_array(i).monthly_income_amt * 1)
+	IF income_array(i).income_category = "DEEMED EARNED" 		THEN ttl_earned_deemed = ttl_earned_deemed + (income_array(i).monthly_income_amt * 1)
 NEXT
+	
+' putting all of our income information into a lovely dialog
+CALL calculate_income(income_array)
 
-
-
-'case noting information to see what we are working with
+' case noting information to see what we are working with
+' this can be deleted when we are done
 CALL navigate_to_MAXIS_screen("CASE", "NOTE")
 PF9
 CALL write_variable_in_case_note("Testing the GRH MSA MA FIAT thingy")
@@ -707,27 +940,31 @@ FOR hhmm_row = 8 to 19
 NEXT
 
 EMReadScreen ma_case, 4, hhmm_row, 26				' }
-IF ma_case <> "_ MA" THEN msgbox "error"			' } looking to see that the client has MA
+IF ma_case <> "_ MA" THEN msgbox "error"				' } looking to see that the client has MA
 
-CALL write_value_and_transmit("X", hhmm_row, 26)	' navigating to BSUM for that client's MA
+CALL write_value_and_transmit("X", hhmm_row, 26)		' navigating to BSUM for that client's MA
 
-PF9													' } 
-msgbox 1											' }
+PF9										' } 
 'checking if FIAT already...						' }
 EMReadScreen cannot_fiat, 20, 24, 2					' }
-IF cannot_fiat <> "PF9 IS NOT PERMITTED" THEN 		' }
-	EMSendKey "04"									' } FIAT 500 for POLICY CHANGE
-	transmit										' } 
-END IF												' }
+IF cannot_fiat <> "PF9 IS NOT PERMITTED" THEN 			' }
+	EMSendKey "04"							' } FIAT 500 for POLICY CHANGE
+	transmit								' } 
+END IF									' }
 
-msgbox 2
-
-'FIAT Millecento Assets
+'FIAT Millecento the Assets
 CALL write_value_and_transmit("X", 7, 17)			' } gets to MAPT
 CALL write_value_and_transmit("X", 7, 3)			' } gets to ASSETS popup
 
-msgbox 3
 
+' wiping existing values...
+FOR row = 10 to 17
+	for col = 35 to 63 step 14
+		EMWriteScreen "__________", row, col
+	next
+NEXT
+
+' writing total counted, excluded, and unavailable amounts
 EMWriteScreen ttl_CASH_counted, 10, 35
 EMWriteScreen ttl_CASH_excluded, 10, 49
 EMWriteScreen ttl_CASH_unavailable, 10, 63
@@ -747,13 +984,13 @@ EMWriteScreen ttl_OTHR_counted, 15, 35
 EMWriteScreen ttl_OTHR_excluded, 15, 49
 EMWriteScreen ttl_OTHR_unavailable, 15, 63
 
-msgbox 4
+msgbox 4.5
 
 transmit
 transmit
 PF3 
 
-' updating budget method away from B
+' updating budget method from X to B
 FOR i = 0 to 5
 	EMWriteScreen "B", 13, (21 + (i * 11))
 	EMWriteScreen "DX", 12, (17 + (i * 11))
@@ -764,10 +1001,83 @@ msgbox 5
 
 ' going through and updating the budget with income and assets
 FOR i = 0 TO 5
-	CALL write_value_and_transmit("X", 9, (21 + (i * 11)))			' pooting the X on the BUDGET field for that month in the benefit period
+	EMWriteScreen "X", 9, (21 + (i * 11))			' pooting the X on the BUDGET field for that month in the benefit period	
 NEXT
 
 msgbox 6
 
 transmit
 
+'The script now needs to go through all the income types to make sure it is putting the correct income type in the correct field...
+	EMWriteScreen "N", 5, 63			' WRITING "N" for PTMA
+	FOR i = 0 TO ubound(income_array)
+		IF income_array(i).income_category = "UNEARNED" THEN 
+			CALL write_value_and_transmit("X", 8, 3)
+			fiat_unea_row = 8
+			DO
+				EMReadScreen blank_space_for_writing, 2, fiat_unea_row, 8
+				IF blank_space_for_writing = "__" THEN EXIT DO
+				fiat_unea_row = fiat_unea_row + 1
+			LOOP
+			EMWriteScreen income_array(i).income_type_code, fiat_unea_row, 8
+			EMWriteScreen income_array(i).monthly_income_amt, fiat_unea_row, 43
+			EMWriteScreen "N", fiat_unea_row, 58
+			msgbox budg_month & vbNewLine & i
+			transmit
+			PF3
+			msgbox budg_month & vbNewLine & i
+		ELSEIF income_array(i).income_category = "EARNED" THEN 
+			CALL write_value_and_transmit("X", 8, 43)
+			fiat_earn_row = 8
+			DO
+				EMReadScreen blank_space_for_writing, 2, fiat_earn_row, 8
+				IF blank_space_for_writing = "__" THEN EXIT DO
+				fiat_earn_row = fiat_earn_row + 1
+			LOOP
+			EMWriteScreen income_array(i).income_type_code, fiat_earn_row, 8
+			EMWriteScreen income_array(i).monthly_income_amt, fiat_earn_row, 43
+			EMWriteScreen "N", fiat_earn_row, 59
+			msgbox budg_month & vbNewLine & i
+			transmit
+			PF3
+			msgbox budg_month & vbNewLine & i
+		ELSEIF income_array(i).income_category = "DEEMED EARNED" THEN 
+			CALL write_value_and_transmit("X", 9, 43)
+			fiat_deem_earn_row = 8
+			DO
+				EMReadScreen blank_space_for_writing, 2, fiat_deem_earn_row, 8
+				IF blank_space_for_writing = "__" THEN EXIT DO
+				fiat_deem_earn_row = fiat_deem_earn_row + 1
+			LOOP
+			EMWriteScreen income_array(i).income_type_code, fiat_deem_earn_row, 8
+			EMWriteScreen income_array(i).monthly_income_amt, fiat_deem_earn_row, 43
+			EMWriteScreen "N", fiat_deem_earn_row, 59
+			msgbox budg_month & vbNewLine & i
+			transmit
+			PF3
+			msgbox budg_month & vbNewLine & i
+		ELSEIF income_array(i).income_category = "DEEMED UNEARNED" THEN 
+			CALL write_value_and_transmit("X", 9, 3)
+			fiat_deem_unea_row = 8
+			DO
+				EMReadScreen blank_space_for_writing, 2, fiat_deem_unea_row, 8
+				IF blank_space_for_writing = "__" THEN EXIT DO
+				fiat_deem_unea_row = fiat_deem_unea_row + 1
+			LOOP
+			EMWriteScreen income_array(i).income_type_code, fiat_deem_unea_row, 8
+			EMWriteScreen income_array(i).monthly_income_amt, fiat_deem_unea_row, 43
+			EMWriteScreen "N", fiat_deem_unea_row, 58
+			msgbox budg_month & vbNewLine & i
+			transmit
+			PF3
+			msgbox budg_month & vbNewLine & i
+		END IF	
+	NEXT
+	for i = 1 to 5
+		EMWriteScreen "N", 5, 63			' WRITING "N" for PTMA
+		transmit
+		msgbox "pause"
+	next
+	
+	
+	script_end_procedure("fin")
