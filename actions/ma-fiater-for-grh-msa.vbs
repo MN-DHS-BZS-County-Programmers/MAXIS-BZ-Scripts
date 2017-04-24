@@ -914,17 +914,15 @@ CALL calculate_income(income_array)
 
 ' case noting information to see what we are working with
 ' this can be deleted when we are done
-CALL navigate_to_MAXIS_screen("CASE", "NOTE")
-PF9
-CALL write_variable_in_case_note("Testing the GRH MSA MA FIAT thingy")
-FOR i = 0 to ubound(asset_array)
-	CALL write_variable_in_case_note(asset_array(i).asset_panel & ": " & formatcurrency(asset_array(i).asset_amount) & ", " & asset_array(i).asset_type)
-NEXT
-
-FOR i = 0 to ubound(income_array)
-	CALL write_variable_in_case_note(income_array(i).income_category & ": " & formatcurrency(income_array(i).monthly_income_amt) & ", " & income_array(i).income_type)
-NEXT
-
+'CALL navigate_to_MAXIS_screen("CASE", "NOTE")
+'PF9
+'CALL write_variable_in_case_note("Testing the GRH MSA MA FIAT thingy")
+'FOR i = 0 to ubound(asset_array)
+'	CALL write_variable_in_case_note(asset_array(i).asset_panel & ": " & formatcurrency(asset_array(i).asset_amount) & ", " & asset_array(i).asset_type)
+'NEXT
+'FOR i = 0 to ubound(income_array)
+'	CALL write_variable_in_case_note(income_array(i).income_category & ": " & formatcurrency(income_array(i).monthly_income_amt) & ", " & income_array(i).income_type)
+'NEXT
 
 msgbox "ready to fiat hc?"
 
