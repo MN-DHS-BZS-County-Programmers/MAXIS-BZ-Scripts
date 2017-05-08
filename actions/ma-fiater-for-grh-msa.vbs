@@ -63,10 +63,26 @@ class asset_object
 	'variables...going to keep them public for to cut down on the work needed to manipulate
 	public asset_panel
 	public asset_amount
+	public asset_counted_amount
+	public asset_excluded_amount
+	public asset_unavailable_amount
 	public asset_type
-	public asset_amount_dialog  ' used for display in the dialog
+	public asset_amount_dialog  	' used for display in the dialog
 	public asset_type_dialog 	' used for the dialog...you'll see
 
+	'private functions for setting asset value
+	public function set_counted_amount(amount)
+		asset_counted_amount = amount
+	end function
+	
+	public function set_excluded_amount(amount)
+		asset_excluded_amount = amount
+	end function
+	
+	public function set_unavailable_amount(amount)
+		asset_unavailable_amount = amount
+	end function
+	
 	' function to read the amount for a specific asset
 	public function read_asset_amount(len, row, col)
 		EMReadScreen asset_amt, len, row, col
@@ -76,8 +92,20 @@ class asset_object
 		IF asset_amt < 0 THEN 																' }
 			MsgBox "ERROR: Asset found with negative balance. The script will now stop."  	' } 
 			stopscript																		' } should probably just have object function reject negative balance
-		END IF																				' }
-		asset_amount = asset_amt
+		END IF
+		IF asset_type = "COUNTED" THEN 
+			CALL set_counted_amount(asset_amt)
+			CALL set_excluded_amount(0)
+			CALL set_unavailable_amount(0)
+		ELSEIF asset_type = "EXCLUDED" THEN 
+			CALL set_counted_amount(0)
+			CALL set_excluded_amount(asset_amt)
+			CALL set_unavailable_amount(0)
+		ELSEIF asset_type = "UNAVAILABLE" THEN 	
+			CALL set_counted_amount(0)
+			CALL set_excluded_amount(0)
+			CALL set_unavailable_amount(asset_amt)
+		END IF
 	end function	
 	
 	' function to read whether the asset is counted
@@ -405,7 +433,7 @@ FUNCTION calculate_assets(input_array)
 	number_of_assets = ubound(input_array)
 	
 	'parralel array for user input
-	redim parallel_array(number_of_assets, 1)	
+	redim parallel_array(number_of_assets, 2)	
 	
 	'determining height of dialog
 	dialog_height = 115 + (20 * number_of_assets)
@@ -416,22 +444,29 @@ FUNCTION calculate_assets(input_array)
 		asset_unavailable_total = 0
 		'calculating the values of the totals...
 		FOR i = 0 TO number_of_assets
-			parallel_array(i, 0) = input_array(i).asset_amount
-			parallel_array(i, 1) = input_array(i).asset_type
+			parallel_array(i, 0) = input_array(i).asset_counted_amount
+			parallel_array(i, 1) = input_array(i).asset_excluded_amount
+			parallel_array(i, 2) = input_array(i).asset_unavailable_amount
+			
+			IF isempty(parallel_array(i, 0)) = true THEN parallel_array(i, 0) = 0
+			IF isempty(parallel_array(i, 1)) = true THEN parallel_array(i, 1) = 0
+			IF isempty(parallel_array(i, 2)) = true THEN parallel_array(i, 2) = 0
 		
-			IF input_array(i).asset_type = "COUNTED" THEN asset_counted_total = asset_counted_total + (input_array(i).asset_amount * 1)
-			IF input_array(i).asset_type = "EXCLUDED" THEN asset_excluded_total = asset_excluded_total + (input_array(i).asset_amount * 1)
-			IF input_array(i).asset_type = "UNAVAILABLE" THEN asset_unavailable_total = asset_unavailable_total + (input_array(i).asset_amount * 1)
+			asset_counted_total = asset_counted_total + (input_array(i).asset_counted_amount * 1)
+			asset_excluded_total = asset_excluded_total + (input_array(i).asset_excluded_amount * 1)
+			asset_unavailable_total = asset_unavailable_total + (input_array(i).asset_unavailable_amount * 1)
 		NEXT
 	
      BeginDialog Dialog1, 0, 0, 385, dialog_height, "Asset Dialog"
-       FOR i = 0 TO number_of_assets
-     	Text 10, 15 + (i * 20), 55, 10, "Asset Panel:"
-     	Text 75, 15 + (i * 20), 40, 10, input_array(i).asset_panel
-     	Text 130, 15 + (i * 20), 35, 10, "Amount:"
-     	EditBox 170, 10 + (i * 20), 65, 15, parallel_array(i, 0)
-     	Text 250, 15 + (i * 20), 45, 10, "Counted?"
-     	DropListBox 305, 10 + (i * 20), 65, 15, "COUNTED"+chr(9)+"EXCLUDED"+chr(9)+"UNAVAILABLE", parallel_array(i, 1)
+       Text 10, 10, 55, 10, "ASSET PANEL"
+	   Text 75, 10, 55, 10, "COUNTED"
+	   Text 130, 10, 55, 10, "EXCLUDED"
+	   Text 185, 10, 55, 10, "UNAVAILABLE"
+	   FOR i = 0 TO number_of_assets
+     	Text 10,  25 + (i * 20), 40, 10, input_array(i).asset_panel
+		EditBox 75,  20 + (i * 20), 40, 15, parallel_array(i, 0)
+		EditBox 130, 20 + (i * 20), 40, 15, parallel_array(i, 1)
+		EditBox 185, 20 + (i * 20), 40, 15, parallel_array(i, 2)
        NEXT
        Text 10, dialog_height - 40, 60, 10, "COUNTED Total:"
        EditBox 70, dialog_height - 45, 50, 15, asset_counted_total & ""
@@ -449,9 +484,14 @@ FUNCTION calculate_assets(input_array)
 			cancel_confirmation
 			IF ButtonPressed = calculator_button THEN
 				'Changing the values of the 
-				FOR i = 0 TO number_of_assets	
-					CALL input_array(i).set_asset_amount(parallel_array(i, 0))
-					CALL input_array(i).set_asset_type(parallel_array(i, 1))
+				FOR i = 0 TO number_of_assets
+					if parallel_array(i, 0) = "" then parallel_array(i, 0) = 0 
+					if parallel_array(i, 1) = "" then parallel_array(i, 1) = 0 
+					if parallel_array(i, 2) = "" then parallel_array(i, 2) = 0 
+					
+					CALL input_array(i).set_counted_amount(parallel_array(i, 0))
+					CALL input_array(i).set_excluded_amount(parallel_array(i, 1))
+					CALL input_array(i).set_unavailable_amount(parallel_array(i, 2))
 				NEXT
 			END IF
 	LOOP UNTIL ButtonPressed = -1
@@ -461,21 +501,17 @@ FUNCTION calculate_assets(input_array)
 	asset_excluded_total = 0
 	asset_unavailable_total = 0
 	FOR i = 0 TO number_of_assets
-		parallel_array(i, 0) = input_array(i).asset_amount
-		parallel_array(i, 1) = input_array(i).asset_type
-	
-		IF input_array(i).asset_type = "COUNTED" THEN
-			asset_counted_total = asset_counted_total + (input_array(i).asset_amount * 1)
-		ElSEIF input_array(i).asset_type = "EXCLUDED" THEN 
-			asset_excluded_total = asset_excluded_total + (input_array(i).asset_amount * 1)
-		ElSEIF input_array(i).asset_type = "UNAVAILABLE" THEN 
-			asset_unavailable_total = asset_unavailable_total + (input_array(i).asset_amount * 1)
-		END IF
-	NEXT
+		IF (parallel_array(i, 0)) = "" THEN parallel_array(i, 0) = 0
+		IF (parallel_array(i, 1)) = "" THEN parallel_array(i, 1) = 0
+		IF (parallel_array(i, 2)) = "" THEN parallel_array(i, 2) = 0
 		
-	FOR i = 0 TO number_of_assets	
-		CALL input_array(i).set_asset_amount(parallel_array(i, 0))
-		CALL input_array(i).set_asset_type(parallel_array(i, 1))
+		asset_counted_total = asset_counted_total + parallel_array(i, 0)			
+		asset_excluded_total = asset_excluded_total + parallel_array(i, 1)			
+		asset_unavailable_total = asset_unavailable_total + parallel_array(i, 2)	
+		
+		CALL input_array(i).set_counted_amount(parallel_array(i, 0))
+		CALL input_array(i).set_excluded_amount(parallel_array(i, 1))
+		CALL input_array(i).set_unavailable_amount(parallel_array(i, 2))		
 	NEXT
 
 	IF asset_counted_total >= 3000 THEN 
@@ -616,9 +652,9 @@ IF num_acct <> "0" THEN 											' }
 		num_assets = num_assets + 1									' }
 		redim preserve asset_array(num_assets)						' } STAT/ACCT
 		set asset_array(num_assets) = new asset_object				' }
-		asset_array(num_assets).set_asset_panel "ACCT"				' }			
+		asset_array(num_assets).set_asset_panel "ACCT"				' }
+		asset_array(num_assets).read_asset_counted 14, 64			' }		
 		asset_array(num_assets).read_asset_amount 8, 10, 46			' }
-		asset_array(num_assets).read_asset_counted 14, 64			' }
 		transmit													' }
 		EMReadScreen enter_a_valid, 21, 24, 2						' }
 		IF enter_a_valid = "ENTER A VALID COMMAND" THEN EXIT DO		' }
@@ -635,9 +671,9 @@ IF number_of_cash <> "0" THEN 										' }
 	num_assets = num_assets + 1										' }
 	redim preserve asset_array(num_assets)							' }
 	set asset_array(num_assets) = new asset_object					' } STAT/CASH	
-	asset_array(num_assets).set_asset_panel "CASH"					' }			
+	asset_array(num_assets).set_asset_panel "CASH"					' }	
+	asset_array(num_assets).set_asset_type "COUNTED"				' }	
 	asset_array(num_assets).read_asset_amount 8, 8, 39				' } 
-	asset_array(num_assets).set_asset_type "COUNTED"				' }
 END IF																' }
 
 ' ==================
@@ -653,8 +689,8 @@ IF number_of_other <> "0" THEN 											' }
 		redim preserve asset_array(num_assets)							' }
 		set asset_array(num_assets) = new asset_object					' } STAT/OTHR
 		asset_array(num_assets).set_asset_panel "OTHR"					' }
-		asset_array(num_assets).read_asset_amount 10, 8, 40				' }
 		asset_array(num_assets).read_asset_counted 12, 64				' }
+		asset_array(num_assets).read_asset_amount 10, 8, 40				' }
 		transmit														' }
 		EMReadScreen enter_a_valid, 21, 24, 2							' }
 		IF enter_a_valid = "ENTER A VALID COMMAND" THEN EXIT DO			' }
@@ -674,8 +710,8 @@ IF number_of_secu <> "0" THEN 											' }
 		redim preserve asset_array(num_assets)							' }	STAT/SECU	
 		set asset_array(num_assets) = new asset_object					' }		
 		CALL asset_array(num_assets).set_asset_panel("SECU")			' }	
-		CALL asset_array(num_assets).read_asset_amount(8, 10, 52)		' }		
-		CALL asset_array(num_assets).read_asset_counted(15, 64)			' }		
+		CALL asset_array(num_assets).read_asset_counted(15, 64)			' }
+		CALL asset_array(num_assets).read_asset_amount(8, 10, 52)		' }			
 		transmit														' }			
 		EMReadScreen enter_a_valid, 21, 24, 2							' }		
 		IF enter_a_valid = "ENTER A VALID COMMAND" THEN EXIT DO			' }		
@@ -695,8 +731,8 @@ IF number_of_cars <> "0" THEN 											' }
 		redim preserve asset_array(num_assets)							' }					
 		set asset_array(num_assets) = new asset_object					' } STAT/CARS					
 		CALL asset_array(num_assets).set_asset_amount("CARS")			' }					
-		CALL asset_array(num_assets).read_asset_amount(8, 9, 45)		' }						
-		CALL asset_array(num_assets).read_asset_counted(15, 76)			' }					
+		CALL asset_array(num_assets).read_asset_counted(15, 76)			' }	
+		CALL asset_array(num_assets).read_asset_amount(8, 9, 45)		' }									
 		transmit														' }							
 		EMReadScreen enter_a_valid, 21, 24, 2							' }										
 		IF enter_a_valid = "ENTER A VALID COMMAND" THEN EXIT DO			' }									
@@ -707,52 +743,98 @@ CALL calculate_assets(asset_array)
 
 ' creating totals for the ttl_whatever variables for to FIAT the assets
 FOR i = 0 TO ubound(asset_array)
-	IF asset_array(i).asset_type = "COUNTED" 		THEN 
-		IF asset_array(i).asset_panel = "ACCT" THEN 
-			ttl_ACCT_counted = ttl_ACCT_counted + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
-			ttl_CARS_counted = ttl_CARS_counted + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
-			ttl_CASH_counted = ttl_CASH_counted + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
-			ttl_OTHR_counted = ttl_OTHR_counted + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "REST" THEN 
-			ttl_REST_counted = ttl_REST_counted + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
-			ttl_SECU_counted = ttl_SECU_counted + (1 * asset_array(i).asset_amount)
-		END IF
-	ELSEIF asset_array(i).asset_type = "EXCLUDED" 		THEN 
-		IF asset_array(i).asset_panel = "ACCT" THEN 
-			ttl_ACCT_excluded = ttl_ACCT_excluded + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
-			ttl_CARS_excluded = ttl_CARS_excluded + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
-			ttl_CASH_excluded = ttl_CASH_excluded + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
-			ttl_OTHR_excluded = ttl_OTHR_excluded + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "REST" THEN 
-			ttl_REST_excluded = ttl_REST_excluded + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
-			ttl_SECU_excluded = ttl_SECU_excluded + (1 * asset_array(i).asset_amount)
-		END IF
-	ELSEIF asset_array(i).asset_type = "UNAVAILABLE" 	THEN 
-		IF asset_array(i).asset_panel = "ACCT" THEN 
-			ttl_ACCT_unavailable = ttl_ACCT_unavailable + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "CARS" THEN 
-			ttl_CARS_unavailable = ttl_CARS_unavailable + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "CASH" THEN 
-			ttl_CASH_unavailable = ttl_CASH_unavailable + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
-			ttl_OTHR_unavailable = ttl_OTHR_unavailable + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "REST" THEN 
-			ttl_REST_unavailable = ttl_REST_unavailable + (1 * asset_array(i).asset_amount)
-		ELSEIF asset_array(i).asset_panel = "SECU" THEN 
-			ttl_SECU_unavailable = ttl_SECU_unavailable + (1 * asset_array(i).asset_amount)
-		END IF
+	IF asset_array(i).asset_panel = "ACCT" THEN 
+		ttl_ACCT_counted = ttl_ACCT_counted + (1 * asset_array(i).asset_counted_amount)
+		ttl_ACCT_excluded = ttl_ACCT_excluded + (1 * asset_array(i).asset_excluded_amount)
+		ttl_ACCT_unavail = ttl_ACCT_unavail + (1 * asset_array(i).asset_unavailable_amount)
+	ELSEIF asset_array(i).asset_panel = "CARS" THEN 
+		ttl_CARS_counted = ttl_CARS_counted + (1 * asset_array(i).asset_amount)
+		ttl_CARS_excluded = ttl_CARS_excluded + (1 * asset_array(i).asset_excluded_amount)
+		ttl_CARS_unavail = ttl_CARS_unavail + (1 * asset_array(i).asset_unavailable_amount)		
+	ELSEIF asset_array(i).asset_panel = "CASH" THEN 
+		ttl_CASH_counted = ttl_CASH_counted + (1 * asset_array(i).asset_amount)
+		ttl_CASH_excluded = ttl_CASH_excluded + (1 * asset_array(i).asset_excluded_amount)
+		ttl_CASH_unavail = ttl_CASH_unavail + (1 * asset_array(i).asset_unavailable_amount)		
+	ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
+		ttl_OTHR_counted = ttl_OTHR_counted + (1 * asset_array(i).asset_amount)
+		ttl_OTHR_excluded = ttl_OTHR_excluded + (1 * asset_array(i).asset_excluded_amount)
+		ttl_OTHR_unavail = ttl_OTHR_unavail + (1 * asset_array(i).asset_unavailable_amount)		
+	ELSEIF asset_array(i).asset_panel = "REST" THEN 
+		ttl_REST_counted = ttl_REST_counted + (1 * asset_array(i).asset_amount)
+		ttl_REST_excluded = ttl_REST_excluded + (1 * asset_array(i).asset_excluded_amount)
+		ttl_REST_unavail = ttl_REST_unavail + (1 * asset_array(i).asset_unavailable_amount)		
+	ELSEIF asset_array(i).asset_panel = "SECU" THEN 
+		ttl_SECU_counted = ttl_SECU_counted + (1 * asset_array(i).asset_amount)
+		ttl_SECU_excluded = ttl_SECU_excluded + (1 * asset_array(i).asset_excluded_amount)
+		ttl_SECU_unavail = ttl_SECU_unavail + (1 * asset_array(i).asset_unavailable_amount)		
 	END IF
 NEXT
 
 CALL check_for_MAXIS(false) 	' checking for MAXIS again again
+
+msgbox "ready to fiat hc?"
+
+CALL check_for_MAXIS(false) 	' checking for MAXIS again again
+
+'The business of FIATing
+CALL navigate_to_MAXIS_screen("ELIG", "HC")
+
+'finding the correct household member
+FOR hhmm_row = 8 to 19
+	EMReadScreen hhmm_pers, 2, hhmm_row, 3
+	IF hhmm_pers = hc_memb THEN EXIT FOR
+NEXT
+
+EMReadScreen ma_case, 4, hhmm_row, 26					' }
+IF ma_case <> "_ MA" THEN msgbox "error"				' } looking to see that the client has MA
+
+CALL write_value_and_transmit("X", hhmm_row, 26)		' navigating to BSUM for that client's MA
+
+PF9													' } 
+'checking if FIAT already...						' }
+EMReadScreen cannot_fiat, 20, 24, 2					' }
+IF cannot_fiat <> "PF9 IS NOT PERMITTED" THEN 		' }
+	EMSendKey "04"									' } FIAT 500 for POLICY CHANGE
+	transmit										' } 
+END IF												' }
+
+'FIAT Millecento the Assets
+CALL write_value_and_transmit("X", 7, 17)			' } gets to MAPT
+CALL write_value_and_transmit("X", 7, 3)			' } gets to ASSETS popup
+
+
+' wiping existing values...
+FOR row = 10 to 17
+	for col = 35 to 63 step 14
+		EMWriteScreen "__________", row, col
+	next
+NEXT
+
+' writing total counted, excluded, and unavailable amounts
+EMWriteScreen ttl_CASH_counted, 10, 35
+EMWriteScreen ttl_CASH_excluded, 10, 49
+EMWriteScreen ttl_CASH_unavailable, 10, 63
+EMWriteScreen ttl_ACCT_counted, 11, 35
+EMWriteScreen ttl_ACCT_excluded, 11, 49
+EMWriteScreen ttl_ACCT_unavailable, 11, 63
+EMWriteScreen ttl_SECU_counted, 12, 35
+EMWriteScreen ttl_SECU_excluded, 12, 49
+EMWriteScreen ttl_SECU_unavailable, 12, 63
+EMWriteScreen ttl_CARS_counted, 13, 35
+EMWriteScreen ttl_CARS_excluded, 13, 49
+EMWriteScreen ttl_CARS_unavailable, 13, 63
+EMWriteScreen ttl_REST_counted, 14, 35
+EMWriteScreen ttl_REST_excluded, 14, 49
+EMWriteScreen ttl_REST_unavailable, 14, 63
+EMWriteScreen ttl_OTHR_counted, 15, 35
+EMWriteScreen ttl_OTHR_excluded, 15, 49
+EMWriteScreen ttl_OTHR_unavailable, 15, 63
+
+msgbox 4.5
+
+transmit
+transmit
+PF3 
 
 ' ==============
 ' ... Income ...
@@ -914,15 +996,16 @@ CALL calculate_income(income_array)
 
 ' case noting information to see what we are working with
 ' this can be deleted when we are done
-'CALL navigate_to_MAXIS_screen("CASE", "NOTE")
-'PF9
-'CALL write_variable_in_case_note("Testing the GRH MSA MA FIAT thingy")
-'FOR i = 0 to ubound(asset_array)
-'	CALL write_variable_in_case_note(asset_array(i).asset_panel & ": " & formatcurrency(asset_array(i).asset_amount) & ", " & asset_array(i).asset_type)
-'NEXT
-'FOR i = 0 to ubound(income_array)
-'	CALL write_variable_in_case_note(income_array(i).income_category & ": " & formatcurrency(income_array(i).monthly_income_amt) & ", " & income_array(i).income_type)
-'NEXT
+CALL navigate_to_MAXIS_screen("CASE", "NOTE")
+PF9
+CALL write_variable_in_case_note("Testing the GRH MSA MA FIAT thingy")
+FOR i = 0 to ubound(asset_array)
+	CALL write_variable_in_case_note(asset_array(i).asset_panel & ": " & formatcurrency(asset_array(i).asset_amount) & ", " & asset_array(i).asset_type)
+NEXT
+
+FOR i = 0 to ubound(income_array)
+	CALL write_variable_in_case_note(income_array(i).income_category & ": " & formatcurrency(income_array(i).monthly_income_amt) & ", " & income_array(i).income_type)
+NEXT
 
 msgbox "ready to fiat hc?"
 
@@ -937,18 +1020,18 @@ FOR hhmm_row = 8 to 19
 	IF hhmm_pers = hc_memb THEN EXIT FOR
 NEXT
 
-EMReadScreen ma_case, 4, hhmm_row, 26				' }
+EMReadScreen ma_case, 4, hhmm_row, 26					' }
 IF ma_case <> "_ MA" THEN msgbox "error"				' } looking to see that the client has MA
 
 CALL write_value_and_transmit("X", hhmm_row, 26)		' navigating to BSUM for that client's MA
 
-PF9										' } 
+PF9													' } 
 'checking if FIAT already...						' }
 EMReadScreen cannot_fiat, 20, 24, 2					' }
-IF cannot_fiat <> "PF9 IS NOT PERMITTED" THEN 			' }
-	EMSendKey "04"							' } FIAT 500 for POLICY CHANGE
-	transmit								' } 
-END IF									' }
+IF cannot_fiat <> "PF9 IS NOT PERMITTED" THEN 		' }
+	EMSendKey "04"									' } FIAT 500 for POLICY CHANGE
+	transmit										' } 
+END IF												' }
 
 'FIAT Millecento the Assets
 CALL write_value_and_transmit("X", 7, 17)			' } gets to MAPT
