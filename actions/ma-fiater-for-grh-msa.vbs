@@ -429,7 +429,7 @@ end class
 
 
 'FUNCTION ======================================
-FUNCTION calculate_assets(input_array)
+FUNCTION calculate_assets(input_array, asset_counted_total)
 	number_of_assets = ubound(input_array)
 	
 	'parralel array for user input
@@ -513,11 +513,6 @@ FUNCTION calculate_assets(input_array)
 		CALL input_array(i).set_excluded_amount(parallel_array(i, 1))
 		CALL input_array(i).set_unavailable_amount(parallel_array(i, 2))		
 	NEXT
-
-	IF asset_counted_total >= 3000 THEN 
-		MsgBox "The client appears to exceed $3,000 in counted assets." & vbNewLine &  "Follow instructions in DHS Bulletin (send DHS-4431 and TIKL for 10 days for return).", vbExclamation
-		script_end_procedure("Script ended.")
-	END IF
 END FUNCTION
 
 FUNCTION calculate_income(input_array)
@@ -739,32 +734,32 @@ IF number_of_cars <> "0" THEN 											' }
 	LOOP																' }							
 END IF																	' }			
 
-CALL calculate_assets(asset_array)
+CALL calculate_assets(asset_array, asset_counted_total)
 
 ' creating totals for the ttl_whatever variables for to FIAT the assets
 FOR i = 0 TO ubound(asset_array)
 	IF asset_array(i).asset_panel = "ACCT" THEN 
-		ttl_ACCT_counted = ttl_ACCT_counted + (1 * asset_array(i).asset_counted_amount)
+		ttl_ACCT_counted = ttl_ACCT_counted +   (1 * asset_array(i).asset_counted_amount)
 		ttl_ACCT_excluded = ttl_ACCT_excluded + (1 * asset_array(i).asset_excluded_amount)
-		ttl_ACCT_unavail = ttl_ACCT_unavail + (1 * asset_array(i).asset_unavailable_amount)
+		ttl_ACCT_unavail = ttl_ACCT_unavail +   (1 * asset_array(i).asset_unavailable_amount)
 	ELSEIF asset_array(i).asset_panel = "CARS" THEN 
-		ttl_CARS_counted = ttl_CARS_counted + (1 * asset_array(i).asset_amount)
+		ttl_CARS_counted = ttl_CARS_counted +   (1 * asset_array(i).asset_counted_amount)
 		ttl_CARS_excluded = ttl_CARS_excluded + (1 * asset_array(i).asset_excluded_amount)
-		ttl_CARS_unavail = ttl_CARS_unavail + (1 * asset_array(i).asset_unavailable_amount)		
+		ttl_CARS_unavail = ttl_CARS_unavail +   (1 * asset_array(i).asset_unavailable_amount)		
 	ELSEIF asset_array(i).asset_panel = "CASH" THEN 
-		ttl_CASH_counted = ttl_CASH_counted + (1 * asset_array(i).asset_amount)
+		ttl_CASH_counted = ttl_CASH_counted + (1 * asset_array(i).asset_counted_amount)
 		ttl_CASH_excluded = ttl_CASH_excluded + (1 * asset_array(i).asset_excluded_amount)
 		ttl_CASH_unavail = ttl_CASH_unavail + (1 * asset_array(i).asset_unavailable_amount)		
 	ELSEIF asset_array(i).asset_panel = "OTHR" THEN 
-		ttl_OTHR_counted = ttl_OTHR_counted + (1 * asset_array(i).asset_amount)
+		ttl_OTHR_counted = ttl_OTHR_counted + (1 * asset_array(i).asset_counted_amount)
 		ttl_OTHR_excluded = ttl_OTHR_excluded + (1 * asset_array(i).asset_excluded_amount)
 		ttl_OTHR_unavail = ttl_OTHR_unavail + (1 * asset_array(i).asset_unavailable_amount)		
 	ELSEIF asset_array(i).asset_panel = "REST" THEN 
-		ttl_REST_counted = ttl_REST_counted + (1 * asset_array(i).asset_amount)
+		ttl_REST_counted = ttl_REST_counted + (1 * asset_array(i).asset_counted_amount)
 		ttl_REST_excluded = ttl_REST_excluded + (1 * asset_array(i).asset_excluded_amount)
 		ttl_REST_unavail = ttl_REST_unavail + (1 * asset_array(i).asset_unavailable_amount)		
 	ELSEIF asset_array(i).asset_panel = "SECU" THEN 
-		ttl_SECU_counted = ttl_SECU_counted + (1 * asset_array(i).asset_amount)
+		ttl_SECU_counted = ttl_SECU_counted + (1 * asset_array(i).asset_counted_amount)
 		ttl_SECU_excluded = ttl_SECU_excluded + (1 * asset_array(i).asset_excluded_amount)
 		ttl_SECU_unavail = ttl_SECU_unavail + (1 * asset_array(i).asset_unavailable_amount)		
 	END IF
@@ -835,6 +830,11 @@ msgbox 4.5
 transmit
 transmit
 PF3 
+
+IF asset_counted_total >= 3000 THEN 
+	MsgBox "The client appears to exceed $3,000 in counted assets." & vbNewLine &  "Follow instructions in DHS Bulletin (send DHS-4431 and TIKL for 10 days for return).", vbExclamation
+	script_end_procedure("Script ended.")
+END IF
 
 ' ==============
 ' ... Income ...
@@ -988,7 +988,7 @@ FOR i = 0 to ubound(income_array)
 	IF income_array(i).income_category = "UNEARNED" 		THEN ttl_unearned_amt = ttl_unearned_amt + (income_array(i).monthly_income_amt * 1)
 	IF income_array(i).income_category = "EARNED" 			THEN ttl_earned_amt = ttl_earned_amt + (income_array(i).monthly_income_amt * 1)
 	IF income_array(i).income_category = "DEEMED UNEARNED" 	THEN ttl_unearned_deemed = ttl_unearned_deemed + (income_array(i).monthly_income_amt * 1)
-	IF income_array(i).income_category = "DEEMED EARNED" 		THEN ttl_earned_deemed = ttl_earned_deemed + (income_array(i).monthly_income_amt * 1)
+	IF income_array(i).income_category = "DEEMED EARNED" 	THEN ttl_earned_deemed = ttl_earned_deemed + (income_array(i).monthly_income_amt * 1)
 NEXT
 	
 ' putting all of our income information into a lovely dialog
@@ -1090,75 +1090,75 @@ msgbox 6
 transmit
 
 'The script now needs to go through all the income types to make sure it is putting the correct income type in the correct field...
-	EMWriteScreen "N", 5, 63			' WRITING "N" for PTMA
-	FOR i = 0 TO ubound(income_array)
-		IF income_array(i).income_category = "UNEARNED" THEN 
-			CALL write_value_and_transmit("X", 8, 3)
-			fiat_unea_row = 8
-			DO
-				EMReadScreen blank_space_for_writing, 2, fiat_unea_row, 8
-				IF blank_space_for_writing = "__" THEN EXIT DO
-				fiat_unea_row = fiat_unea_row + 1
-			LOOP
-			EMWriteScreen income_array(i).income_type_code, fiat_unea_row, 8
-			EMWriteScreen income_array(i).monthly_income_amt, fiat_unea_row, 43
-			EMWriteScreen "N", fiat_unea_row, 58
-			msgbox budg_month & vbNewLine & i
-			transmit
-			PF3
-			msgbox budg_month & vbNewLine & i
-		ELSEIF income_array(i).income_category = "EARNED" THEN 
-			CALL write_value_and_transmit("X", 8, 43)
-			fiat_earn_row = 8
-			DO
-				EMReadScreen blank_space_for_writing, 2, fiat_earn_row, 8
-				IF blank_space_for_writing = "__" THEN EXIT DO
-				fiat_earn_row = fiat_earn_row + 1
-			LOOP
-			EMWriteScreen income_array(i).income_type_code, fiat_earn_row, 8
-			EMWriteScreen income_array(i).monthly_income_amt, fiat_earn_row, 43
-			EMWriteScreen "N", fiat_earn_row, 59
-			msgbox budg_month & vbNewLine & i
-			transmit
-			PF3
-			msgbox budg_month & vbNewLine & i
-		ELSEIF income_array(i).income_category = "DEEMED EARNED" THEN 
-			CALL write_value_and_transmit("X", 9, 43)
-			fiat_deem_earn_row = 8
-			DO
-				EMReadScreen blank_space_for_writing, 2, fiat_deem_earn_row, 8
-				IF blank_space_for_writing = "__" THEN EXIT DO
-				fiat_deem_earn_row = fiat_deem_earn_row + 1
-			LOOP
-			EMWriteScreen income_array(i).income_type_code, fiat_deem_earn_row, 8
-			EMWriteScreen income_array(i).monthly_income_amt, fiat_deem_earn_row, 43
-			EMWriteScreen "N", fiat_deem_earn_row, 59
-			msgbox budg_month & vbNewLine & i
-			transmit
-			PF3
-			msgbox budg_month & vbNewLine & i
-		ELSEIF income_array(i).income_category = "DEEMED UNEARNED" THEN 
-			CALL write_value_and_transmit("X", 9, 3)
-			fiat_deem_unea_row = 8
-			DO
-				EMReadScreen blank_space_for_writing, 2, fiat_deem_unea_row, 8
-				IF blank_space_for_writing = "__" THEN EXIT DO
-				fiat_deem_unea_row = fiat_deem_unea_row + 1
-			LOOP
-			EMWriteScreen income_array(i).income_type_code, fiat_deem_unea_row, 8
-			EMWriteScreen income_array(i).monthly_income_amt, fiat_deem_unea_row, 43
-			EMWriteScreen "N", fiat_deem_unea_row, 58
-			msgbox budg_month & vbNewLine & i
-			transmit
-			PF3
-			msgbox budg_month & vbNewLine & i
-		END IF	
-	NEXT
-	for i = 1 to 5
-		EMWriteScreen "N", 5, 63			' WRITING "N" for PTMA
+EMWriteScreen "N", 5, 63			' WRITING "N" for PTMA
+FOR i = 0 TO ubound(income_array)
+	IF income_array(i).income_category = "UNEARNED" THEN 
+		CALL write_value_and_transmit("X", 8, 3)
+		fiat_unea_row = 8
+		DO
+			EMReadScreen blank_space_for_writing, 2, fiat_unea_row, 8
+			IF blank_space_for_writing = "__" THEN EXIT DO
+			fiat_unea_row = fiat_unea_row + 1
+		LOOP
+		EMWriteScreen income_array(i).income_type_code, fiat_unea_row, 8
+		EMWriteScreen income_array(i).monthly_income_amt, fiat_unea_row, 43
+		EMWriteScreen "N", fiat_unea_row, 58
+		msgbox budg_month & vbNewLine & i
 		transmit
-		msgbox "pause"
-	next
-	
-	
-	script_end_procedure("fin")
+		PF3
+		msgbox budg_month & vbNewLine & i
+	ELSEIF income_array(i).income_category = "EARNED" THEN 
+		CALL write_value_and_transmit("X", 8, 43)
+		fiat_earn_row = 8
+		DO
+			EMReadScreen blank_space_for_writing, 2, fiat_earn_row, 8
+			IF blank_space_for_writing = "__" THEN EXIT DO
+			fiat_earn_row = fiat_earn_row + 1
+		LOOP
+		EMWriteScreen income_array(i).income_type_code, fiat_earn_row, 8
+		EMWriteScreen income_array(i).monthly_income_amt, fiat_earn_row, 43
+		EMWriteScreen "N", fiat_earn_row, 59
+		msgbox budg_month & vbNewLine & i
+		transmit
+		PF3
+		msgbox budg_month & vbNewLine & i
+	ELSEIF income_array(i).income_category = "DEEMED EARNED" THEN 
+		CALL write_value_and_transmit("X", 9, 43)
+		fiat_deem_earn_row = 8
+		DO
+			EMReadScreen blank_space_for_writing, 2, fiat_deem_earn_row, 8
+			IF blank_space_for_writing = "__" THEN EXIT DO
+			fiat_deem_earn_row = fiat_deem_earn_row + 1
+		LOOP
+		EMWriteScreen income_array(i).income_type_code, fiat_deem_earn_row, 8
+		EMWriteScreen income_array(i).monthly_income_amt, fiat_deem_earn_row, 43
+		EMWriteScreen "N", fiat_deem_earn_row, 59
+		msgbox budg_month & vbNewLine & i
+		transmit
+		PF3
+		msgbox budg_month & vbNewLine & i
+	ELSEIF income_array(i).income_category = "DEEMED UNEARNED" THEN 
+		CALL write_value_and_transmit("X", 9, 3)
+		fiat_deem_unea_row = 8
+		DO
+			EMReadScreen blank_space_for_writing, 2, fiat_deem_unea_row, 8
+			IF blank_space_for_writing = "__" THEN EXIT DO
+			fiat_deem_unea_row = fiat_deem_unea_row + 1
+		LOOP
+		EMWriteScreen income_array(i).income_type_code, fiat_deem_unea_row, 8
+		EMWriteScreen income_array(i).monthly_income_amt, fiat_deem_unea_row, 43
+		EMWriteScreen "N", fiat_deem_unea_row, 58
+		msgbox budg_month & vbNewLine & i
+		transmit
+		PF3
+		msgbox budg_month & vbNewLine & i
+	END IF	
+NEXT
+for i = 1 to 5
+	EMWriteScreen "N", 5, 63			' WRITING "N" for PTMA
+	transmit
+	msgbox "pause"
+next
+
+
+script_end_procedure("fin")
