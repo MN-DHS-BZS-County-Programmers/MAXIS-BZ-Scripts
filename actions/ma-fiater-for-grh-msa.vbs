@@ -147,6 +147,7 @@ class income_object
 	public income_start_date
 	public income_end_date
 	public budget_month
+	public COLA_amount 'COLA Disregard amount read from panel'
 	private pay_freq				' read from the panel...private because it is only used to calculate the monthly values
 	private income_multiplier		' extrapolated from the pay_freq...private because it is only used to calculate the monthly values
 
@@ -348,45 +349,60 @@ class income_object
 	' member functions for reading from JOBS
 	public sub read_jobs_for_hc
 		are_we_at_jobs
+		'add check for end date'
 		row = 1
 		col = 1
-		EMSearch "HC Income Estimate", row, col
-		IF row = 0 THEN
-			row = 1
-			col = 1
-			EMSearch "_ HC Est", row, col
-			CALL write_value_and_transmit("X", row, col)
-		END IF
-		EMReadScreen hc_jobs_amount, 8, 11, 63
-		hc_jobs_amount = replace(hc_jobs_amount, "_", "")
-		hc_jobs_amount = trim(hc_jobs_amount)
-		IF hc_jobs_amount = "" THEN hc_jobs_amount = 0.00
-		transmit
-		income_amt = hc_jobs_amount
-'THIS PROBABLY DON"T WORK RIGHT - needs to calculate future paydates and budget multiple paycheck months correctly
-		'reading pay frequency
-		EMReadScreen pay_freq, 1, 18, 35
-		IF pay_freq = "1" THEN
-			income_multiplier = 1
-			income_frequency = "MONTHLY"
-		ELSEIF pay_freq = "2" THEN
-			income_multiplier = 2
-			income_frequency = "SEMI-MONTHLY"
-		ELSEIF pay_freq = "3" THEN
-			income_multiplier = 2.16
-			income_frequency = "BI-WEEKLY"
-		ELSEIF pay_freq = "4" THEN
-			income_multiplier = 4.3
-			income_frequency = "WEEKLY"
-		ELSEIF pay_freq = "5" THEN
-			income_multiplier = 1
-			income_multiplier = "OTHER/MONTHLY"
-		ELSEIF pay_freq = "_" THEN
-			msgbox "The script cannot continue. This case needs a pay frequency on JOBS. THe script will now stop.", vbCritical
-			script_end_procedure ("Script failed. Case requires updating.")
+		If budg_month >= current_plus_one THEN 'This section reads the HC income estimator for calculating future months'
+			EMSearch "HC Income Estimate", row, col
+			IF row = 0 THEN
+				row = 1
+				col = 1
+				EMSearch "_ HC Est", row, col
+				CALL write_value_and_transmit("X", row, col)
+			END IF
+			EMReadScreen hc_jobs_amount, 8, 11, 63
+			hc_jobs_amount = replace(hc_jobs_amount, "_", "")
+			hc_jobs_amount = trim(hc_jobs_amount)
+			IF hc_jobs_amount = "" THEN hc_jobs_amount = 0.00
+			transmit
 		END IF
 
-		calculate_monthly_income
+		'This section reads the actual amounts from the prospective side of JOBS
+		EMReadScreen pay_date_1, 8, 12, 54 'We use the paydate to determine future amounts
+		income_amt = 0.00 'reset
+		For wage_row =  12 to 16
+			EMReadScreen actual_gross, 8, wage_row, 67
+			actual_gross = replace(actual_gross, "_", "")
+			actual_gross = trim(actual_gross)
+			IF actual_gross <> "" THEN income_amt = income_amt + actual_gross
+			'msgbox income_amt
+		NEXT
+		'Now figure out the future months
+		IF budg_month > current_plus_one THEN
+			EMReadScreen pay_freq, 1, 18, 35
+			IF pay_freq = 1 THEN paydates_in_budg_month = 1
+			IF pay_freq = 2 THEN paydates_in_budg_month = 2
+			IF pay_freq = 3 THEN
+				paydate_to_check = cdate(pay_date_1)
+				paydates_in_budg_month = 0
+				DO 'this loop counts the paydates in a month
+			 		paydate_to_check = dateadd("d", 14, paydate_to_check) 'add two weeks'
+					if datepart("m", paydate_to_check) = datepart("m", budg_month) THEN paydates_in_budg_month = paydates_in_budg_month +1
+				LOOP UNTIL paydate_to_check >= cdate(dateadd("m", 1, budg_month))
+			END IF
+			IF pay_freq = 4 THEN
+				paydate_to_check = cdate(pay_date_1)
+				paydates_in_budg_month = 0
+				DO 'this loop counts the paydates in a month
+					paydate_to_check = dateadd("d", 7, paydate_to_check) 'add one weeks'
+					if datepart("m", paydate_to_check) = datepart("m", budg_month) THEN paydates_in_budg_month = paydates_in_budg_month +1
+				LOOP UNTIL paydate_to_check >= cdate(dateadd("m", 1, budg_month))
+			END IF
+			income_amt = hc_jobs_amount * paydates_in_budg_month
+		END IF
+
+		monthly_income_amt = income_amt
+		'calculate_monthly_income
 	end sub
 
 	' member function for reading from BUSI
@@ -400,53 +416,58 @@ class income_object
 	' member functions for reading from UNEA
 	public sub read_unea_for_hc
 		are_we_at_unea
-		check_footer_month 'make sure this isn't CM+1
-		if panel_in_plus_one = true THEN
+		'check_footer_month 'make sure this isn't CM+1
+		'row = 1
+		'col = 1
+		If budg_month >= current_plus_one THEN 'This section reads the HC income estimator for calculating future months'
 			row = 1
 			col = 1
 			EMSearch "_ HC Income Estimate", row, col
 			IF row <> 0 THEN CALL write_value_and_transmit("X", row, col)
-			msgbox "reading from popup"
+			'msgbox "reading from popup"
 			EMReadScreen hc_income_info, 8, 9, 65
 			EMReadScreen hc_inc_est_pay_freq, 1, 10, 63
 			hc_income_info = replace(hc_income_info, "_", "")
 			hc_income_info = trim(hc_income_info)
 			IF hc_income_info = "" THEN hc_income_info = 0.00
-
-			'reading pay frequency
-			EMReadScreen pay_freq, 1, 10, 63
-			IF pay_freq = "1" THEN
-				income_multiplier = 1
-				income_frequency = "MONTHLY"
-			ELSEIF pay_freq = "2" THEN
-				income_multiplier = 2
-				income_frequency = "SEMI-MONTHLY"
-			ELSEIF pay_freq = "3" THEN
-				income_multiplier = 2.16
-				income_frequency = "BI-WEEKLY"
-			ELSEIF pay_freq = "4" THEN
-				income_multiplier = 4.3
-				income_frequency = "WEEKLY"
-			ELSEIF pay_freq = "5" THEN
-				income_multiplier = 1
-				income_multiplier = "OTHER/MONTHLY"
-			ELSEIF pay_freq = "_" THEN
-				msgbox "The script cannot continue. This case needs a pay frequency on JOBS. THe script will now stop.", vbCritical
-				script_end_procedure ("Script failed. Case requires updating.")
-			END IF
-
-		transmit							' } to close the pop-up
-		ELSE 'Read directly from panel if in CM or previous
-			hc_income_info = 0.00
-			income_multiplier = 1
-			for prosp_row = 13 to 17
-				EMReadScreen prosp_amount, 8, prosp_row, 68
-				IF isnumeric(prosp_amount) = True THEN hc_income_info = hc_income_info + prosp_amount
-			next
+			transmit
 		END IF
-		income_amt = hc_income_info			' } assigning value
-
-		calculate_monthly_income
+		'Read a COLA disregard amount if it exists
+		EMReadScreen COLA_amount, 8, 10, 67
+		IF isnumeric(COLA_amount) = false THEN COLA_amount = 0.00
+		'This section reads the actual amounts from the prospective side of UNEA
+		EMReadScreen pay_date_1, 8, 13, 68 'We use the paydate to determine future amounts
+		income_amt = 0.00 'reset
+		For unea_row =  13 to 17
+			EMReadScreen actual_gross, 8, unea_row, 68
+			actual_gross = replace(actual_gross, "_", "")
+			actual_gross = trim(actual_gross)
+			IF actual_gross <> "" THEN income_amt = income_amt + actual_gross
+			'msgbox income_amt
+		NEXT
+		'Now figure out the future months
+		IF budg_month > current_plus_one THEN
+			IF hc_inc_est_pay_freq = 1 THEN paydates_in_budg_month = 1
+			IF hc_inc_est_pay_freq = 2 THEN paydates_in_budg_month = 2
+			IF hc_inc_est_pay_freq = 3 THEN
+				paydate_to_check = cdate(pay_date_1)
+				paydates_in_budg_month = 0
+				DO 'this loop counts the paydates in a month
+					paydate_to_check = dateadd("d", 14, paydate_to_check) 'add two weeks'
+					if datepart("m", paydate_to_check) = datepart("m", budg_month) THEN paydates_in_budg_month = paydates_in_budg_month +1
+				LOOP UNTIL paydate_to_check >= cdate(dateadd("m", 1, budg_month))
+			END IF
+			IF hc_inc_est_pay_freq = 4 THEN
+				paydate_to_check = cdate(pay_date_1)
+				paydates_in_budg_month = 0
+				DO 'this loop counts the paydates in a month
+					paydate_to_check = dateadd("d", 7, paydate_to_check) 'add one weeks'
+					if datepart("m", paydate_to_check) = datepart("m", budg_month) THEN paydates_in_budg_month = paydates_in_budg_month +1
+				LOOP UNTIL paydate_to_check >= cdate(dateadd("m", 1, budg_month))
+			END IF
+			income_amt = hc_income_info * paydates_in_budg_month
+		END IF
+		monthly_income_amt = income_amt
 	end sub
 end class
 
@@ -803,7 +824,6 @@ NEXT
 
 CALL check_for_MAXIS(false) 	' checking for MAXIS again again
 
-msgbox "ready to fiat hc?"
 
 CALL check_for_MAXIS(false) 	' checking for MAXIS again again
 
@@ -861,7 +881,6 @@ EMWriteScreen ttl_OTHR_counted, 15, 35
 EMWriteScreen ttl_OTHR_excluded, 15, 49
 EMWriteScreen ttl_OTHR_unavailable, 15, 63
 
-msgbox 4.5
 
 transmit
 transmit
@@ -891,11 +910,11 @@ current_month = datepart("m", date) & "/1/" & datepart("yyyy", date)
 
 'We loop through the panels six times, starting with the oldest month in the budget span we wish to FIAT.'
 budg_month = initial_month
-current_plus_one = datepart("m", dateadd("m", 1, date)) & "/01/" & datepart("yyyy", dateadd("m", 1, date))
+current_plus_one = cdate(datepart("m", dateadd("m", 1, date)) & "/01/" & datepart("yyyy", dateadd("m", 1, date)))
 For month_add = 0 to 5
 	'Set the footer month for the current LOOP
 budg_month = dateadd("m", month_add, initial_month)
-msgbox budg_month
+
 maxis_footer_month = datepart("m", budg_month)
 if len(maxis_footer_month) = 1 THEN maxis_footer_month = "0" & maxis_footer_month
 maxis_footer_year = right(datepart("yyyy", budg_month), 2)
@@ -1071,18 +1090,17 @@ if len(maxis_footer_month) = 1 THEN maxis_footer_month = "0" & maxis_footer_mont
 
 ' case noting information to see what we are working with
 ' this can be deleted when we are done
-CALL navigate_to_MAXIS_screen("CASE", "NOTE")
-PF9
-CALL write_variable_in_case_note("Testing the GRH MSA MA FIAT thingy")
-FOR i = 0 to ubound(asset_array)
-	CALL write_variable_in_case_note(asset_array(i).asset_panel & ": " & formatcurrency(asset_array(i).asset_amount) & ", " & asset_array(i).asset_type)
-NEXT
+'CALL navigate_to_MAXIS_screen("CASE", "NOTE")
+'PF9
+'CALL write_variable_in_case_note("Testing the GRH MSA MA FIAT thingy")
+'FOR i = 0 to ubound(asset_array)
+'	CALL write_variable_in_case_note(asset_array(i).asset_panel & ": " & formatcurrency(asset_array(i).asset_amount) & ", " & asset_array(i).asset_type)
+'NEXT
+'
+'FOR i = 0 to ubound(income_array)
+'	CALL write_variable_in_case_note(income_array(i).income_category & ": " & formatcurrency(income_array(i).monthly_income_amt) & ", " & income_array(i).income_type)
+'NEXT
 
-FOR i = 0 to ubound(income_array)
-	CALL write_variable_in_case_note(income_array(i).income_category & ": " & formatcurrency(income_array(i).monthly_income_amt) & ", " & income_array(i).income_type)
-NEXT
-
-msgbox "ready to fiat hc?"
 
 CALL check_for_MAXIS(false) 	' checking for MAXIS again again
 
@@ -1103,7 +1121,7 @@ CALL write_value_and_transmit("X", hhmm_row, 26)		' navigating to BSUM for that 
 'Make sure this is the correct type of case'
 EMReadScreen method_check, 55, 13, 21
 method_check = replace(method_check, " ", "")
-IF method_check <> "XXXXXX" THEN script_end_procedure("This is not an auto-ma case for the entire budget period, please process manually.  The script will now stop.")
+'IF method_check <> "XXXXXX" THEN script_end_procedure("This is not an auto-ma case for the entire budget period, please process manually.  The script will now stop.")
 
 PF9													' }
 'checking if FIAT already...						' }
@@ -1112,44 +1130,6 @@ IF cannot_fiat <> "PF9 IS NOT PERMITTED" THEN 		' }
 	EMSendKey "04"									' } FIAT 500 for POLICY CHANGE
 	transmit										' }
 END IF												' }
-
-'FIAT Millecento the Assets
-CALL write_value_and_transmit("X", 7, 17)			' } gets to MAPT
-CALL write_value_and_transmit("X", 7, 3)			' } gets to ASSETS popup
-
-
-' wiping existing values...
-FOR row = 10 to 17
-	for col = 35 to 63 step 14
-		EMWriteScreen "__________", row, col
-	next
-NEXT
-
-' writing total counted, excluded, and unavailable amounts
-EMWriteScreen ttl_CASH_counted, 10, 35
-EMWriteScreen ttl_CASH_excluded, 10, 49
-EMWriteScreen ttl_CASH_unavailable, 10, 63
-EMWriteScreen ttl_ACCT_counted, 11, 35
-EMWriteScreen ttl_ACCT_excluded, 11, 49
-EMWriteScreen ttl_ACCT_unavailable, 11, 63
-EMWriteScreen ttl_SECU_counted, 12, 35
-EMWriteScreen ttl_SECU_excluded, 12, 49
-EMWriteScreen ttl_SECU_unavailable, 12, 63
-EMWriteScreen ttl_CARS_counted, 13, 35
-EMWriteScreen ttl_CARS_excluded, 13, 49
-EMWriteScreen ttl_CARS_unavailable, 13, 63
-EMWriteScreen ttl_REST_counted, 14, 35
-EMWriteScreen ttl_REST_excluded, 14, 49
-EMWriteScreen ttl_REST_unavailable, 14, 63
-EMWriteScreen ttl_OTHR_counted, 15, 35
-EMWriteScreen ttl_OTHR_excluded, 15, 49
-EMWriteScreen ttl_OTHR_unavailable, 15, 63
-
-msgbox 4.5
-
-transmit
-transmit
-PF3
 
 'This willenter the income standard and method.
 
@@ -1198,10 +1178,16 @@ FOR i = 0 TO ubound(income_array)
 		EMWriteScreen income_array(i).income_type_code, fiat_unea_row, 8
 		EMWriteScreen income_array(i).monthly_income_amt, fiat_unea_row, 43
 		EMWriteScreen income_exclusion_code, fiat_unea_row, 58
-		msgbox budg_month & vbNewLine & i
 		transmit
 		PF3
-		msgbox budg_month & vbNewLine & i
+		'Write the COLA if appropriate'
+		IF income_array(i).COLA_amount > 0 AND datepart("M", current_budg_month) < 7 THEN
+			EMWriteScreen "X", 11, 3
+			transmit
+			EMWriteScreen income_array(i).COLA_amount, 14, 43
+			transmit
+			PF3
+		END IF
 	ELSEIF income_array(i).income_category = "EARNED" THEN
 		CALL write_value_and_transmit("X", 8, 43)
 		fiat_earn_row = 8
@@ -1213,10 +1199,8 @@ FOR i = 0 TO ubound(income_array)
 		EMWriteScreen income_array(i).income_type_code, fiat_earn_row, 8
 		EMWriteScreen income_array(i).monthly_income_amt, fiat_earn_row, 43
 		EMWriteScreen income_exclusion_code, fiat_earn_row, 59
-		msgbox budg_month & vbNewLine & i
 		transmit
 		PF3
-		msgbox budg_month & vbNewLine & i
 	ELSEIF income_array(i).income_category = "DEEMED EARNED" THEN
 		CALL write_value_and_transmit("X", 9, 43)
 		fiat_deem_earn_row = 8
@@ -1228,10 +1212,8 @@ FOR i = 0 TO ubound(income_array)
 		EMWriteScreen income_array(i).income_type_code, fiat_deem_earn_row, 8
 		EMWriteScreen income_array(i).monthly_income_amt, fiat_deem_earn_row, 43
 		EMWriteScreen "N", fiat_deem_earn_row, 59
-		msgbox budg_month & vbNewLine & i
 		transmit
 		PF3
-		msgbox budg_month & vbNewLine & i
 	ELSEIF income_array(i).income_category = "DEEMED UNEARNED" THEN
 		CALL write_value_and_transmit("X", 9, 3)
 		fiat_deem_unea_row = 8
@@ -1247,19 +1229,72 @@ FOR i = 0 TO ubound(income_array)
 		ELSE
 		 EMWriteScreen "N", fiat_deem_unea_row, 58
 		END IF
-		msgbox budg_month & vbNewLine & i
 		transmit
 		PF3
-		msgbox budg_month & vbNewLine & i
+		'Write the COLA if appropriate'
+		IF income_array(i).COLA_amount > 0 AND datepart("M", budg_month) < 7 THEN
+			EMWriteScreen "X", 11, 3
+			transmit
+			EMWriteScreen income_array(i).COLA_amount, 14, 43
+			transmit
+			PF3
+		END IF
 	END IF
 	END IF
 NEXT
 transmit
+
 NEXT 'closing out the chicken loop'
+
+'Now enter assets
+
+'FIAT Millecento the Assets
+For i = 1 to 6 'mark the person tests'
+EMWriteScreen "X", 7, (i*11) + 6
+Next
+transmit
+
+DO ' This loop goes through each available MAPT screen and enters the assets on the popup '
+EMReadScreen MAPT_check, 4, 3, 51
+IF MAPT_check <> "MAPT" THEN EXIT DO
+CALL write_value_and_transmit("X", 7, 3)			' } gets to ASSETS popup
+
+
+' wiping existing values...
+FOR row = 10 to 17
+	for col = 35 to 63 step 14
+		EMWriteScreen "__________", row, col
+	next
+NEXT
+
+' writing total counted, excluded, and unavailable amounts
+EMWriteScreen ttl_CASH_counted, 10, 35
+EMWriteScreen ttl_CASH_excluded, 10, 49
+EMWriteScreen ttl_CASH_unavailable, 10, 63
+EMWriteScreen ttl_ACCT_counted, 11, 35
+EMWriteScreen ttl_ACCT_excluded, 11, 49
+EMWriteScreen ttl_ACCT_unavailable, 11, 63
+EMWriteScreen ttl_SECU_counted, 12, 35
+EMWriteScreen ttl_SECU_excluded, 12, 49
+EMWriteScreen ttl_SECU_unavailable, 12, 63
+EMWriteScreen ttl_CARS_counted, 13, 35
+EMWriteScreen ttl_CARS_excluded, 13, 49
+EMWriteScreen ttl_CARS_unavailable, 13, 63
+EMWriteScreen ttl_REST_counted, 14, 35
+EMWriteScreen ttl_REST_excluded, 14, 49
+EMWriteScreen ttl_REST_unavailable, 14, 63
+EMWriteScreen ttl_OTHR_counted, 15, 35
+EMWriteScreen ttl_OTHR_excluded, 15, 49
+EMWriteScreen ttl_OTHR_unavailable, 15, 63
+transmit
+transmit
+transmit
+LOOP
+
 
 
 '=========>>>>>>>> Here we go back to ELIG and check for potential spendown standard.
 
 
 
-script_end_procedure("fin")
+script_end_procedure("Success.  Please review your results before approving.")
