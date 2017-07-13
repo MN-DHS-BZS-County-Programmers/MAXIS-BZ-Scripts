@@ -349,7 +349,16 @@ class income_object
 	' member functions for reading from JOBS
 	public sub read_jobs_for_hc
 		are_we_at_jobs
-		'add check for end date'
+		'THis makes sure we don't count ended income
+		income_ended = false
+		EMReadScreen income_end_date, 8, 9, 49
+		IF income_end_date <> "__ __ __" THEN
+			income_end_date = cdate(replace(income_end_date, " ", "/"))
+			if income_end_date < budg_month then income_ended = true
+		END if
+
+
+		if income_ended <> true THEN
 		row = 1
 		col = 1
 		If budg_month >= current_plus_one THEN 'This section reads the HC income estimator for calculating future months'
@@ -400,7 +409,7 @@ class income_object
 			END IF
 			income_amt = hc_jobs_amount * paydates_in_budg_month
 		END IF
-
+		END IF
 		monthly_income_amt = income_amt
 		'calculate_monthly_income
 	end sub
@@ -419,6 +428,14 @@ class income_object
 		'check_footer_month 'make sure this isn't CM+1
 		'row = 1
 		'col = 1
+		'THis makes sure we don't count ended income
+		income_ended = false
+		EMReadScreen income_end_date, 8, 7, 68
+		IF income_end_date <> "__ __ __" THEN
+			income_end_date = cdate(replace(income_end_date, " ", "/"))
+			if income_end_date < budg_month then income_ended = true
+		END if
+
 		If budg_month >= current_plus_one THEN 'This section reads the HC income estimator for calculating future months'
 			row = 1
 			col = 1
