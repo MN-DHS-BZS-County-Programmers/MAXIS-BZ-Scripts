@@ -689,7 +689,7 @@ EMWriteScreen hc_memb, 20, 76
 transmit
 EMReadScreen status_1619, 1, 16, 59
 EMReadScreen waiver_type, 1, 14, 59
-IF status_1619 <> "_" or waiver_type <> "_" THEN script_end_procedure("This case has 1619 status or a waiver, and the FIATer should not be used.  The script will now stop.")
+IF status_1619 <> "_" or waiver_type = "K" or waiver_type = "J" THEN script_end_procedure("This case has 1619 status or an Elderly Waiver, and the FIATer should not be used.  The script will now stop.")
 
 
 ' ==============
