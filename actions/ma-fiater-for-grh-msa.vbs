@@ -505,17 +505,23 @@ FUNCTION calculate_assets(input_array, asset_counted_total)
 		asset_unavailable_total = 0
 		'calculating the values of the totals...
 		FOR i = 0 TO number_of_assets
-			parallel_array(i, 0) = input_array(i).asset_counted_amount
-			parallel_array(i, 1) = input_array(i).asset_excluded_amount
-			parallel_array(i, 2) = input_array(i).asset_unavailable_amount
+			If isempty(input_array(i)) = FALSE Then 
+				parallel_array(i, 0) = input_array(i).asset_counted_amount
+				parallel_array(i, 1) = input_array(i).asset_excluded_amount
+				parallel_array(i, 2) = input_array(i).asset_unavailable_amount
 
-			IF isempty(parallel_array(i, 0)) = true THEN parallel_array(i, 0) = 0
-			IF isempty(parallel_array(i, 1)) = true THEN parallel_array(i, 1) = 0
-			IF isempty(parallel_array(i, 2)) = true THEN parallel_array(i, 2) = 0
+				IF isempty(parallel_array(i, 0)) = true THEN parallel_array(i, 0) = 0
+				IF isempty(parallel_array(i, 1)) = true THEN parallel_array(i, 1) = 0
+				IF isempty(parallel_array(i, 2)) = true THEN parallel_array(i, 2) = 0
 
-			asset_counted_total = asset_counted_total + (input_array(i).asset_counted_amount * 1)
-			asset_excluded_total = asset_excluded_total + (input_array(i).asset_excluded_amount * 1)
-			asset_unavailable_total = asset_unavailable_total + (input_array(i).asset_unavailable_amount * 1)
+				asset_counted_total = asset_counted_total + (input_array(i).asset_counted_amount * 1)
+				asset_excluded_total = asset_excluded_total + (input_array(i).asset_excluded_amount * 1)
+				asset_unavailable_total = asset_unavailable_total + (input_array(i).asset_unavailable_amount * 1)
+			Else 
+				asset_counted_total = 0
+				asset_excluded_total = 0
+				asset_unavailable_total = 0
+			End If 
 		NEXT
 
      BeginDialog Dialog1, 0, 0, 385, dialog_height, "Asset Dialog"
@@ -524,10 +530,14 @@ FUNCTION calculate_assets(input_array, asset_counted_total)
 	   Text 130, 10, 55, 10, "EXCLUDED"
 	   Text 185, 10, 55, 10, "UNAVAILABLE"
 	   FOR i = 0 TO number_of_assets
-     	Text 10,  25 + (i * 20), 40, 10, input_array(i).asset_panel
-		EditBox 75,  20 + (i * 20), 40, 15, parallel_array(i, 0)
-		EditBox 130, 20 + (i * 20), 40, 15, parallel_array(i, 1)
-		EditBox 185, 20 + (i * 20), 40, 15, parallel_array(i, 2)
+	   	If isempty(input_array(i)) = FALSE Then 
+	     	Text 10,  25 + (i * 20), 40, 10, input_array(i).asset_panel
+			EditBox 75,  20 + (i * 20), 40, 15, parallel_array(i, 0)
+			EditBox 130, 20 + (i * 20), 40, 15, parallel_array(i, 1)
+			EditBox 185, 20 + (i * 20), 40, 15, parallel_array(i, 2)
+		Else 
+			Text 10,  25 + (i * 20), 200, 10, "This case has no asset panels in STAT."
+		End If 
        NEXT
        Text 10, dialog_height - 40, 60, 10, "COUNTED Total:"
        EditBox 70, dialog_height - 45, 50, 15, asset_counted_total & ""
