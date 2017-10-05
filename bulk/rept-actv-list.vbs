@@ -203,7 +203,6 @@ End if
 'Setting the variable for what's to come
 excel_row = 2
 all_case_numbers_array = "*"
-MsgBox "New"
 
 For each worker in worker_array
 	back_to_self	'Does this to prevent "ghosting" where the old info shows up on the new screen for some reason
