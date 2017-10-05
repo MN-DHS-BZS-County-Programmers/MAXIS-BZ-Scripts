@@ -399,6 +399,7 @@ m = 0
 '(10,#) = GRH Status
 '(11,#) = Worker's X Number
 '(12,#) = CCAP Status
+all_case_numbers_array = "*"
 
 For each worker in worker_array
 	back_to_self	'Does this to prevent "ghosting" where the old info shows up on the new screen for some reason
@@ -457,8 +458,9 @@ For each worker in worker_array
 				Redim Preserve Full_case_list_array (Ubound(Full_case_list_array,1), Ubound(Full_case_list_array,2)+1) 'Resize the array for the next case
 
 				'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-				If trim(MAXIS_case_number) <> "" and instr(all_case_numbers_array, MAXIS_case_number) <> 0 then exit do
-				all_case_numbers_array = trim(all_case_numbers_array & " " & MAXIS_case_number)
+				MAXIS_case_number = trim(MAXIS_case_number)
+				If MAXIS_case_number <> "" and instr(all_case_numbers_array, "*" & MAXIS_case_number & "*") <> 0 then exit do
+				all_case_numbers_array = trim(all_case_numbers_array & MAXIS_case_number & "*")
 
 				MAXIS_row = MAXIS_row + 1
 				MAXIS_case_number = ""			'Blanking out variable
