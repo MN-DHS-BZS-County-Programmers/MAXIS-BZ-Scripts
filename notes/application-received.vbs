@@ -191,17 +191,20 @@ pended_date = date & ""
 'Runs the second dialog - which gathers information about the application
 Do
 	Do
-		Do
-			Dialog app_detail_dialog
-			cancel_confirmation
-			If app_type = "Select One" then MsgBox "Please enter the type of application received."
-			If how_app_recvd = "Select One" then MsgBox "Please enter how the application was received to the agency."
-			If worker_name = "" then MsgBox "Please enter who this case was assigned to."
-		Loop until (app_type <> "Select One" AND how_app_recvd <> "Select One" AND worker_name <> "")
-		If transfer_case = 1 AND (worker_number = "" OR len(worker_number) <> 7) then MsgBox "You must enter the MAXIS number of the worker if you would like the case to be transfered by the script, be sure that it is in X###### format."
-	Loop until (worker_number <> "" AND len(worker_number) = 7 OR transfer_case = 0)
-	If app_type = "ApplyMN" AND isnumeric(confirmation_number) = false AND time_of_app = "" = true then MsgBox "If an ApplyMN was received, you must enter the confirmation number and time received"
-Loop until (app_type = "ApplyMN" and isnumeric(confirmation_number) = true) AND time_of_app <> "" OR app_type <> "ApplyMN"
+		err_msg = ""
+		Dialog app_detail_dialog
+		cancel_confirmation
+		
+		If date_of_app = "" Then err_msg = err_msg & vbNewLine & "* Enter the date of application."
+		If app_type = "Select One" then err_msg = err_msg & vbNewLine &  "* Please enter the type of application received."
+		If how_app_recvd = "Select One" then err_msg = err_msg & vbNewLine &  "* Please enter how the application was received to the agency."
+		If worker_name = "" then err_msg = err_msg & vbNewLine &  "* Please enter who this case was assigned to."
+		If transfer_case = 1 AND (worker_number = "" OR len(worker_number) <> 7) then err_msg = err_msg & vbNewLine &  "* You must enter the MAXIS number of the worker if you would like the case to be transfered by the script, be sure that it is in X###### format."
+		If app_type = "ApplyMN" AND isnumeric(confirmation_number) = false AND time_of_app = "" then err_msg = err_msg & vbNewLine &  "* If an ApplyMN was received, you must enter the confirmation number and time received"
+		if err_msg <> "" Then MsgBox "Please resolve before continuing:" & vbNewLine & err_msg
+	Loop until err_msg = ""
+	call check_for_password(are_we_passworded_out)  'Adding functionality for MAXIS v.6 Passworded Out issue'
+Loop until are_we_passworded_out = false
 
 'Creates a variable that lists all the programs pending.
 If cash_pend = 1 THEN programs_applied_for = programs_applied_for & "Cash, "
@@ -262,6 +265,7 @@ IF transfer_case = 1 THEN
 			End Function
 			
 			Call WaitForLoad
+			unique_hwnd = IE.hwnd
 			
 			'view settings - Dimensions are not vital but the others ARE
 			IE.Toolbar = 0
@@ -286,6 +290,11 @@ IF transfer_case = 1 THEN
 				End If 	
 			Loop until right(where_am_i, 5) <> "Login"
 
+			Set oShell = CreateObject("Shell.Application")
+			For Each Wnd in oShell.Windows
+				If Wnd.hwnd = unique_hwnd Then Set IE = Wnd
+			Next
+			
 			HEADER = IE.LocationName
 
 			x.AppActivate(HEADER)
@@ -368,18 +377,20 @@ IF transfer_case = 1 THEN
 End If
 
 IF time_of_app <> "" Then
-	colon_place = InStr(time_of_app, ":")
-	If colon_place <> 0 Then 
-		time_stamp_hour = left(time_of_app, colon_place - 1)
-		time_stamp_hour = time_stamp_hour * 1
-		If time_stamp_hour > 12 Then 
-			time_stamp_hour = time_stamp_hour - 12
-			AM_PM = "PM"
-		Else 
-			AM_PM = "AM"
-		End If
-		time_stamp_min = right(time_of_app, len(time_of_app) - colon_place)
-		time_of_app = time_stamp_hour & ":" & time_stamp_min
+	If AM_PM <> "PM" Then 
+		colon_place = InStr(time_of_app, ":")
+		If colon_place <> 0 Then 
+			time_stamp_hour = left(time_of_app, colon_place - 1)
+			time_stamp_hour = time_stamp_hour * 1
+			If time_stamp_hour > 12 Then 
+				time_stamp_hour = time_stamp_hour - 12
+				AM_PM = "PM"
+			Else 
+				AM_PM = "AM"
+			End If
+			time_stamp_min = right(time_of_app, len(time_of_app) - colon_place)
+			time_of_app = time_stamp_hour & ":" & time_stamp_min
+		End If 
 	End If 
 	time_stamp = " at " & time_of_app & " " & AM_PM
 ELSE
