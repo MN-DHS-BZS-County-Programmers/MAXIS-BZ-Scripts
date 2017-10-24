@@ -287,6 +287,13 @@ script_array_D_to_F(script_num).description 			= "Template for EA/EGA applicatio
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array_D_to_F(script_num)			'Resets the array to add one more element to it
 Set script_array_D_to_F(script_num) = new script		'Set this array element to be a new script. Script details below...
+script_array_D_to_F(script_num).script_name 			= "Emergency Screening"
+script_array_D_to_F(script_num).file_name				= "emergency-screening.vbs"
+script_array_D_to_F(script_num).description 			= "Dashboard to use to asses eligibility for Emergency Programs."
+
+script_num = script_num + 1								'Increment by one
+ReDim Preserve script_array_D_to_F(script_num)			'Resets the array to add one more element to it
+Set script_array_D_to_F(script_num) = new script		'Set this array element to be a new script. Script details below...
 script_array_D_to_F(script_num).script_name 			= "Employment plan or status update"
 script_array_D_to_F(script_num).file_name				= "employment-plan-or-status-update.vbs"
 script_array_D_to_F(script_num).description 			= "Template for case noting an employment plan or status update for family cash cases."
