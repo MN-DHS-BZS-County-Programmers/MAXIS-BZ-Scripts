@@ -78,7 +78,7 @@ EndDialog
 
 'DATE BASED LOGIC FOR UTILITY AMOUNTS------------------------------------------------------------------------------------------
 If date >= cdate("10/01/2017") then 
-	heat_AC_amt = 536
+	heat_AC_amt = 556
 	electric_amt = 172
 	phone_amt = 41
 ElseIf date >= cdate("10/01/2016") then			'these variables need to change every October
