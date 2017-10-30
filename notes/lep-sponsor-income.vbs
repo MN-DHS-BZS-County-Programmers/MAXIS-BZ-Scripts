@@ -109,7 +109,7 @@ If sponsor_HH_size = 5 then income_limit = 3118
 If sponsor_HH_size = 6 then income_limit = 3571
 If sponsor_HH_size = 7 then income_limit = 4024
 If sponsor_HH_size = 8 then income_limit = 4477
-If sponsor_HH_size > 8 then income_limit = 4430 + (453 * (sponsor_HH_size - 8))
+If sponsor_HH_size > 8 then income_limit = 4477 + (453 * (sponsor_HH_size - 8))
 
 'If any income variables are not numeric, the script will convert them to a "0" for calculating
 If IsNumeric(primary_sponsor_earned_income) = False then primary_sponsor_earned_income = 0
