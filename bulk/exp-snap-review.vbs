@@ -166,6 +166,8 @@ Const days_pending = 5
 Const appears_exp  = 6      'appears_exp will be carried through to determine if the cases make it to the Excel list or not
 Const case_notes   = 7
 
+all_case_numbers_array = "*"
+
 For each worker in worker_array
 	back_to_self	'Does this to prevent "ghosting" where the old info shows up on the new screen for some reason
 	Call navigate_to_MAXIS_screen("REPT", "PND1")
@@ -192,9 +194,10 @@ For each worker in worker_array
 				EMReadScreen nbr_days_pending, 4, MAXIS_row, 54		 'Reading nbr days pending
 
 				'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-				If MAXIS_case_number <> "" and instr(all_case_numbers_array, MAXIS_case_number) <> 0 then exit do
-				If MAXIS_case_number = "" and client_name = "" then exit do			'Exits do if we reach the end
-				all_case_numbers_array = trim(all_case_numbers_array & " " & MAXIS_case_number)
+				If MAXIS_case_number <> "" and instr(all_case_numbers_array, "*" & MAXIS_case_number & "*") <> 0 then exit do
+				all_case_numbers_array = trim(all_case_numbers_array & MAXIS_case_number & "*")
+
+				If MAXIS_case_number = "" then exit do			'Exits do if we reach the end
 
 				'Adding client information to the array'
 				ReDim Preserve PND1_array(7, entry_record)	'This resizes the array to include the each case number on PND1 to the PND1_array
@@ -327,8 +330,9 @@ For each worker in worker_array
 				EMReadScreen client_name, 22, MAXIS_row, 16			 'Reading client name
 
 				'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-				If MAXIS_case_number <> "" and (instr(all_case_numbers_array, MAXIS_case_number) <> 0 and client_name <> " ADDITIONAL APP       ") then exit do
-				all_case_numbers_array = trim(all_case_numbers_array & " " & MAXIS_case_number)
+				If MAXIS_case_number <> "" and (instr(all_case_numbers_array, "*" & MAXIS_case_number & "*") <> 0 and client_name <> " ADDITIONAL APP       ") then exit do
+				all_case_numbers_array = trim(all_case_numbers_array & MAXIS_case_number & "*")
+
 				If MAXIS_case_number = "" then exit do			'Exits do if we reach the end
 
 				'If additional application is rec'd then the excel output is the client's name, not ADDITIONAL APP
