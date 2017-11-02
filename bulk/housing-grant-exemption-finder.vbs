@@ -189,6 +189,7 @@ End if
 
 'establishing the row to start searching in the Excel spreadsheet
 excel_row = 2
+all_case_numbers_array = "*"
 
 For each worker in worker_array
 	back_to_self
@@ -221,9 +222,11 @@ For each worker in worker_array
 						END IF
 
 						'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-						If trim(MAXIS_case_number) <> "" and instr(all_case_numbers_array, MAXIS_case_number) <> 0 then exit do
-						all_case_numbers_array = trim(all_case_numbers_array & " " & MAXIS_case_number)
-						If trim(MAXIS_case_number) = "" and trim(client_name) = "" then exit do			'Exits do if we reach the end
+						MAXIS_case_number = trim(MAXIS_case_number)
+						If MAXIS_case_number <> "" and instr(all_case_numbers_array, "*" & MAXIS_case_number & "*") <> 0 then exit do
+						all_case_numbers_array = trim(all_case_numbers_array & MAXIS_case_number & "*")
+		
+						If MAXIS_case_number = "" then exit do			'Exits do if we reach the end
 
 					'add case/case information to Excel
         			ObjExcel.Cells(excel_row, 1).Value = worker

@@ -47,6 +47,7 @@ changelog = array()
 
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+call changelog_update("10/05/2017", "Update to match the script to the new version of the NDNH New Hire DAIL.", "Casey Love, Ramsey County")
 call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 
 'Actually displays the changelog. This function uses a text file located in the My Documents folder. It stores the name of the script file and a description of the most recent viewed change.
@@ -101,14 +102,20 @@ row = 1
 col = 1
 EMSearch "JOB DETAILS", row, col 	'Has to search, because every once in a while the rows and columns can slide one or two positions.
 If row = 0 then script_end_procedure("MAXIS may be busy: the script appears to have errored out. This should be temporary. Try again in a moment. If it happens repeatedly contact the alpha user for your agency.")
-EMReadScreen new_hire_first_line, 61, row, col - 7 'Reads each line for the case note. COL needs to be subtracted from because of NDNH message format differs from original new hire format.
-EMReadScreen new_hire_second_line, 61, row + 1, col - 4
-EMReadScreen new_hire_third_line, 61, row + 2, col - 4
-EMReadScreen new_hire_fourth_line, 61, row + 3, col - 4
+EMReadScreen new_hire_first_line, 61, row, col - 17 'Reads each line for the case note. COL needs to be subtracted from because of NDNH message format differs from original new hire format.
+EMReadScreen new_hire_second_line, 61, row + 1, col
+EMReadScreen new_hire_third_line, 61, row + 2, col
+EMReadScreen new_hire_fourth_line, 61, row + 3, col
 IF right(new_hire_third_line, 46) <> right(new_hire_fourth_line, 46) then 				'script was being run on cases where the names did not match but SSN did. This will allow users to review.
 	warning_box = MsgBox("The names found on the NEW HIRE message do not match exactly." & vbcr & new_hire_third_line & vbcr & new_hire_fourth_line & vbcr & "Please review and click OK if you wish to continue and CANCEL if the name is incorrect.", vbOKCancel)
 	If warning_box = vbCancel then script_end_procedure("The script has ended. Please review the new hire as you indicated that the name read from the NEW HIRE and the MAXIS name did not match.")
 END IF
+EMReadScreen no_space_SSN, 9, row, col - 17		'Reading the SSN at the beginning of the hire message 
+ssn_first = left(no_space_SSN, 3)
+ssn_second = right(left(no_space_SSN, 5), 2)
+ssn_third = right(no_space_SSN, 4)
+new_HIRE_SSN = ssn_first & "-" & ssn_second & "-" & ssn_third
+
 row = 1 						'Now it's searching for info on the hire date as well as employer
 col = 1
 EMSearch "DATE HIRED   :", row, col
@@ -123,10 +130,6 @@ year_hired = Datepart("yyyy", date_hired)
 year_hired = year_hired - 2000
 EMSearch "EMPLOYER:", row, col
 EMReadScreen employer, 25, row, col + 10
-row = 1 						'Now it's searching for the SSN
-col = 1
-EMSearch "SSN #", row, col
-EMReadScreen new_HIRE_SSN, 11, row, col + 5
 PF3
 
 'CHECKING CASE CURR. MFIP AND SNAP HAVE DIFFERENT RULES.
@@ -262,7 +265,7 @@ PF9
 transmit
 
 'Writes new hire message but removes the SSN.
-EMSendKey replace(new_hire_first_line, new_HIRE_SSN, "XXX-XX-XXXX") & "<newline>" & new_hire_second_line & "<newline>" & new_hire_third_line + "<newline>" & new_hire_fourth_line & "<newline>" & "---" & "<newline>"
+EMSendKey replace(new_hire_first_line, no_space_SSN, "XXX-XX-XXXX") & "<newline>" & new_hire_second_line & "<newline>" & new_hire_third_line + "<newline>" & new_hire_fourth_line & "<newline>" & "---" & "<newline>"
 
 'Writes that the message is unreported, and that the proofs are being sent/TIKLed for.
 call write_variable_in_case_note("* Job unreported to the agency.")
