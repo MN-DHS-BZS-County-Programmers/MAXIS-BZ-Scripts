@@ -233,6 +233,7 @@ ReDim spenddown_error_array (12, 0)
 'Setting the variable for what's to come
 excel_row = 2
 hc_clt = 0
+all_case_numbers_array = "*"
 
 'Getting all the cases with HC active for each worker
 For each worker in worker_array
@@ -262,10 +263,11 @@ For each worker in worker_array
 				EMReadScreen HC_status, 1, MAXIS_row, 64			'Reading HC status
 
 				'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-				If trim(MAXIS_case_number) <> "" and instr(all_case_numbers_array, MAXIS_case_number) <> 0 then exit do
-				all_case_numbers_array = trim(all_case_numbers_array & " " & MAXIS_case_number)
+				MAXIS_case_number = trim(MAXIS_case_number)
+				If MAXIS_case_number <> "" and instr(all_case_numbers_array, "*" & MAXIS_case_number & "*") <> 0 then exit do
+				all_case_numbers_array = trim(all_case_numbers_array & MAXIS_case_number & "*")
 
-				If MAXIS_case_number = "        " then exit do			'Exits do if we reach the end
+				If MAXIS_case_number = "" then exit do			'Exits do if we reach the end
 
 				'Using if...thens to decide if a case should be added (status isn't blank or inactive and respective box is checked)
 				If HC_status = "A" then

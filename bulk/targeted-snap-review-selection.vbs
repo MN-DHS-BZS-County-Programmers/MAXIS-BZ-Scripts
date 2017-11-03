@@ -153,7 +153,7 @@ END IF
 active_criteria_total = 0
 caper_criteria_total = 0
 excel_row = 2
-
+all_case_numbers_array = "*"
 
 'First, we check REPT/ACTV.  Must be done on ACTIVE and CAPER checks'
 For each worker in worker_array
@@ -184,10 +184,11 @@ For each worker in worker_array
 
 
 				'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-				If trim(MAXIS_case_number) <> "" and instr(all_case_numbers_array, MAXIS_case_number) <> 0 then exit do
-				all_case_numbers_array = trim(all_case_numbers_array & " " & MAXIS_case_number)
+				MAXIS_case_number = trim(MAXIS_case_number)
+				If MAXIS_case_number <> "" and instr(all_case_numbers_array, "*" & MAXIS_case_number & "*") <> 0 then exit do
+				all_case_numbers_array = trim(all_case_numbers_array & MAXIS_case_number & "*")
 
-				If MAXIS_case_number = "        " then exit do			'Exits do if we reach the end
+				If MAXIS_case_number = "" then exit do			'Exits do if we reach the end
 
 				'Using if...thens to decide if a case should be added (status isn't blank or inactive and respective box is checked)
 
@@ -237,10 +238,11 @@ For each worker in worker_array
 				EMReadScreen client_name, 21, MAXIS_row, 14		'Reading client name
 
 				'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-				If trim(MAXIS_case_number) <> "" and instr(all_case_numbers_array, MAXIS_case_number) <> 0 then exit do
-				all_case_numbers_array = trim(all_case_numbers_array & " " & MAXIS_case_number)
+				MAXIS_case_number = trim(MAXIS_case_number)
+				If MAXIS_case_number <> "" and instr(all_case_numbers_array, "*" & MAXIS_case_number & "*") <> 0 then exit do
+				all_case_numbers_array = trim(all_case_numbers_array & MAXIS_case_number & "*")
 
-				If MAXIS_case_number = "        " then exit do			'Exits do if we reach the end
+				If MAXIS_case_number = "" then exit do			'Exits do if we reach the end
 				redim preserve caper_array(ca_count)
 				set caper_array(ca_count) = new case_attributes
 				caper_array(ca_count).MAXIS_case_number = MAXIS_case_number
