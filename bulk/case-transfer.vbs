@@ -1136,9 +1136,10 @@ If transfer_check = checked then
 			End If
 			IF memo_check = checked then
 				'Sending a memo if requested
-				navigate_to_MAXIS_screen "SPEC", "MEMO"
-				PF5
-				EMWriteScreen "x", 5, 10
+				
+				'Navigating to SPEC/MEMO and starting a new memo
+				start_a_new_spec_memo
+
 				transmit
 				Call write_variable_in_SPEC_MEMO ("*** This is just an informational notice ***")
 				Call write_variable_in_SPEC_MEMO ("Your case has been transferred.")
