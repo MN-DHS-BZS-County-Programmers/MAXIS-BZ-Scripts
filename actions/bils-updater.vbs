@@ -161,7 +161,7 @@ EMConnect ""
 call MAXIS_case_number_finder(MAXIS_case_number)
 
 'Ask for case number, validate that it's numeric.
-Do
+Do 	
 	Do
 		Dialog BILS_case_number_dialog	'FYI: Dialog includes checkbox for simply updating existing bills, instead of adding new ones.
 		cancel_confirmation
@@ -190,13 +190,13 @@ call navigate_to_MAXIS_screen("STAT", "BILS")
 'IF THE WORKER REQUESTED TO UPDATE EXISTING BILS, THE SCRIPT STARTS AN ABBREVIATED IF/THEN STATEMENT----------------------------------------------------------------------------------------------------
 If updating_existing_BILS_check = checked then
 
-	Do
+	Do 
 		'DIALOG RUNS, PUTS BILS ON EDIT MODE AND CHECKS FOR PASSWORD PROMPT
 		Dialog BILS_updater_abbreviated_dialog
 		cancel_confirmation
 		CALL check_for_password(are_we_passworded_out)			'function that checks to ensure that the user has not passworded out of MAXIS, allows user to password back into MAXIS
 	Loop until are_we_passworded_out = false					'loops until user passwords back in
-
+	
 	PF9
 	EMReadScreen BILS_check, 4, 2, 54
 	If BILS_check <> "BILS" then script_end_procedure("BILS not found. Did you navigate away from BILS? Did you get passworded out? The script will now close.")
@@ -272,7 +272,7 @@ If updating_existing_BILS_check = checked then
 End if
 
 'IF THE WORKER REQUESTED TO ADD NEW BILS, THE SCRIPT STARTS THE ADVANCED DIALOG----------------------------------------------------------------------------------------------------
-Do
+Do 
     Do
     	DO
     		Dialog BILS_updater_dialog

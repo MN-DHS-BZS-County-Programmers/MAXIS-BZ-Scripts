@@ -1,3 +1,10 @@
+NOTE
+===
+
+This project is unmaintained as of 01/27/2017, due to lack of staffing at MN-DHS. If you have any questions on this project's status, contact kathy.bruen@state.mn.us, Manager for SNAP Program Integrity.
+---
+
+
 BlueZone Scripts | DHS-MAXIS-Scripts
 ===
 
@@ -35,7 +42,7 @@ _[(back to top)](#bluezone-scripts--dhs-maxis-scripts)_
 ---
 State Administrators
 ---
-As of July 2016, there is no state administrator and one backup for the BlueZone Scripts project: 
+As of Jan 27th 2016, there is no state administrator and one backup for the MAXIS BlueZone Scripts project: 
 * **[Veronica Cary](mailto:Veronica.Cary@state.mn.us)**: Technical Consultant (backup)
 
 In addition to our state administrators, numerous county/tribal agency personnel are involved in much of the writing and testing of BlueZone Scripts. Their contribution is appreciated!
