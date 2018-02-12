@@ -1,5 +1,5 @@
 'Required for statistical purposes==========================================================================================
-name_of_script = "ACTIONS - ABAWD FIATER.vbs"
+name_of_script = "ACTIONS - ABAWD MINOR CHILD EXEMPTION FIATER.vbs"
 start_time = timer
 STATS_counter = 1                     	'sets the stats counter at one
 STATS_manualtime = 225                	'manual run time in seconds
@@ -53,14 +53,15 @@ changelog = array()
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
 call changelog_update("01/10/2018", "Updated coordinates in STAT/JOBS for income type and verification codes.", "Ilse Ferris, Hennepin County")
-call changelog_update("01/17/2017", "Initial version.", "Ilse Ferris, Hennepin County")
+call changelog_update("12/30/2016", "Added new script to FIAT eligibilty, income and deductions for non-parent ABAWDs in SNAP household with minor children.", "Ilse Ferris, Hennepin County")
+call changelog_update("12/30/2016", "Initial version.", "Ilse Ferris, Hennepin County")
 
 'Actually displays the changelog. This function uses a text file located in the My Documents folder. It stores the name of the script file and a description of the most recent viewed change.
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
 'Dialogs----------------------------------------------------------------------------------------------------
-BeginDialog case_number_dialog, 0, 0, 251, 165, "ABAWD FIATer"
+BeginDialog case_number_dialog, 0, 0, 251, 140, "ABAWD minor child exemption FIATer"
   EditBox 120, 10, 60, 15, MAXIS_case_number
   EditBox 120, 30, 25, 15, initial_month
   EditBox 155, 30, 25, 15, initial_year
@@ -69,9 +70,9 @@ BeginDialog case_number_dialog, 0, 0, 251, 165, "ABAWD FIATer"
     CancelButton 145, 50, 50, 15
   Text 65, 15, 50, 10, "Case Number:"
   Text 20, 35, 100, 10, "Initial month/year of package:"
-  GroupBox 5, 75, 240, 85, "ABAWD FIATer"
-  Text 10, 90, 230, 35, "This FIATer is to be used when a client has ABAWD months in their 36 month lookback period available, but there are extra months coded on the ABAWD tracking record due to banked months or 2nd set eligibilty, and the case is failing the 'ABAWD - 3/36 MONTH' person test. "
-  Text 10, 135, 225, 20, " See POLI/TEMP TE02.06.02 'Known problems affecting SNAP elig' for detailed information."
+  GroupBox 5, 75, 240, 60, "ABAWD STAT/WREG CODING - CHILD UNDER 18"
+  Text 10, 90, 230, 25, "This FIATer is to be used when there is non-parent adult(s) in the SNAP unit with at least one child under the age of 18. FSET/ABAWD coding for the non-parent will be 21/04."
+  Text 10, 120, 225, 10, " See POLI/TEMP TE02.05.70.03 for detailed information."
 EndDialog
 
 '----------------------DEFINING CLASSES WE'LL NEED FOR THIS SCRIPT
@@ -100,28 +101,10 @@ end class
 'Connecting to BlueZone and finding the MAXIS case number
 EMConnect ""
 call maxis_case_number_finder(MAXIS_case_number)
-Call MAXIS_footer_finder(initial_month, initial_year)
+MAXIS_footer_month = CM_plus_1_mo		'default date for CM plus one
+MAXIS_footer_year = CM_plus_1_yr
 
-'inhibits users from these counties from using the script as they are exempt counties. 
-If worker_county_code = "x101" OR _
-	worker_county_code = "x111" OR _
-	worker_county_code = "x115" OR _
-	worker_county_code = "x129" OR _
-	worker_county_code = "x131" OR _
-	worker_county_code = "x133" OR _
-	worker_county_code = "x136" OR _
-	worker_county_code = "x139" OR _
-	worker_county_code = "x144" OR _
-	worker_county_code = "x145" OR _
-	worker_county_code = "x148" OR _
-	worker_county_code = "x149" OR _
-	worker_county_code = "x154" OR _
-	worker_county_code = "x158" OR _
-	worker_county_code = "x180" THEN
-	script_end_procedure ("Your agency is exempt from ABAWD work requirements. SNAP banked months are not available to your recipients.")
-END IF
-
-DO 
+Do 
 	DO
 		err_msg = ""
 		dialog case_number_dialog
@@ -165,110 +148,46 @@ Call navigate_to_maxis_screen("STAT", "REVW")
 EMReadscreen REVW_date, 8, 9, 57
 If REVW_date = "__ 01 __" then script_end_procedure("A SNAP review date is required. Please update STAT/REVW, then run the script again.")
 
-'The following performs case accuracy checks.
-call navigate_to_maxis_screen("ELIG", "FS")
-redim ABAWD_member_array(0)
-
-For each member in hh_member_array
-	row = 6
-	col = 1
-	EMSearch member, row, col 'Finding the row this member is on
-	EMWritescreen "x", row, 5
-	transmit 'Now on FFPR
-	EMReadscreen inelig_test, 6, 6, 20 'This reads the ABAWD 3/36 month test
-	IF inelig_test = "FAILED" THEN 'This member is failing this test, add them to the ABAWD member array
-		If ABAWD_member_array(0) <> "" Then ReDim Preserve ABAWD_member_array(UBound(ABAWD_member_array)+1)
-		ABAWD_member_array(UBound(ABAWD_member_array)) = member
+'The section will establish which household member(s) are non-parents and check for any other inhibiting errors. 
+call navigate_to_maxis_screen("STAT", "SUMM")
+ABAWD_members = "0"			'establishing number of ABAWD members and which 
+MAXIS_row = 5				'MAXIS row to start reading STAT/SUMM info
+Do 
+	EMReadscreen SUMM_info, 60, MAXIS_row, 15
+	If InStr(SUMM_info, "ABAWD STATUS SHOWS CARETAKER OF MINOR CHILD") then
+		EMReadscreen ABAWD_memb_number, 2, MAXIS_row, 8
+		MAXIS_row = MAXIS_row + 2
+		ABAWD_members = ABAWD_members + 1
+		IF ABAWD_member_array(0) <> "" then ReDim Preserve ABAWD_member_array(UBound(ABAWD_member_array)+1)
+		ABAWD_member_array(UBound(ABAWD_member_array)) = ABAWD_memb_number
+	Else
+		MAXIS_row = MAXIS_row + 1	
 	END IF
-	transmit
+LOOP until MAXIS_row = 19 or InStr(SUMM_info, "BKFS FS HAS BEEN INHIBITED")
+
+If ABAWD_member_array(0) = "" THEN script_end_procedure("No members have appear to meet the criteria of to FIAT the case. Please review the case for accuracy.")
+
+err_msg = ""		'establishing blank variables
+
+'Checking the WREG panel for these individuals to ensure that ABAWD/FSET coding is 21/04	
+For each ABAWD_memb_number in ABAWD_member_array 'This loop will check that WREG is coded correctly
+	call navigate_to_maxis_screen("STAT", "WREG")
+	EMWritescreen ABAWD_memb_number, 20, 76
+	Transmit
+	EMReadscreen wreg_status, 2, 8, 50
+	IF wreg_status <> "21" THEN err_msg = err_msg & vbCr & "Member " & member & " does not have FSET code 21."
+	EMReadscreen abawd_status, 2, 13, 50
+	IF abawd_status <> "04" THEN err_msg = err_msg & vbCr & "Member " & member & " does not have ABAWD code 04."
 Next
 
-IF developer_mode = false THEN
-	IF ABAWD_member_array(0) = "" THEN script_end_procedure("ERROR: There are no members on this case with ineligible ABAWDs.  The script will stop.")
-ELSE
-	IF ABAWD_member_array(0) = "" THEN msgbox "ERROR: There are no members on this case with ineligible ABAWDs.  The script would stop in production mode."
+IF err_msg <> "" THEN 'This means the WREG panel(s) are coded incorrectly.
+	IF developer_mode = true THEN
+		msgbox "The following errors were found on the WREG panel. In production mode the script would stop." & vBcr & err_msg
+	ELSE
+		msgbox "Please resolve the following errors before continuing. The script will now stop." & vBcr & err_msg
+		script_end_procedure("")
+	END IF
 END IF
-
-err_msg = ""
-
-For each ABAWD_memb_number in ABAWD_member_array 'This loop will check that WREG is coded correctly
-	Call navigate_to_MAXIS_screen("stat","wreg")		'navigates to stat/wreg
-	EMWriteScreen ABAWD_memb_number, 20, 76
-	transmit
-	EMReadScreen wreg_code,  2, 8,  50
-	EMReadScreen abawd_code, 2, 13, 50
-	IF wreg_status <> "30" THEN err_msg = err_msg & vbCr & "Member " & member & " does not have FSET code 30."
-	EMReadscreen abawd_status, 2, 13, 50
-	IF abawd_status <> "10" THEN err_msg = err_msg & vbCr & "Member " & member & " does not have ABAWD code 10."
-
-    EMReadScreen wreg_total, 1, 2, 78
-    IF wreg_total <> "0" THEN
-    	EmWriteScreen "x", 13, 57		'Pulls up the WREG tracker'
-    	transmit
-    	EMREADScreen tracking_record_check, 15, 4, 40  		'adds cases to the rejection list if the ABAWD tracking record cannot be accessed.
-    	If tracking_record_check <> "Tracking Record" then 
-			err_msg = err_msg & vbCr & "Member " & ABAWD_member_number & ": Cannot access the ABAWD tracking record. Review and process manually."
-    	ELSE
-    		bene_mo_col = (15 + (4*cint(MAXIS_footer_month)))		'col to search starts at 15, increased by 4 for each footer month
-    		bene_yr_row = 10
-    		abawd_counted_months = 0					'delclares the variables values at 0
-    		month_count = 0
-    		DO
-    			'establishing variables for specific ABAWD counted month dates
-    			If bene_mo_col = "19" then counted_date_month = "01"
-    			If bene_mo_col = "23" then counted_date_month = "02"
-    			If bene_mo_col = "27" then counted_date_month = "03"
-    			If bene_mo_col = "31" then counted_date_month = "04"
-    			If bene_mo_col = "35" then counted_date_month = "05"
-    			If bene_mo_col = "39" then counted_date_month = "06"
-    			If bene_mo_col = "43" then counted_date_month = "07"
-    			If bene_mo_col = "47" then counted_date_month = "08"
-    			If bene_mo_col = "51" then counted_date_month = "09"
-    			If bene_mo_col = "55" then counted_date_month = "10"
-    			If bene_mo_col = "59" then counted_date_month = "11"
-    			If bene_mo_col = "63" then counted_date_month = "12"
-    			'counted date year: this is found on rows 7-10. Row 11 is current year plus one, so this will be exclude this list.
-    			If bene_yr_row = "10" then counted_date_year = right(DatePart("yyyy", date), 2)
-    			If bene_yr_row = "9"  then counted_date_year = right(DatePart("yyyy", DateAdd("yyyy", -1, date)), 2)
-    			If bene_yr_row = "8"  then counted_date_year = right(DatePart("yyyy", DateAdd("yyyy", -2, date)), 2)
-    			If bene_yr_row = "7"  then counted_date_year = right(DatePart("yyyy", DateAdd("yyyy", -3, date)), 2)
-    			abawd_counted_months_string = counted_date_month & "/" & counted_date_year
-    
-    			'reading to see if a month is counted month or not
-    			EMReadScreen is_counted_month, 1, bene_yr_row, bene_mo_col
-    
-    			'counting and checking for counted ABAWD months
-    			IF is_counted_month = "X" or is_counted_month = "M" THEN
-    				EMReadScreen counted_date_year, 2, bene_yr_row, 14			'reading counted year date
-    				abawd_counted_months_string = counted_date_month & "/" & counted_date_year
-    				abawd_info_list = abawd_info_list & ", " & abawd_counted_months_string			'adding variable to list to add to array
-    				abawd_counted_months = abawd_counted_months + 1				'adding counted months
-    			END IF
-    
-    			'declaring & splitting the abawd months array
-    			If left(abawd_info_list, 1) = "," then abawd_info_list = right(abawd_info_list, len(abawd_info_list) - 1)
-    			counted_months_array = Split(abawd_info_list, ",")
-        
-    			bene_mo_col = bene_mo_col - 4		're-establishing serach once the end of the row is reached
-    			IF bene_mo_col = 15 THEN
-    				bene_yr_row = bene_yr_row - 1
-    				bene_mo_col = 63
-    			END IF
-    			month_count = month_count + 1
-    		LOOP until month_count = 36
-    	PF3
-    	End if
-		If abawd_counted_months > 3 then 
-			EMWriteScreen "x", 13, 57	'enters the ABAWD tracking record
-			transmit
-			confirm_ABAWD_months = Msgbox("More than 3 counted months have been found on the ABAWD tracking record for MEMBER " & ABAWD_memb_number & vbcr & _
-			" Counted ABAWD months are: " & abawd_info_list & vbcr & vbcr & "If this is correct, press OK to continue with the FIAT. Press cancel to stop the script.", vbOkCancel + vbExclamation, "More than 3 counted ABAWD months exist.")
-    		IF confirm_ABAWD_months = vbCancel then script_end_procedure("The script has ended. Please review the case and the ABAWD tracking record if you're unsure of the counted ABAWD months on this case.")
-			PF3							'exists the ABAWD tracking record
-		END IF 
-	END If
-Next 
-'END OF ABAWD MONTHS----------------------------------------------------------------------------------------------------
 
 'The following loop will take the script through each month in the package, from appl month. to CM+1
 For i = 0 to ubound(footer_month_array)
@@ -681,11 +600,12 @@ For i = 0 to ubound(footer_month_array)
 	EMwritescreen MAXIS_footer_month, 20, 43
 	EMWritescreen MAXIS_footer_year, 20, 46
 	transmit
-	EMReadscreen results_check, 4, 14, 46 'We need to make sure results exist, otherwise stop.
+	'EMReadscreen results_check, 4, 14, 46 'We need to make sure results exist, otherwise stop.
 	'IF results_check = "    " THEN script_end_procedure("The script was unable to find unapproved SNAP results for the benefit month, please check your case and try again.")
 	EMWritescreen "03", 4, 34 'entering the FIAT reason
 	EMWritescreen "x", 14, 22
 	transmit 'This should take us to FFSL
+	
 	'The following loop will enter person tests screen and pass for each member on grant
 	For each member in hh_member_array
 		row = 6
@@ -693,100 +613,105 @@ For i = 0 to ubound(footer_month_array)
 		EMSearch member, row, col 'Finding the row this member is on
 		EMWritescreen "x", row, 5
 		transmit 'Now on FFPR
+		EMWritescreen "N", 7, 58
+		EMWritescreen "P", 7, 66
 		EMWritescreen "PASSED", 9, 12
-		EMReadscreen state_food_check, 1, 7, 58 'We need to enter something here if it is blank'
-		IF state_food_check <> "N" or state_food_check <> "Y" THEN EMwritescreen "N", 7, 58
 		transmit
 		PF3 'back to FFSL
 	Next
 	'Ready to head into case test / budget screens
 
-	EMWritescreen "x", 16, 5
-	EMWritescreen "x", 17, 5
-	Transmit
-	'Passing all case tests
-	EMWritescreen "PASSED", 10, 7
-	EMWritescreen "PASSED", 13, 7
-	Transmit
-	EMReadscreen net_check, 3, 24, 40 'sometimes this test needs to be passed, sometimes n/a.  the transmit triggers an error msg if it needs to pass this'
-	IF net_check = "NET" THEN EMWritescreen "PASSED", 14, 7
-	PF3		
+		EMWritescreen "x", 16, 5
+		EMWritescreen "x", 17, 5
+		Transmit
+		
+		'Passing all case tests
+		EMWritescreen "PASSED", 13, 7
+		EMWritescreen "PASSED", 14, 7
+		PF3
+		'checkking for case is catergorically eligible error
+		EMReadScreen cat_elig_check, 7, 24, 2
+		If cat_elig_check = "CASE IS" then 
+			'EMWritescreen "N/A___", 13, 7
+			EMWritescreen "N/A___", 14, 7
+			PF3
+		END IF
+		
+		'Now the BUDGET (FFB1) NO
+		'First, blank out existing values to avoid an error from existing info
+		EMWriteScreen "         ", 5, 32
+		EMWriteScreen "         ", 6, 32
+		EMWriteScreen "         ", 11, 32
+		EMWriteScreen "         ", 12, 32
+		EMWriteScreen "         ", 13, 32
+		EMWriteScreen "         ", 14, 32
+		EMWriteScreen "         ", 15, 32
+		EMWriteScreen "         ", 16, 32
+		EMWriteScreen "         ", 12, 72
+		EMWriteScreen "         ", 13, 72
+		EMWriteScreen "         ", 14, 72
+		EMWritescreen ABAWD_months_array(i).gross_wages, 5, 32
+		EMWritescreen ABAWD_months_array(i).busi_income, 6, 32
+		EMWritescreen ABAWD_months_array(i).gross_RSDI, 11, 32
+		EMWritescreen ABAWD_months_array(i).gross_SSI, 12, 32
+		EMWritescreen ABAWD_months_array(i).gross_VA, 13, 32
+		EMWritescreen ABAWD_months_array(i).gross_UC, 14, 32
+		EMWritescreen ABAWD_months_array(i).gross_CS, 15, 32
+		EMWritescreen ABAWD_months_array(i).gross_other, 16, 32
+		EMWritescreen ABAWD_months_array(i).deduction_FMED, 12, 72
+		EMWritescreen ABAWD_months_array(i).deduction_COEX, 14, 72
 	
-	'Now the BUDGET (FFB1) NO
-	'First, blank out existing values to avoid an error from existing info
-	EMWriteScreen "         ", 5, 32
-	EMWriteScreen "         ", 6, 32
-	EMWriteScreen "         ", 11, 32
-	EMWriteScreen "         ", 12, 32
-	EMWriteScreen "         ", 13, 32
-	EMWriteScreen "         ", 14, 32
-	EMWriteScreen "         ", 15, 32
-	EMWriteScreen "         ", 16, 32
-	EMWriteScreen "         ", 12, 72
-	EMWriteScreen "         ", 13, 72
-	EMWriteScreen "         ", 14, 72
-	EMWritescreen ABAWD_months_array(i).gross_wages, 5, 32
-	EMWritescreen ABAWD_months_array(i).busi_income, 6, 32
-	EMWritescreen ABAWD_months_array(i).gross_RSDI, 11, 32
-	EMWritescreen ABAWD_months_array(i).gross_SSI, 12, 32
-	EMWritescreen ABAWD_months_array(i).gross_VA, 13, 32
-	EMWritescreen ABAWD_months_array(i).gross_UC, 14, 32
-	EMWritescreen ABAWD_months_array(i).gross_CS, 15, 32
-	EMWritescreen ABAWD_months_array(i).gross_other, 16, 32
-	EMWritescreen ABAWD_months_array(i).deduction_FMED, 12, 72
-	EMWritescreen ABAWD_months_array(i).deduction_COEX, 14, 72
-
-	transmit
-	EMReadScreen warning_check, 4, 18, 9 'We need to check here for a warning on potential expedited cases..
-	IF warning_check = "FIAT" Then 'and enter two extra transmits to bypass.
 		transmit
+		EMReadScreen warning_check, 4, 18, 9 'We need to check here for a warning on potential expedited cases..
+		IF warning_check = "FIAT" Then 'and enter two extra transmits to bypass.
+			transmit
+			transmit
+		END IF
+		EMwritescreen "FFB2", 20, 70 'This is to make sure we end up in the right place'
 		transmit
-	END IF
-	EMwritescreen "FFB2", 20, 70 'This is to make sure we end up in the right place'
-	transmit
-	'Now on FFB2
-	EMWriteScreen "         ",  5, 29
-	EMWriteScreen "         ",  6, 29
-	EMWriteScreen "         ",  7, 29
-	EMWriteScreen "         ",  8, 29
-	EMWriteScreen "         ",  9, 29
-	EMWriteScreen "         ", 10, 29
-	EMWriteScreen "         ", 11, 29
-	EMWriteScreen "         ", 12, 29
-	EMWritescreen ABAWD_months_array(i).SHEL_rent, 5, 29
-	EMWritescreen ABAWD_months_array(i).SHEL_tax, 6, 29
-	EMWritescreen ABAWD_months_array(i).SHEL_insa, 7, 29
-	EMWritescreen ABAWD_months_array(i).HEST_elect, 8, 29
-	EMWritescreen ABAWD_months_array(i).HEST_heat, 9, 29
-	EMWritescreen ABAWD_months_array(i).HEST_phone, 11, 29
-	EMWriteScreen ABAWD_months_array(i).SHEL_other, 12, 29
-	'this enters the proration date in the initial month'
-	IF abs(MAXIS_footer_month) = abs(left(proration_date, 2)) THEN
-		EMWriteScreen left(proration_date, 2), 11, 56
-		EMWriteScreen mid(proration_date, 4, 2), 11, 59
-		EMWriteScreen right(proration_date, 2), 11, 62
-	END IF
-	transmit
-	EMReadScreen warning_check, 4, 18, 9 'We need to check here for a warning on potential expedited cases..
-	IF warning_check = "FIAT" Then 'and enter two extra transmits to bypass.
+		'Now on FFB2
+		EMWriteScreen "         ",  5, 29
+		EMWriteScreen "         ",  6, 29
+		EMWriteScreen "         ",  7, 29
+		EMWriteScreen "         ",  8, 29
+		EMWriteScreen "         ",  9, 29
+		EMWriteScreen "         ", 10, 29
+		EMWriteScreen "         ", 11, 29
+		EMWriteScreen "         ", 12, 29
+		EMWritescreen ABAWD_months_array(i).SHEL_rent, 5, 29
+		EMWritescreen ABAWD_months_array(i).SHEL_tax, 6, 29
+		EMWritescreen ABAWD_months_array(i).SHEL_insa, 7, 29
+		EMWritescreen ABAWD_months_array(i).HEST_elect, 8, 29
+		EMWritescreen ABAWD_months_array(i).HEST_heat, 9, 29
+		EMWritescreen ABAWD_months_array(i).HEST_phone, 11, 29
+		EMWriteScreen ABAWD_months_array(i).SHEL_other, 12, 29
+		'this enters the proration date in the initial month'
+		IF abs(MAXIS_footer_month) = abs(left(proration_date, 2)) THEN
+			EMWriteScreen left(proration_date, 2), 11, 56
+			EMWriteScreen mid(proration_date, 4, 2), 11, 59
+			EMWriteScreen right(proration_date, 2), 11, 62
+		END IF
 		transmit
+		EMReadScreen warning_check, 4, 18, 9 'We need to check here for a warning on potential expedited cases..
+		IF warning_check = "FIAT" Then 'and enter two extra transmits to bypass.
+			transmit
+			transmit
+		END IF
+		'Now on SUMM screen, which shouldn't matter
+		PF3 'back to FFSL
+		PF3 'This should bring up the "do you want to retain" popup
+	
+		EMReadScreen income_cap_check, 11, 24, 2
+		If income_cap_check = "PROSP GROSS" then script_end_procedure("Prospective gross income is over the income standard. THE FIAT cannot be saved. Please review case and budget for potential errors.")
+		EMWritescreen "Y", 13, 41
 		transmit
-	END IF
-	'Now on SUMM screen, which shouldn't matter
-	PF3 'back to FFSL
-	PF3 'This should bring up the "do you want to retain" popup
-
-	EMReadScreen income_cap_check, 11, 24, 2
-	If income_cap_check = "PROSP GROSS" then script_end_procedure("Prospective gross income is over the income standard. THE FIAT cannot be saved. Please review case and budget for potential errors.")
-	EMWritescreen "Y", 13, 41
-	transmit
-	EMReadscreen final_month_check, 4, 10, 53 'This looks for a pop-up that only comes up in the final month, and clears it.
-	IF final_month_check = "ELIG" THEN
-		EMWritescreen "Y", 11, 52
-		EMWritescreen initial_month, 13, 37
-		EMWritescreen right(initial_year, 2), 13, 40
-		transmit
-	END IF
+		EMReadscreen final_month_check, 4, 10, 53 'This looks for a pop-up that only comes up in the final month, and clears it.
+		IF final_month_check = "ELIG" THEN
+			EMWritescreen "Y", 11, 52
+			EMWritescreen initial_month, 13, 37
+			EMWritescreen right(initial_year, 2), 13, 40
+			transmit
+		END IF
 next
 
 script_end_procedure("Success, the FIAT results have been generated. Please review before approving." & vbcr & vbcr & _
