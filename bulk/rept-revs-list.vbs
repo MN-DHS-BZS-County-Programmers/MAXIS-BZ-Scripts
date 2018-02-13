@@ -44,11 +44,53 @@ changelog = array()
 
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+CALL changelog_update("01/25/2018", "Entering a supervisor X-Number in the Workers to Check will pull all X-Numbers listed under that supervisor in MAXIS. Addiional bug fix where script was missing cases.", "Casey Love, Hennepin County")
+call changelog_update("01/25/2018", "Added handling for all months. Previously script only allowed user to select from current month or current month plus 2.", "Ilse Ferris, Hennepin County")
 call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 
 'Actually displays the changelog. This function uses a text file located in the My Documents folder. It stores the name of the script file and a description of the most recent viewed change.
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
+
+'This function is used to grab all active X numbers according to the supervisor X number(s) inputted
+FUNCTION create_array_of_all_active_x_numbers_by_supervisor(array_name, supervisor_array)
+	'Getting to REPT/USER
+	CALL navigate_to_MAXIS_screen("REPT", "USER")
+
+	'Sorting by supervisor
+	PF5
+	PF5
+
+	'Reseting array_name
+	array_name = ""
+
+	'Splitting the list of inputted supervisors...
+	supervisor_array = replace(supervisor_array, " ", "")
+	supervisor_array = split(supervisor_array, ",")
+	FOR EACH unit_supervisor IN supervisor_array
+		IF unit_supervisor <> "" THEN
+			'Entering the supervisor number and sending a transmit
+			CALL write_value_and_transmit(unit_supervisor, 21, 12)
+
+			MAXIS_row = 7
+			DO
+				EMReadScreen worker_ID, 8, MAXIS_row, 5
+				worker_ID = trim(worker_ID)
+				IF worker_ID = "" THEN EXIT DO
+				array_name = trim(array_name & " " & worker_ID)
+				MAXIS_row = MAXIS_row + 1
+				IF MAXIS_row = 19 THEN
+					PF8
+					EMReadScreen end_check, 9, 24,14
+					If end_check = "LAST PAGE" Then Exit Do
+					MAXIS_row = 7
+				END IF
+			LOOP
+		END IF
+	NEXT
+	'Preparing array_name for use...
+	array_name = split(array_name)
+END FUNCTION
 
 'Checks for county info from global variables, or asks if it is not already defined.
 get_county_code
@@ -81,13 +123,9 @@ If current_month_plus_2 = vbCancel then stopscript
 If current_month_plus_2 = vbYes then current_month_plus_2 = True
 If current_month_plus_2 = vbNo then current_month_plus_2 = False
 
-'Determining what current month + 2 is
-future_footer_month = datepart("m", dateadd("m", 2, date))
-If len(future_footer_month) = 1 then future_footer_month = "0" & future_footer_month
-future_footer_year = right(datepart("yyyy", dateadd("m", 2, date)), 2)
-
 'Connects to BlueZone
 EMConnect ""
+Call MAXIS_footer_finder(MAXIS_footer_month, MAXIS_footer_year)		'inputs the MAXIS footer/month and year that is on the current MAXIS screen
 
 Do
 	Do
@@ -185,17 +223,39 @@ END IF
 'If all workers are selected, the script will go to REPT/USER, and load all of the workers into an array. Otherwise it'll create a single-object "array" just for simplicity of code.
 If all_workers_check = checked then
 	call create_array_of_all_active_x_numbers_in_county(worker_array, two_digit_county_code)
-Else
+Else		'If worker numbers are litsted - this will create an array of workers to check
 	x1s_from_dialog = split(worker_number, ",")	'Splits the worker array based on commas
 
-	'Need to add the worker_county_code to each one
+	'formatting array
 	For each x1_number in x1s_from_dialog
-		If worker_array = "" then
-			worker_array = trim(ucase(x1_number))		'replaces worker_county_code if found in the typed x1 number
+		x1_number = trim(ucase(x1_number))					'Formatting the x numbers so there are no errors
+		Call navigate_to_MAXIS_screen ("REPT", "USER")		'This part will check to see if the x number entered is a supervisor of anyone
+		PF5
+		PF5
+		EMWriteScreen x1_number, 21, 12
+		transmit
+		EMReadScreen sup_id_check, 7, 7, 5					'This is the spot where the first person is listed under this supervisor
+		IF sup_id_check <> "       " Then 					'If this frist one is not blank then this person is a supervisor
+			supervisor_array = trim(supervisor_array & " " & x1_number)		'The script will add this x number to a list of supervisors
 		Else
-			worker_array = worker_array & ", " & trim(ucase(x1_number)) 'replaces worker_county_code if found in the typed x1 number
-		End if
+			If worker_array = "" then						'Otherwise this x number is added to a list of workers to run the script on
+				worker_array = trim(x1_number)
+			Else
+				worker_array = worker_array & ", " & trim(ucase(x1_number)) 'replaces worker_county_code if found in the typed x1 number
+			End if
+		End If
+		PF3
 	Next
+
+	If supervisor_array <> "" Then 				'If there are any x numbers identified as a supervisor, the script will run the function above
+		Call create_array_of_all_active_x_numbers_by_supervisor (more_workers_array, supervisor_array)
+		workers_to_add = join(more_workers_array, ", ")
+		If worker_array = "" then				'Adding all x numbers listed under the supervisor to the worker array
+			worker_array = workers_to_add
+		Else
+			worker_array = worker_array & ", " & trim(ucase(workers_to_add))
+		End if
+	End If
 
 	'Split worker_array
 	worker_array = split(worker_array, ", ")
@@ -203,15 +263,14 @@ End if
 
 'Setting the variable for what's to come
 excel_row = 2
+all_case_numbers_array = "*"
 
 For each worker in worker_array
 	back_to_self	'Does this to prevent "ghosting" where the old info shows up on the new screen for some reason
 	MAXIS_footer_month = "" 'clearing variable to prevent breaking when in Cm+2
 	MAXIS_footer_year = ""
-	temp_footer_month = "0" & datepart("m", date)
-	temp_footer_year = datepart("yyyy", date)
-	EMWriteScreen right(temp_footer_month, 2), 20, 43 'needs to add date that isn't CM+2 other wise script cannot navigate back to REVS when running on multiple cases.
-	EMWriteScreen right(temp_footer_year, 2), 20, 46
+	EMWriteScreen MAXIS_footer_month, 20, 43 'needs to add date that isn't CM+2 other wise script cannot navigate back to REVS when running on multiple cases.
+	EMWriteScreen MAXIS_footer_year, 20, 46
 	transmit
 
 	Call navigate_to_MAXIS_screen("rept", "revs")
@@ -220,8 +279,8 @@ For each worker in worker_array
 
 	'If current_month_plus_2 is selected, it pops that month into the footer month area.
 	If current_month_plus_2 = True then
-		EMWriteScreen future_footer_month, 20, 55
-		EMWriteScreen future_footer_year, 20, 58
+		EMWriteScreen CM_plus_2_mo, 20, 55
+		EMWriteScreen CM_plus_2_yr, 20, 58
 		transmit
 	End if
 	EMReadScreen MAXIS_footer_month, 2, 20, 55
@@ -251,10 +310,10 @@ For each worker in worker_array
 				cash_status = trim(replace(cash_status, " ", ""))
 
 				'Doing this because sometimes BlueZone registers a "ghost" of previous data when the script runs. This checks against an array and stops if we've seen this one before.
-				If trim(MAXIS_case_number) <> "" and instr(all_case_numbers_array, MAXIS_case_number) <> 0 then exit do
-				all_case_numbers_array = trim(all_case_numbers_array & " " & MAXIS_case_number)
-
-				If MAXIS_case_number = "        " then exit do			'Exits do if we reach the end
+				MAXIS_case_number = trim(MAXIS_case_number)
+				If MAXIS_case_number <> "" and instr(all_case_numbers_array, "*" & MAXIS_case_number & "*") <> 0 then exit do
+				all_case_numbers_array = trim(all_case_numbers_array & MAXIS_case_number & "*")
+				If MAXIS_case_number = "" Then Exit Do			'Exits do if we reach the end
 
 				'For some goofy reason the dash key shows up instead of the space key. No clue why. This will turn them into null variables.
 				If cash_status = "-" then cash_status = ""

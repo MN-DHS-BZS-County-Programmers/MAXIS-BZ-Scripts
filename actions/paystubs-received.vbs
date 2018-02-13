@@ -44,6 +44,7 @@ changelog = array()
 
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+call changelog_update("01/10/2018", "Updated coordinates in STAT/JOBS for income type and verification codes.", "Ilse Ferris, Hennepin County")
 CALL changelog_update("01/11/2017", "The script has been updated to write to the GRH PIC and to case note that the GRH PIC has been updated.", "Robert Fewins-Kalb, Anoka County")
 call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 
@@ -585,12 +586,8 @@ Do
 	If pay_frequency = "Every Week" then EMWriteScreen cint((average_hours_per_paystub + .0000000000001) * total_prospective_dates), 18, 72
 
 	'Puts pay verification type in
-	IF ((MAXIS_footer_month * 1) >= 10 AND (MAXIS_footer_year * 1) >= "16") OR (MAXIS_footer_year = "17") THEN
-		EMWriteScreen left(JOBS_verif_code, 1), 6, 34
-	ELSE
-		EMWriteScreen left(JOBS_verif_code, 1), 6, 38
-	END IF
-
+	EMWriteScreen left(JOBS_verif_code, 1), 6, 34
+	
 	'If the footer month is the current month + 1, the script needs to update the HC popup for HC cases.
 	If update_HC_popup_check = 1 and datediff("m", date, MAXIS_footer_month & "/01/" & MAXIS_footer_year) = 1 then
 		EMReadScreen HC_income_est_check, 3, 19, 63 'reading to find the HC income estimator is moving 6/1/16, to account for if it only affects future months we are reading to find the HC inc EST
