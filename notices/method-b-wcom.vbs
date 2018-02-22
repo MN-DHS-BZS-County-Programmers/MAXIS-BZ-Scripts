@@ -146,8 +146,21 @@ medi_part_b = (Medicare_B)
 call navigate_to_MAXIS_screen("ELIG", "HC")
 EMSendKey "x"
 transmit
-EMReadScreen method_type, 1, 13, 21
-If method_type <> "B" then script_end_procedure("Your case is not a Method B budget case. The script will now end.")
+mo_col = 19
+yr_col = 22
+Do
+    EMReadScreen bsum_mo, 2, 6, mo_col
+    EMReadScreen bsum_yr, 2, 6, yr_col
+    If bsum_mo = MAXIS_footer_month and bsum_yr = MAXIS_footer_year Then
+        method_col = bsum_mo + 2
+        Exit Do
+    End If
+    bsum_mo = bsum_mo + 11
+    bsum_yr = bsum_yr + 11
+Loop until bsum_mo = 85
+
+EMReadScreen method_type, 1, 13, method_col
+If method_type <> "B" then script_end_procedure("Your case is not Method B budget case in the footer month you have indicated. The script will now end.")
 
 'finding the correct income, SD and and income standard for footer month selected'
 footer_info = MAXIS_footer_month & "/" & MAXIS_footer_year  'turnes footer year and footer month into string'
