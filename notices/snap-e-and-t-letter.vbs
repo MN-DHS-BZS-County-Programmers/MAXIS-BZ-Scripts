@@ -163,7 +163,7 @@ BeginDialog SNAPET_automated_adress_dialog, 0, 0, 306, 240, "SNAP E&T Appointmen
   DropListBox 115, 50, 185, 15, FSET_list, interview_location
   EditBox 60, 70, 110, 15, SNAPET_contact
   EditBox 235, 70, 65, 15, SNAPET_phone
-  DropListBox 105, 95, 85, 15, "Select one..."+chr(9)+"Banked months"+chr(9)+"Other manual referral"+chr(9)+"Student"+chr(9)+"Working with CBO", manual_referral
+  DropListBox 105, 95, 85, 15, "Select one..."+chr(9)+"ABAWD (3/36 mo.)"+chr(9)+"Banked months"+chr(9)+"Other manual referral"+chr(9)+"Student"+chr(9)+"Working with CBO", manual_referral
   EditBox 105, 115, 195, 15, other_referral_notes
   EditBox 105, 140, 85, 15, worker_signature
   ButtonGroup ButtonPressed
@@ -200,7 +200,7 @@ BeginDialog SNAPET_manual_address_dialog, 0, 0, 301, 275, "SNAP E&T Appointment 
   EditBox 210, 85, 45, 15, SNAPET_zip
   EditBox 65, 105, 65, 15, SNAPET_contact
   EditBox 185, 105, 70, 15, SNAPET_phone
-  DropListBox 110, 125, 80, 15, "Select one..."+chr(9)+"Banked months"+chr(9)+"Other manual referral"+chr(9)+"Student"+chr(9)+"Working with CBO", manual_referral
+  DropListBox 110, 125, 80, 15, "Select one..."+chr(9)+"ABAWD (3/36 mo.)"+chr(9)+"Banked months"+chr(9)+"Other manual referral"+chr(9)+"Student"+chr(9)+"Working with CBO", manual_referral
   EditBox 110, 145, 185, 15, other_referral_notes
   EditBox 75, 170, 110, 15, worker_signature
   ButtonGroup ButtonPressed
@@ -229,7 +229,7 @@ BeginDialog SNAPET_Hennepin_dialog, 0, 0, 466, 205, "SNAP E&T Appointment Letter
   EditBox 105, 10, 55, 15, MAXIS_case_number
   EditBox 220, 10, 25, 15, member_number
   DropListBox 105, 35, 195, 15, "Select one..."+chr(9)+"Somali-language (Sabathani, next Tuesday @ 2:00 p.m.)"+chr(9)+"Central NE (HSB, next Wednesday @ 2:00 p.m.)"+chr(9)+"North (HSB, next Wednesday @ 10:00 a.m.)"+chr(9)+"Northwest(Brookdale, next Monday @ 2:00 p.m.)"+chr(9)+"South Mpls (Sabathani, next Tuesday @ 10:00 a.m.)"+chr(9)+"South Suburban (Sabathani, next Tuesday @ 10:00 a.m.)"+chr(9)+"West (Sabathani, next Tuesday @ 10:00 a.m.)", interview_location
-  DropListBox 105, 60, 110, 15, "Select one..."+chr(9)+"Banked months"+chr(9)+"Other manual referral"+chr(9)+"Student"+chr(9)+"Working with CBO", manual_referral
+  DropListBox 105, 60, 110, 15, "Select one..."+chr(9)+"ABAWD (3/36 mo.)"+chr(9)+"Banked months"+chr(9)+"Other manual referral"+chr(9)+"Student"+chr(9)+"Working with CBO", manual_referral
   EditBox 105, 80, 195, 15, other_referral_notes
   EditBox 105, 105, 85, 15, worker_signature
   ButtonGroup ButtonPressed
@@ -383,7 +383,7 @@ DO
 		'asks if they really want to cancel script
 		cancel_confirmation
 		If MAXIS_case_number = "" or IsNumeric(MAXIS_case_number) = False or len(MAXIS_case_number) > 8 then err_msg = err_msg & vbNewLine & "* Enter a valid case number."
-		If isdate(appointment_date) = FALSE then err_msg = err_msg & vbNewLine & "* Enter a valid case number."
+		If isdate(appointment_date) = FALSE then err_msg = err_msg & vbNewLine & "* Enter a valid orientation date."
 		'The DateValue condition does not apply to Hennepin County users which is why it is excluded in the line below
 		IF worker_county_code <> "x127" AND DateValue(appointment_date) < date then err_msg = err_msg & vbNewLine & "* Orientation date entered has already passed.  Select a new date."
 		IF len(member_number) <> 2 then err_msg = err_msg & vbNewLine & "* Enter a valid member number."
