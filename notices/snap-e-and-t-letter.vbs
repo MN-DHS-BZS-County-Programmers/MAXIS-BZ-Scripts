@@ -1084,10 +1084,10 @@ CALL write_bullet_and_variable_in_case_note("Appointment time", appointment_time
 CALL write_bullet_and_variable_in_case_note("Appointment location", SNAPET_name)
 Call write_variable_in_case_note("* The WREG panel has been updated to reflect the E & T orientation date.")
 If manual_referral <> "Select one..." then Call write_variable_in_case_note("* Manual referral made for: " & manual_referral & " recipient.")
-If manual_referral <> "Select one..." then Call write_variable_in_case_note("* TIKL set for 30 days for proof of compliance with E & T.")
+Call write_bullet_and_variable_in_case_note("Other referral notes", other_referral_notes)
+If manual_referral <> "Select one..." then Call write_variable_in_case_note("* TIKL set for 30 days.")
 CALL write_variable_in_case_note("---")
 CALL write_variable_in_case_note(worker_signature)
-
 
 'The SPEC/LETR----------------------------------------------------------------------------------------------------
 call navigate_to_MAXIS_screen("SPEC", "LETR")
