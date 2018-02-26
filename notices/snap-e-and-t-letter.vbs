@@ -1130,7 +1130,7 @@ PF3
 If manual_referral <> "Select one..." then
 	call navigate_to_MAXIS_screen("dail", "writ")
 	call create_MAXIS_friendly_date(date, 30, 5, 18)
-	Call write_variable_in_TIKL("Manual referral was made for " & other_referral_notes & " recipient 30 days ago. Please review case to see if verification of E and T compliance was sent to recipient, and that they are complying.")
+	Call write_variable_in_TIKL("A manual referral was made for " & other_referral_notes & " recipient 30 days ago. Please review case/ABAWD status, and update case if applicable.")
 	transmit
 	PF3
 End if
@@ -1160,7 +1160,7 @@ If manual_referral <> "Select one..." then 					'if banked months or student are
 			PF3																			'saves referral
 			EMWriteScreen "Y", 11, 64								'Y to confirm save
 			transmit																'confirms saving the referral
-			script_end_procedure("Your orientation letter, manual referral, and a 30 day TIKL has been made. Navigate to SPEC/WCOM if you want to review the notice sent to the client." & _
+			script_end_procedure("Your orientation letter, manual referral, and 30-day TIKL has been made. Navigate to SPEC/WCOM if you want to review the notice sent to the client." & _
 			vbNewLine & vbNewLine & "Make sure that you have sent the form ""ABAWD FS RULES"" to the client.")
 		Else
 			script_end_procedure("Please select your agency's ES provider, and PF3 to save your referral.")		'if agency is not Hennepin, then user is asked to select the ES provider and save'
