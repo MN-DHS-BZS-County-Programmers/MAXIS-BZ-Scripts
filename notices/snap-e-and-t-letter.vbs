@@ -1063,6 +1063,8 @@ If manual_referral = "Banked months" then
  	if ABAWD_status <> "13" then script_end_procedure ("Member " & member_number & " is not coded as a banked months recipient. The script will now end.")
 End if
 
+MAXIS_background_check
+
 'Ensuring the orientation date is coding in the with the referral date scheduled
 EMReadScreen orientation_date, 8, 9, 50
 orientation_date = replace(orientation_date, " ", "/")
@@ -1085,6 +1087,7 @@ If manual_referral <> "Select one..." then Call write_variable_in_case_note("* M
 If manual_referral <> "Select one..." then Call write_variable_in_case_note("* TIKL set for 30 days for proof of compliance with E & T.")
 CALL write_variable_in_case_note("---")
 CALL write_variable_in_case_note(worker_signature)
+
 
 'The SPEC/LETR----------------------------------------------------------------------------------------------------
 call navigate_to_MAXIS_screen("SPEC", "LETR")
