@@ -151,12 +151,13 @@ yr_col = 22
 Do
     EMReadScreen bsum_mo, 2, 6, mo_col
     EMReadScreen bsum_yr, 2, 6, yr_col
+
     If bsum_mo = MAXIS_footer_month and bsum_yr = MAXIS_footer_year Then
-        method_col = bsum_mo + 2
+        method_col = mo_col + 2
         Exit Do
     End If
-    bsum_mo = bsum_mo + 11
-    bsum_yr = bsum_yr + 11
+    mo_col = mo_col + 11
+    yr_col = yr_col + 11
 Loop until bsum_mo = 85
 
 EMReadScreen method_type, 1, 13, method_col
