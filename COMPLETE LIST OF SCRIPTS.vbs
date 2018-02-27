@@ -78,23 +78,12 @@ end class
 script_num = 0
 ReDim Preserve script_array(script_num)
 Set script_array(script_num) = new script_bowie
-script_array(script_num).script_name 			= "ABAWD Banked Months FIATer"																		'Script name
-script_array(script_num).description 			= "FIATS SNAP eligibility, income, and deductions for HH members using banked months."
-script_array(script_num).category               = "ACTIONS"
-script_array(script_num).workflows              = ""
-script_array(script_num).subcategory            = array("ABAWD")
-script_array(script_num).release_date           = #10/01/2000#
-
-script_num = script_num + 1						'Increment by one
-ReDim Preserve script_array(script_num)
-Set script_array(script_num) = new script_bowie
 script_array(script_num).script_name 			= "ABAWD FIATer"																		'Script name
 script_array(script_num).description 			= "FIATS SNAP eligibility, income, and deductions for HH members with more than 3 counted months on the ABAWD tracking record."
 script_array(script_num).category               = "ACTIONS"
 script_array(script_num).workflows              = ""
 script_array(script_num).subcategory            = array("ABAWD")
 script_array(script_num).release_date           = #01/17/2017#
-
 
 script_num = script_num + 1						'Increment by one
 ReDim Preserve script_array(script_num)			'Resets the array to add one more element to it
@@ -176,27 +165,6 @@ script_array(script_num).category               = "ACTIONS"
 script_array(script_num).workflows              = ""
 script_array(script_num).subcategory            = array("")
 script_array(script_num).release_date           = #11/03/2016#
-
-script_num = script_num + 1						'Increment by one
-ReDim Preserve script_array(script_num)			'Resets the array to add one more element to it
-Set script_array(script_num) = new script_bowie		'Set this array element to be a new script_bowie. Script details below...
-script_array(script_num).script_name 			= "HG expansion MONY-CHCK"																		'Script name
-script_array(script_num).description 			= "Issues a housing grant in MONY/CHCK for cases that meet HG expansion criteria."
-script_array(script_num).category               = "ACTIONS"
-script_array(script_num).workflows              = ""
-script_array(script_num).subcategory            = array("")
-script_array(script_num).release_date           = #12/01/2016#
-
-script_num = script_num + 1								'Increment by one
-ReDim Preserve script_array(script_num)		'Resets the array to add one more element to it
-Set script_array(script_num) = new script_bowie		'Set this array element to be a new script_bowie. Script details below...
-script_array(script_num).script_name			= "HG Supplement"
-script_array(script_num).description			= "Issues a housing grant in MONY/CHCK for cases that should have been issued in prior months."
-script_array(script_num).category               = "ACTIONS"
-script_array(script_num).workflows              = ""
-script_array(script_num).subcategory            = array("")
-script_array(script_num).release_date           = #04/25/2016#
-
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array(script_num)		'Resets the array to add one more element to it
@@ -319,16 +287,6 @@ script_array(script_num).category               = "BULK"
 script_array(script_num).workflows              = ""
 script_array(script_num).subcategory            = array("REPORTS")
 script_array(script_num).release_date           = #10/01/2000#
-
-script_num = script_num + 1								'Increment by one
-ReDim Preserve script_array(script_num)
-Set script_array(script_num) = new script_bowie
-script_array(script_num).script_name 			= "Banked Months Report"																		'Script name
-script_array(script_num).description 			= "Creates a month specific report of banked months used, also checks these cases to confirm banked month use and creates a rejected report."
-script_array(script_num).category               = "BULK"
-script_array(script_num).workflows              = ""
-script_array(script_num).subcategory            = array("")
-script_array(script_num).release_date           = #04/25/2016#
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array(script_num)			'Resets the array to add one more element to it
@@ -509,16 +467,6 @@ script_array(script_num).category               = "BULK"
 script_array(script_num).workflows              = ""
 script_array(script_num).subcategory            = array("REPORTS")
 script_array(script_num).release_date           = #10/01/2000#
-
-script_num = script_num + 1								'Increment by one
-ReDim Preserve script_array(script_num)		'Resets the array to add one more element to it
-Set script_array(script_num) = new script_bowie		'Set this array element to be a new script_bowie. Script details below...
-script_array(script_num).script_name 			= "REPT-GRMR List"
-script_array(script_num).description 			= "Pulls a list of cases in REPT/GRMR into an Excel spreadsheet."
-script_array(script_num).category               = "BULK"
-script_array(script_num).workflows              = ""
-script_array(script_num).subcategory            = array("REPORTS")
-script_array(script_num).release_date           = #06/27/2016#
 
 script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array(script_num)		'Resets the array to add one more element to it
