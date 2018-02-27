@@ -40,6 +40,7 @@ changelog = array()
 
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+call changelog_update("02/27/2018", "Removed BULK scripts 'Banked Month Report' and 'REPT/GRMR'.", "Ilse Ferris, Hennepin County")
 call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 
 'Actually displays the changelog. This function uses a text file located in the My Documents folder. It stores the name of the script file and a description of the most recent viewed change.
@@ -97,13 +98,6 @@ script_array_BULK_stat_list = array()
 '-------------------------------------------------------------------------------------------------------------------------BULK MAIN MENU
 'Resetting the variable
 script_num = 0
-ReDim Preserve script_array_BULK_main(script_num)
-Set script_array_BULK_main(script_num) = new script
-script_array_BULK_main(script_num).script_name 			= "Banked Months Report"																		'Script name
-script_array_BULK_main(script_num).file_name 				= "banked-months-report.vbs"															'Script URL
-script_array_BULK_main(script_num).description 			= "Creates a month specific report of banked months used, also checks these cases to confirm banked month use and creates a rejected report."
-
-script_num = script_num + 1								'Increment by one
 ReDim Preserve script_array_BULK_main(script_num)			'Resets the array to add one more element to it
 Set script_array_BULK_main(script_num) = new script
 script_array_BULK_main(script_num).script_name 			= "CASE/NOTE from List"																		'Script name
@@ -275,13 +269,6 @@ Set script_array_BULK_stat_list(script_num) = new script	'Set this array element
 script_array_BULK_stat_list(script_num).script_name 		= " EOMC "													'needs spaces to generate button width properly.
 script_array_BULK_stat_list(script_num).file_name			= "rept-eomc-list.vbs"
 script_array_BULK_stat_list(script_num).description 		= "Pulls a list of cases in REPT/EOMC into an Excel spreadsheet."
-
-script_num = script_num + 1									'Increment by one
-ReDim Preserve script_array_BULK_stat_list(script_num)		'Resets the array to add one more element to it
-Set script_array_BULK_stat_list(script_num) = new script	'Set this array element to be a new script. Script details below...
-script_array_BULK_stat_list(script_num).script_name 		= " GRMR "
-script_array_BULK_stat_list(script_num).file_name			= "rept-grmr-list.vbs"
-script_array_BULK_stat_list(script_num).description 		= "Pulls a list of cases in REPT/GRMR into an Excel spreadsheet."
 
 script_num = script_num + 1									'Increment by one
 ReDim Preserve script_array_BULK_stat_list(script_num)		'Resets the array to add one more element to it
