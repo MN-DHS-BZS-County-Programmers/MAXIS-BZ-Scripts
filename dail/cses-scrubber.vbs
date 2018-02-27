@@ -44,7 +44,7 @@ changelog = array()
 
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
-call changelog_update("02/27/2018", "Fixed bug in statistics gathering that was causing the statistics to always be 0.", "Casey Love, Hennepin County")
+call changelog_update("02/27/2018", "Added warning for cases with possibly more than 1 page of CSES DAILS. Also fixed bug for statistics gathering.", "Casey Love, Hennepin County")
 call changelog_update("01/19/2017", "Added ability to update cases without open MFIP or SNAP", "David Courtright, Saint Louis County")
 call changelog_update("01/10/2017", "Bug fix to make sure that the impact on the MFIP benefit is read from the corrct footer month. Handling for cases that are in pending status - these should be processed manually.", "Casey Love, Ramsey County")
 call changelog_update("12/15/2016", "Fixing a bug with counting household members and formatting the spreadsheet. Also adding ability to budget income for a person no longer in the household. For MFIP cases the script will attempt to see how the income changed the benefit.", "Casey Love, Ramsey County")
@@ -208,6 +208,7 @@ For MAXIS_row = 6 to 19			'<<<<<CHECK THIS AGAINST A FULL, ACTUAL FACTUAL DAIL
 	EMWriteScreen "x", MAXIS_row, 3									'Puts an 'X' on the DAIL message
 	transmit														'Transmits
 
+    If MAXIS_row = 19 Then End_of_Page = True                       'Adding this to identify if the script finds a full page of DAILs
     STATS_counter = STATS_counter + 1
 
 	'READS THE TYPE
@@ -270,7 +271,34 @@ For MAXIS_row = 6 to 19			'<<<<<CHECK THIS AGAINST A FULL, ACTUAL FACTUAL DAIL
 	message_number = message_number + 1
 Next
 
+If End_of_Page = True Then
 
+    BeginDialog Dialog1, 0, 0, 141, 105, "CONTINUE THIS SCRIPT?"
+      ButtonGroup ButtonPressed
+        PushButton 30, 85, 50, 15, "Continue", continue_button
+        CancelButton 85, 85, 50, 15
+      Text 5, 5, 130, 20, "This case may have more than a full page of Child Support DAIL messages."
+      Text 5, 30, 130, 25, "This script does NOT support any case that has Child Support DAIL messages on a second page of the DAIL."
+      Text 5, 65, 125, 10, "Continue script or Cancel?"
+    EndDialog
+
+    Dialog Dialog1
+
+    If ButtonPressed = cancel Then
+
+        For col_to_autofit = 1 to 12
+        	ObjExcel.columns(col_to_autofit).AutoFit()
+        Next
+        leave_excel_open = MsgBox("Do you want to leave the Excel Document open?", vbQuestion + vbYesNo, "Leave Excel Open")
+        if leave_excel_open = vbNo Then
+            objExcel.DisplayAlerts = False			'Close the Excel
+            objExcel.Workbooks.Close
+            objExcel.quit
+            objExcel.DisplayAlerts = True
+        end if
+        StopScript
+    End If
+End If
 
 
 '===================================================================================================================================DETERMINING WHAT PROGRAMS ARE OPEN
