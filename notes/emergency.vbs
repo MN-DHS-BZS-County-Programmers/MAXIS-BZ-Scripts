@@ -394,7 +394,8 @@ If EGA_screening_check = 1 then
 	END IF
 END IF
 'End of EMER screening code----------------------------------------------------------------------------------------------------
-
+'blanking out crisis variable for Hennepin & Ramsey users so heading is not duplicated in case notes
+crisis = ""
 'Jumping into STAT
 call navigate_to_MAXIS_screen("stat", "hcre")
 'Creating a custom dialog for determining who the HH members are
