@@ -128,10 +128,11 @@ call write_variable_in_CASE_NOTE ("---")
 call write_variable_in_CASE_NOTE(worker_signature)
 
 'Checks if additional info is yes and the TIKL is checked, sets a TIKL for the return of the info
-IF Tikl_checkbox = 1 THEN
+
+IF Tikl_checkbox = 1 THEN 
 	call navigate_to_MAXIS_screen("dail", "writ")
 	call create_MAXIS_friendly_date(date, 10, 5, 18)		'The following will generate a TIKL formatted date for 10 days from now.
-	call write_variable_in_TIKL("Additional info requested after an EVF being rec'd should have returned by now. If not received, take appropriate action. (TIKL auto-generated from script)." )
+	call write_variable_in_TIKL("Additional info for job at " & employer & " should have been received by now. Signed EVF for this job should be on file. (TIKL auto-generated from EVF Received script).")
 	transmit
 	PF3
 	'Success message
