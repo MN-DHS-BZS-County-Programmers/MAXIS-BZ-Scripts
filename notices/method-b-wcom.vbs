@@ -44,6 +44,7 @@
 
  'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
  'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+ call changelog_update("02/28/2018", "Fixing bug so the script will check for Method B based on the indicated month instead of defaulting to the first month in ELIG.", "Casey Love, Hennepin County")
  call changelog_update("01/02/2018", "Fixing bug that prevented the script from writing SPEC/MEMO due to MAXIS updates.", "David Courtright, St Louis County")
  call changelog_update("04/04/2017", "Added handling for multiple recipient changes to SPEC/WCOM", "David Courtright, St Louis County")
  call changelog_update("12/27/2016", "Script can now write to a MEMO is a waiting notice is not available/found.", "Charles Potter, DHS")
@@ -146,8 +147,22 @@ medi_part_b = (Medicare_B)
 call navigate_to_MAXIS_screen("ELIG", "HC")
 EMSendKey "x"
 transmit
-EMReadScreen method_type, 1, 13, 21
-If method_type <> "B" then script_end_procedure("Your case is not a Method B budget case. The script will now end.")
+mo_col = 19
+yr_col = 22
+Do
+    EMReadScreen bsum_mo, 2, 6, mo_col
+    EMReadScreen bsum_yr, 2, 6, yr_col
+
+    If bsum_mo = MAXIS_footer_month and bsum_yr = MAXIS_footer_year Then
+        method_col = mo_col + 2
+        Exit Do
+    End If
+    mo_col = mo_col + 11
+    yr_col = yr_col + 11
+Loop until bsum_mo = 85
+
+EMReadScreen method_type, 1, 13, method_col
+If method_type <> "B" then script_end_procedure("Your case is not Method B budget case in the footer month you have indicated. The script will now end.")
 
 'finding the correct income, SD and and income standard for footer month selected'
 footer_info = MAXIS_footer_month & "/" & MAXIS_footer_year  'turnes footer year and footer month into string'
