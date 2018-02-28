@@ -44,6 +44,7 @@
 
  'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
  'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+ call changelog_update("02/28/2018", "Fixing bug so the script will check for Method B based on the indicated month instead of defaulting to the first month in ELIG.", "Casey Love, Hennepin County")
  call changelog_update("01/02/2018", "Fixing bug that prevented the script from writing SPEC/MEMO due to MAXIS updates.", "David Courtright, St Louis County")
  call changelog_update("04/04/2017", "Added handling for multiple recipient changes to SPEC/WCOM", "David Courtright, St Louis County")
  call changelog_update("12/27/2016", "Script can now write to a MEMO is a waiting notice is not available/found.", "Charles Potter, DHS")
