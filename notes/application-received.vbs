@@ -44,6 +44,7 @@ changelog = array()
 
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+call changelog_update("02/28/2018", "Added Day 30 of the application, add option to note routing dates, and enhanced time formatting for entering applymn times - 24hr time format will be switched to 12hr format.", "Casey Love, Hennepin County")
 call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 
 'Actually displays the changelog. This function uses a text file located in the My Documents folder. It stores the name of the script file and a description of the most recent viewed change.
@@ -61,7 +62,7 @@ BeginDialog case_appld_dialog, 0, 0, 161, 65, "Application Received"
   Text 5, 30, 85, 10, "Worker Signature"
 EndDialog
 
-BeginDialog app_detail_dialog, 0, 0, 221, 260, "Detail of application"
+BeginDialog app_detail_dialog, 0, 0, 221, 280, "Detail of application"
   DropListBox 80, 5, 135, 45, "Select One"+chr(9)+"In Person"+chr(9)+"Dropped Off"+chr(9)+"Mail"+chr(9)+"Online"+chr(9)+"Fax"+chr(9)+"Email", how_app_recvd
   DropListBox 80, 25, 135, 20, "Select One"+chr(9)+"CAF"+chr(9)+"ApplyMN"+chr(9)+"HC - Certain Populations"+chr(9)+"HCAPP"+chr(9)+"Addendum", app_type
   EditBox 80, 45, 135, 15, confirmation_number
@@ -78,9 +79,10 @@ BeginDialog app_detail_dialog, 0, 0, 221, 260, "Detail of application"
   EditBox 150, 180, 65, 15, pended_date
   EditBox 5, 200, 210, 15, entered_notes
   CheckBox 5, 220, 205, 15, "Check here to have script transfer case to assigned worker", transfer_case
+  EditBox 145, 240, 70, 15, app_in_intake_date
   ButtonGroup ButtonPressed
-    OkButton 110, 240, 50, 15
-    CancelButton 165, 240, 50, 15
+    OkButton 110, 260, 50, 15
+    CancelButton 165, 260, 50, 15
   Text 5, 10, 70, 10, "Application received"
   Text 5, 30, 65, 10, "Type of application"
   Text 5, 50, 60, 10, "Confirmation #"
@@ -91,10 +93,14 @@ BeginDialog app_detail_dialog, 0, 0, 221, 260, "Detail of application"
   Text 5, 165, 110, 10, "Worker Number (X###### format)"
   Text 5, 185, 25, 10, "Notes:"
   Text 110, 185, 40, 10, "Pended on:"
+  Text 25, 245, 115, 10, "Date application received in intake:"
 EndDialog
 
 'Grabs the case number
 EMConnect ""
+
+'Checks for county info from global variables, or asks if it is not already defined.
+get_county_code
 
 CALL MAXIS_case_number_finder (MAXIS_case_number)
 
@@ -186,18 +192,20 @@ pended_date = date & ""
 'Runs the second dialog - which gathers information about the application
 Do
 	Do
-		Do
-			Dialog app_detail_dialog
-			cancel_confirmation
-			If app_type = "Select One" then MsgBox "Please enter the type of application received."
-			If how_app_recvd = "Select One" then MsgBox "Please enter how the application was received to the agency."
-			If worker_name = "" then MsgBox "Please enter who this case was assigned to."
-		Loop until (app_type <> "Select One" AND how_app_recvd <> "Select One" AND worker_name <> "")
-		If transfer_case = 1 AND (worker_number = "" OR len(worker_number) <> 7) then MsgBox "You must enter the MAXIS number of the worker if you would like the case to be transfered by the script, be sure that it is in X###### format."
-	Loop until (worker_number <> "" AND len(worker_number) = 7 OR transfer_case = 0)
-	If app_type = "ApplyMN" AND isnumeric(confirmation_number) = false AND time_of_app = "" = true then MsgBox "If an ApplyMN was received, you must enter the confirmation number and time received"
-Loop until (app_type = "ApplyMN" and isnumeric(confirmation_number) = true) AND time_of_app <> "" OR app_type <> "ApplyMN"
+		err_msg = ""
+		Dialog app_detail_dialog
+		cancel_confirmation
 
+		If date_of_app = "" Then err_msg = err_msg & vbNewLine & "* Enter the date of application."
+		If app_type = "Select One" then err_msg = err_msg & vbNewLine &  "* Please enter the type of application received."
+		If how_app_recvd = "Select One" then err_msg = err_msg & vbNewLine &  "* Please enter how the application was received to the agency."
+		If worker_name = "" then err_msg = err_msg & vbNewLine &  "* Please enter who this case was assigned to."
+		If transfer_case = 1 AND (worker_number = "" OR len(worker_number) <> 7) then err_msg = err_msg & vbNewLine &  "* You must enter the MAXIS number of the worker if you would like the case to be transfered by the script, be sure that it is in X###### format."
+		If app_type = "ApplyMN" AND isnumeric(confirmation_number) = false AND time_of_app = "" then err_msg = err_msg & vbNewLine &  "* If an ApplyMN was received, you must enter the confirmation number and time received"
+		if err_msg <> "" Then MsgBox "Please resolve before continuing:" & vbNewLine & err_msg
+	Loop until err_msg = ""
+	call check_for_password(are_we_passworded_out)  'Adding functionality for MAXIS v.6 Passworded Out issue'
+Loop until are_we_passworded_out = false
 'Creates a variable that lists all the programs pending.
 If cash_pend = 1 THEN programs_applied_for = programs_applied_for & "Cash, "
 If emer_pend = 1 THEN programs_applied_for = programs_applied_for & "Emergency, "
@@ -224,24 +232,47 @@ End If
 
 
 IF time_of_app <> "" Then
+	If AM_PM <> "PM" Then
+		colon_place = InStr(time_of_app, ":")
+		If colon_place <> 0 Then
+			time_stamp_hour = left(time_of_app, colon_place - 1)
+			time_stamp_hour = time_stamp_hour * 1
+			If time_stamp_hour > 12 Then
+				time_stamp_hour = time_stamp_hour - 12
+				AM_PM = "PM"
+			Else
+				AM_PM = "AM"
+			End If
+			time_stamp_min = right(time_of_app, len(time_of_app) - colon_place)
+			time_of_app = time_stamp_hour & ":" & time_stamp_min
+		End If
+	End If
 	time_stamp = " at " & time_of_app & " " & AM_PM
 ELSE
 	time_stamp = " "
 End If
 
+app_day_30 = DateAdd("d", 30, date_of_app)
+
 'Writes the case note
 CALL start_a_blank_case_note
 CALL write_variable_in_CASE_NOTE ("APP PENDED - " & app_type & " rec'vd via " & how_app_recvd & " on " & date_of_app & time_stamp)
-IF isnumeric(confirmation_number) = true THEN CALL write_bullet_and_variable_in_CASE_NOTE ("Confirmation # ", confirmation_number)
+IF isnumeric(confirmation_number) = true THEN CALL write_variable_in_CASE_NOTE ("* Confirmation # " & confirmation_number)
 CALL write_bullet_and_variable_in_CASE_NOTE ("Requesting", programs_applied_for)
 CALL write_bullet_and_variable_in_CASE_NOTE ("Pended on", pended_date)
 CALL write_bullet_and_variable_in_CASE_NOTE ("Application assigned to", worker_name)
-IF transfer_case = checked THEN CALL write_variable_in_CASE_NOTE ("* Case transfered to " & worker_name & " in MAXIS")
+IF transfer_case = checked THEN CALL write_variable_in_CASE_NOTE ("* Case transfered to " & worker_name & " in " & transfer_system)
 IF entered_notes <> "" THEN CALL write_bullet_and_variable_in_CASE_NOTE ("Notes", entered_notes)
+CALL write_bullet_and_variable_in_CASE_NOTE ("Day 30", app_day_30)
 CALL write_variable_in_CASE_NOTE ("---")
+If app_in_intake_date <> "" Then
+	CALL write_bullet_and_variable_in_CASE_NOTE ("Application Received in Intake on", app_in_intake_date)
+	CALL write_variable_in_CASE_NOTE ("* (Used for internal tracking only)")
+	CALL write_variable_in_CASE_NOTE ("---")
+End If
 CALL write_variable_in_CASE_NOTE (worker_signature)
 
 'Reminder to screen for XFS if SNAP is pending.
-IF fs_pend = 1 THEN MsgBox ("SNAP is pending, be sure to run the NOTES-Expedited Screening script as well to note potential XFS eligibility")
+IF fs_pend = 1 THEN end_msg = "SNAP is pending, be sure to run the NOTES-Expedited Screening script as well to note potential XFS eligibility" & vbNewLine & vbNewLine & end_msg
 
-script_end_procedure ("")
+script_end_procedure (end_msg)
