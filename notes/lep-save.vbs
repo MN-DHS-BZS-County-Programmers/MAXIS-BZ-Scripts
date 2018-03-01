@@ -50,6 +50,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO - change name and remove 'LEP' name - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2946
+
 'DIALOG PORTION----------------------------------------------------------------------------------------------------------------------------------------------
 
 BeginDialog SAVE_dialog, 0, 0, 206, 355, "SAVE Dialog"
