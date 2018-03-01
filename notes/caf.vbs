@@ -53,7 +53,7 @@ changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
 ' TODO add additional working when the EDRS checkbox is checked to case not the results - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2853
-
+' TODO add forced editing for certain fields of the CAF - need additional discussion - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2896'
 'DIALOGS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BeginDialog case_number_dialog, 0, 0, 181, 120, "Case number dialog"
   EditBox 80, 5, 60, 15, MAXIS_case_number
