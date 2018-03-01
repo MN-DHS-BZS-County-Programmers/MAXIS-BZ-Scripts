@@ -52,6 +52,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO have these call the same script - new hire is the same functionality - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2785
+
 'DIALOGS----------------------------------------------------
 'This is a dialog asking if the job is known to the agency.
 BeginDialog job_known_to_agency_dialog, 0, 0, 276, 65, "Job known?"

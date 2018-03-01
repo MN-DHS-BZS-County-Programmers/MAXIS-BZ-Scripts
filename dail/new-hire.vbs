@@ -54,6 +54,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO have these call the same script - new hire is the same functionality - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2785
+
 'DIALOGS----------------------------------------------------------------------------------------------
 'This is a dialog asking if the job is known to the agency.
 BeginDialog new_HIRE_dialog, 0, 0, 291, 195, "New HIRE dialog"
@@ -206,7 +208,7 @@ If create_JOBS_checkbox = checked then
 
 	EMWriteScreen "w", 5, 34				'Wage income is the type
 	EMWriteScreen "n", 6, 34				'No proof has been provided
-	
+
 	EMWriteScreen employer, 7, 42			'Adds employer info
 	EMWriteScreen month_hired, 9, 35		'Adds month hired to start date (this is actually the day income was received)
 	EMWriteScreen day_hired, 9, 38			'Adds day hired
