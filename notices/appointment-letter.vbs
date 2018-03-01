@@ -53,6 +53,7 @@ call changelog_update("11/20/2016", "Initial version.", "Ilse Ferris, Hennepin C
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO Remove Henn Count - Century Plaza address - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2945'
 'CLASSES----------------------------------------------------------------------------------------------------------------------
 'IF THIS WORKS, CONSIDER INCORPORATING INTO FUNCTIONS LIBRARY
 
