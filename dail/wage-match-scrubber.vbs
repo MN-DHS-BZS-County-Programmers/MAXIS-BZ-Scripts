@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO enhancement to add IEVP and case notes - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2634'
 'This is the custom function that checks the JOBS panels and builds the dialog to display all the information
 FUNCTION income_matrix(income_matrix_array, match_name, match_employer, quarter, quarterly_wage, match_year, all_programs)
 	CALL navigate_to_MAXIS_screen("STAT", "MEMB")
