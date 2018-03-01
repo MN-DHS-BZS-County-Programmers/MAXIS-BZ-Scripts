@@ -79,7 +79,7 @@ BeginDialog SAVE_dialog, 0, 0, 206, 355, "SAVE Dialog"
   Text 10, 275, 45, 10, "Other Notes:"
   GroupBox 5, 155, 185, 55, "SAVE 2"
   Text 10, 165, 135, 10, "Sponsored on I-864 Affidavit of Support?"
-  Text 10, 220, 85, 10, "Imigration doc received:"
+  Text 10, 220, 85, 10, "Imigration doc received:"      ' TODO - fix spellin - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2940'
   Text 10, 240, 35, 10, "Exp date:"
   Text 10, 315, 70, 10, "Sign your case note:"
   Text 10, 80, 65, 10, "LPR adjusted from:"
