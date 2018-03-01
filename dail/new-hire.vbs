@@ -55,6 +55,7 @@ changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
 ' TODO have these call the same script - new hire is the same functionality - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2785
+' TODO add MAXIS_case_number variable to script for stats - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2891
 
 'DIALOGS----------------------------------------------------------------------------------------------
 'This is a dialog asking if the job is known to the agency.
