@@ -57,6 +57,8 @@ changelog_display
 ' TODO Add more options for WHO is being contacted - this is a maybe
 ' TODO s are brought to you by - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2600
 
+' TODO add checkbox for leaving a generic message - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2773'
+
 'THE MAIN DIALOG--------------------------------------------------------------------------------------------------
 BeginDialog client_contact_dialog, 0, 0, 386, 320, "Client contact"
   ComboBox 50, 5, 60, 15, "Phone call"+chr(9)+"Voicemail"+chr(9)+"Email"+chr(9)+"Office visit"+chr(9)+"Letter", contact_type
