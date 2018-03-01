@@ -53,6 +53,8 @@ changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
 ' TODO add handling for correct coding of initial months - at application - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2894'
+' TODO add enhancement with NOTES ON INCOME functionality - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2913'
+
 'CUSTOM FUNCTIONS
 Function prospective_averager(pay_date, gross_amt, hours, paystubs_received, total_prospective_pay, total_prospective_hours) 'Creates variables for total_prospective_pay and total_prospective_hours
   If isdate(pay_date) = True then
