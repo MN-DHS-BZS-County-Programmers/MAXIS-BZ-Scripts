@@ -52,6 +52,7 @@ changelog = array()
 
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+call changelog_update("03/01/2018", "Changed closing message.", "Ilse Ferris, Hennepin County")
 call changelog_update("01/10/2018", "Updated coordinates in STAT/JOBS for income type and verification codes.", "Ilse Ferris, Hennepin County")
 call changelog_update("01/17/2017", "Initial version.", "Ilse Ferris, Hennepin County")
 
@@ -789,5 +790,4 @@ For i = 0 to ubound(footer_month_array)
 	END IF
 next
 
-script_end_procedure("Success, the FIAT results have been generated. Please review before approving." & vbcr & vbcr & _
-"Please use 'NOTICES - ABAWD WITH CHILD IN HH WCOM' after approving the case to add the required worker comments to the notice.")
+script_end_procedure("Success, the FIAT results have been generated. Please review before approving the case.")
