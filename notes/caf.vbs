@@ -52,6 +52,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add additional working when the EDRS checkbox is checked to case not the results - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2853
+
 'DIALOGS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BeginDialog case_number_dialog, 0, 0, 181, 120, "Case number dialog"
   EditBox 80, 5, 60, 15, MAXIS_case_number
