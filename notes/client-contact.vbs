@@ -50,6 +50,13 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO Increase field length for the name of the contact
+' TODO Have phone numbers in a list for a cobobox for easy selection
+' TODO have a dropdown with linguages for interpreter used or have it autofill from MEMB
+' TODO Update so if the RE field is blank it does not add the RE to the case note header
+' TODO Add more options for WHO is being contacted - this is a maybe
+' TODO s are brought to you by - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2600
+
 'THE MAIN DIALOG--------------------------------------------------------------------------------------------------
 BeginDialog client_contact_dialog, 0, 0, 386, 320, "Client contact"
   ComboBox 50, 5, 60, 15, "Phone call"+chr(9)+"Voicemail"+chr(9)+"Email"+chr(9)+"Office visit"+chr(9)+"Letter", contact_type
