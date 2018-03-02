@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO case note should be “Programs Affected by Discrepancy” - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2923'
 'Dialogs----------------------------------------------------------------------------------------------------
 BeginDialog case_discrepancy_dialog, 0, 0, 336, 245, "Case discrepancy"
   EditBox 90, 10, 70, 15, MAXIS_case_number

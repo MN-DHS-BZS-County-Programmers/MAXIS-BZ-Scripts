@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add new fields because of MAXIS - ADDR - homeless indicator, WREG - Banked Months indicator, EMPS - field options changed for Mbrs req    at home for SMC - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2942'
 '========================================================================TRANSFER CASES========================================================================
 Function transfer_cases(workers_to_XFER_cases_to, case_number_array)
 	'Creates an array of the workers selected in the dialog

@@ -53,6 +53,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+'TODO get rid of this script and make a BIG ELIG Summary script - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/3012'
+
 'Checks for county info from global variables, or asks if it is not already defined.
 get_county_code
 

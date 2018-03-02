@@ -51,6 +51,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add MAXIS_case_number variable to script for stats - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2891
 '<<<GO THROUGH AND REMOVE REDUNDANT FUNCTIONS
 EMConnect ""
 remedial_care_amt = "188.00"	'Amount that needs to be updated with current remedial care amount.

@@ -49,7 +49,11 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 'Actually displays the changelog. This function uses a text file located in the My Documents folder. It stores the name of the script file and a description of the most recent viewed change.
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
-
+ ' TODO Remove interview wording or make optional as interviews are not required for processing MTAF.
+ ' TODO Income complete/incomplete combo box for the note header
+ ' TODO add other income fields to the income autofill (UNEA, BUSI) - to more closely resemble the CAF
+ ' TODO - make this more action oriented - maybe
+ ' TODO s are brought to you by - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2594'
 'DIALOGS----------------------------------------------------------------------------------------------------
 'CASE NUMBER DIALOG
 BeginDialog case_number_dialog, 0, 0, 126, 45, "Case number dialog"

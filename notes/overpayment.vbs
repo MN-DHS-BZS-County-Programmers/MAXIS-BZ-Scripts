@@ -82,7 +82,7 @@ BeginDialog overpayment_dialog, 0, 0, 266, 305, "Overpayment dialog"
   Text 5, 50, 95, 10, "Claim Number(s) if available: "
   Text 5, 165, 140, 10, "When/why should this have been reported: "
   Text 5, 130, 60, 10, "Claim Collectible?"
-  Text 5, 145, 165, 10, "Explaination/calculation to determine if collectible:"
+  Text 5, 145, 165, 10, "Explaination/calculation to determine if collectible:"     ' TODO - fix spelling - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2939'
 EndDialog
 
 'SECTION 03: THE SCRIPT----------------------------------------------------------------------------------------------------

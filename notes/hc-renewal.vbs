@@ -50,6 +50,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO SIR MADE link needs to be changed - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2876'
+' TODO add another box for COunty medicare Reimbursement - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2976 '
 'DIALOGS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BeginDialog case_number_and_footer_month_dialog, 0, 0, 161, 65, "Case number and footer month"
   Text 5, 10, 85, 10, "Enter your case number:"

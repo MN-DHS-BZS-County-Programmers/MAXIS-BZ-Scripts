@@ -132,6 +132,7 @@ If FMED_check = "MEMBER HAS TURNED 60 - NOTIFY ABOUT POSSIBLE FMED DEDUCTION" th
 EMReadScreen remedial_care_check, 41, 6, 20
 If remedial_care_check = "REF 01 PERSON HAS REMEDIAL CARE DEDUCTION" then call run_from_GitHub(script_repository & "dail/ltc-remedial-care.vbs")
 
+' TODO have these call the same script - new hire is the same functionality - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2785
 'New HIRE messages, client started a new job (loads NEW HIRE)
 EMReadScreen HIRE_check, 15, 6, 20
 If HIRE_check = "NEW JOB DETAILS" then call run_from_GitHub(script_repository & "dail/new-hire.vbs")

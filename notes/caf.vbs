@@ -52,6 +52,12 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add additional working when the EDRS checkbox is checked to case not the results - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2853
+' TODO add forced editing for certain fields of the CAF - need additional discussion - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2896'
+' TODO add a checkbox and handling for cases ready for approval WITHOUT shelter expenses verified - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2911'
+' TODO add enhancement to include ACUT information - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2924'
+' TODO add handling for the 5223F - SNAP application fro Seniors - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2938'
+' TODO add handling for MEMI - other state end date - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2974 '
 'DIALOGS-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BeginDialog case_number_dialog, 0, 0, 181, 120, "Case number dialog"
   EditBox 80, 5, 60, 15, MAXIS_case_number

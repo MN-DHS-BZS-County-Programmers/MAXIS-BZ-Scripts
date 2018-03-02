@@ -51,6 +51,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add MAXIS_case_number variable to script for stats - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2891
+
 '<<<<<GO THROUGH THE SCRIPT AND REMOVE REDUNDANT FUNCTIONS, THANKS TO CUSTOM FUNCTIONS THEY ARE NOT REQUIRED.
 
 EMConnect ""
@@ -82,7 +84,7 @@ Call write_variable_in_SPEC_MEMO ("If you have medical bills over $35 each month
 Call write_variable_in_SPEC_MEMO ("  ")
 Call write_variable_in_SPEC_MEMO ("Please call your worker with questions.")
 
-PF4 
+PF4
 
 EMWriteScreen "case", 19, 22
 EMWriteScreen "note", 19, 70
