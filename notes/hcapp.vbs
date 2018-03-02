@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add MA-EPD handling - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2926'
 'DATE CALCULATIONS----------------------------------------------------------------------------------------------------
 MAXIS_footer_month = datepart("m", date)
 If len(MAXIS_footer_month) = 1 then MAXIS_footer_month = "0" & MAXIS_footer_month

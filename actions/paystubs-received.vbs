@@ -52,6 +52,9 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add handling for correct coding of initial months - at application - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2894'
+' TODO add enhancement with NOTES ON INCOME functionality - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2913'
+
 'CUSTOM FUNCTIONS
 Function prospective_averager(pay_date, gross_amt, hours, paystubs_received, total_prospective_pay, total_prospective_hours) 'Creates variables for total_prospective_pay and total_prospective_hours
   If isdate(pay_date) = True then
@@ -429,17 +432,17 @@ Do
 			transmit
 		END IF
     End if
-	
+
 	'going into the GRH PIC to update...
-	IF update_GRH_PIC_check = 1 THEN 
+	IF update_GRH_PIC_check = 1 THEN
 		'checking to make sure that the user has the case in a benefit month that includes the GRH PIC... 07/16 is the first month...
 		EMReadScreen grh_pic, 7, 19, 73
-		IF grh_pic <> "GRH PIC" THEN 
+		IF grh_pic <> "GRH PIC" THEN
 			MsgBox "*** NOTICE!!! ***" & vbCr & vbCr & "You are attempting to update the GRH PIC in a budget month prior to the implementation of the GRH PIC on STAT/JOBS. The script will skip attempting to update the GRH PIC for this month.", vbExclamation
 		ELSE
 			'else, going in to the GRH PIC
 			CALL write_value_and_transmit("X", 19, 71)
-			
+
 			'erasing the information currently in the GRH PIC
 			EMWriteScreen "_", 3, 63		'pay frequency
 			EMWriteScreen "______", 6, 63		'hrs/wk
@@ -448,19 +451,19 @@ Do
 			FOR row = 7 to 16
 				EMWriteScreen "__", row, 9
 				EMWriteScreen "__", row, 12
-				EMWriteScreen "__", row, 15    
+				EMWriteScreen "__", row, 15
 				EMWriteScreen "________", row, 21
 			NEXT
-			
+
 			'writing today's date in the Date of Calculation field
 			CALL create_mainframe_friendly_date(date, 3, 30, "YY")
-			
+
 			'writing the pay frequency
 			If pay_frequency = "One Time Per Month" then 	EMWriteScreen "1", 3, 63
 			If pay_frequency = "Two Times Per Month" then 	EMWriteScreen "2", 3, 63
 			If pay_frequency = "Every Other Week" then 		EMWriteScreen "3", 3, 63
 			If pay_frequency = "Every Week" then 			EMWriteScreen "4", 3, 63
-			
+
 			'updating income lines
 			GRH_PIC_row = 7
 			'Uses function to add each PIC pay date, income, and hours. Doesn't add any if they show "01/01/2000" as those are dummy numbers
@@ -476,13 +479,13 @@ Do
 			EMReadScreen avg_grh_income, 39, 16, 38
 			EMReadScreen grh_prosp_monthly, 42, 17, 35
 			PF3
-		END IF	
+		END IF
 	END IF
 
 	'Clears JOBS data before updating the JOBS panel
 	EMSetCursor 12, 25
 	EMSendKey "___________________________________________________________________________________________________________________________________________________"
-	
+
 	'Updates for retrospective income by checking each pay date's month against the footer month using a function. If the footer month is two months ahead of the pay month it will add to JOBS and keep a tally of hours.
 	MAXIS_row = 12 'Needs this for the following functions
 	Dim retro_hours
@@ -587,7 +590,7 @@ Do
 
 	'Puts pay verification type in
 	EMWriteScreen left(JOBS_verif_code, 1), 6, 34
-	
+
 	'If the footer month is the current month + 1, the script needs to update the HC popup for HC cases.
 	If update_HC_popup_check = 1 and datediff("m", date, MAXIS_footer_month & "/01/" & MAXIS_footer_year) = 1 then
 		EMReadScreen HC_income_est_check, 3, 19, 63 'reading to find the HC income estimator is moving 6/1/16, to account for if it only affects future months we are reading to find the HC inc EST
@@ -667,7 +670,7 @@ If update_PIC_check = 1 then
 	call write_variable_in_CASE_NOTE(worker_signature)
 End if
 
-IF update_GRH_PIC_check = 1 THEN 
+IF update_GRH_PIC_check = 1 THEN
 	start_a_blank_CASE_NOTE
 	CALL write_variable_in_CASE_NOTE("~~~GRH PIC: " & date & "~~~")
 	CALL write_variable_in_CASE_NOTE("Pay Date    Gross Amt")

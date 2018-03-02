@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO issues listed at - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2952 '
 'CUSTOM FUNCTIONS---------------------------------------------------------------------------------------------
 'This one creates a quasi-two-dimensional array of all cases, using "|" to split cases and "~" to split case info within cases.
 Function combine_CEI_data_to_array(info_array)

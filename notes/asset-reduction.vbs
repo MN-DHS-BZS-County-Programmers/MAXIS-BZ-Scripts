@@ -1,10 +1,10 @@
-'Required for statistical purposes========================================================================================== 
+'Required for statistical purposes==========================================================================================
 name_of_script = "NOTES - ASSET REDUCTION.vbs"
-start_time = timer 
-STATS_counter = 1               'sets the stats counter at one 
-STATS_manualtime = 180          'manual run time in seconds 
-STATS_denomination = "C"        'C is for each case 
- 'END OF stats block========================================================================================================= 
+start_time = timer
+STATS_counter = 1               'sets the stats counter at one
+STATS_manualtime = 180          'manual run time in seconds
+STATS_denomination = "C"        'C is for each case
+ 'END OF stats block=========================================================================================================
 
 'LOADING FUNCTIONS LIBRARY FROM GITHUB REPOSITORY===========================================================================
 IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded once
@@ -60,6 +60,9 @@ call changelog_update("01/19/2017", "Initial version.", "Ilse Ferris, Hennepin C
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add autofill to the editboxes for dialogs
+' TODO change header to ** from -- and have the header in all caps
+' TODO s brought to you by - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2874'
 'DIALOGS----------------------------------------------------------------------------------------------------
 BeginDialog case_number_dialog, 0, 0, 146, 75, "Case number dialog"
   EditBox 85, 10, 50, 15, MAXIS_case_number
@@ -192,8 +195,8 @@ Do
 		if ButtonPressed = 0 then StopScript
 		if IsNumeric(MAXIS_case_number) = false or len(MAXIS_case_number) > 8 THEN err_msg = err_msg & vbCr & "* Enter a valid case number."
 		If reduction_status = "Select one..."THEN err_msg = err_msg & vbCr & "* Select an asset reduction status."
-		IF err_msg <> "" THEN MsgBox "*** NOTICE!***" & vbNewLine & err_msg & vbNewLine		
-	Loop until err_msg = ""	
+		IF err_msg <> "" THEN MsgBox "*** NOTICE!***" & vbNewLine & err_msg & vbNewLine
+	Loop until err_msg = ""
  	Call check_for_password(are_we_passworded_out)
 LOOP UNTIL check_for_password(are_we_passworded_out) = False
 
@@ -201,14 +204,14 @@ call check_for_MAXIS(False)	'checking for an active MAXIS session
 
 'Asset reduction required coding----------------------------------------------------------------------------------------------------
 If reduction_status = "Required" then
-	Do 
-		Do 
+	Do
+		Do
 			err_msg = ""
         	Dialog reduction_dialog
-        	cancel_confirmation 
+        	cancel_confirmation
 			MAXIS_dialog_navigation
         	IF isdate(due_date) = false THEN err_msg = err_msg & vbNewLine & "* Enter a valid asset reduction due date"
-        	IF trim(asset_limit) = "" THEN err_msg = err_msg & vbNewLine & "* Enter the asset limit amount(s)." 
+        	IF trim(asset_limit) = "" THEN err_msg = err_msg & vbNewLine & "* Enter the asset limit amount(s)."
 			IF (DWP_checkbox = 0 AND EMER_checkbox = 0 AND GA_checkbox = 0 AND GRH_checkbox = 0 AND MA_checkbox = 0 AND MFIP_checkbox = 0 AND MSP_checkbox = 0 AND MSA_checkbox = 0) then err_msg = err_msg & vbNewLine & "* Enter at least one program."
         	IF trim(income) = "" THEN err_msg = err_msg & vbNewLine & "* Enter income information for the case."
         	IF trim(current_asset_total) = "" THEN err_msg = err_msg & vbNewLine & "* Enter the current total of counted assets."
@@ -216,22 +219,22 @@ If reduction_status = "Required" then
 			If trim(assets) = "" THEN err_msg = err_msg & vbNewLine & "* Enter asset information."
         	If trim(actions_taken) = "" THEN err_msg = err_msg & vbNewLine & "* Enter the actions taken."
 			IF worker_signature = "" THEN err_msg = err_msg & vbNewLine & "* Please enter your worker signature."
-        	IF err_msg <> "" THEN MsgBox "*** NOTICE!***" & vbNewLine & err_msg & vbNewLine		
-     	Loop until err_msg = ""	
+        	IF err_msg <> "" THEN MsgBox "*** NOTICE!***" & vbNewLine & err_msg & vbNewLine
+     	Loop until err_msg = ""
     	Call check_for_password(are_we_passworded_out)
-    LOOP UNTIL check_for_password(are_we_passworded_out) = False	
+    LOOP UNTIL check_for_password(are_we_passworded_out) = False
 END IF
-    
+
 'Asset reduction completed coding----------------------------------------------------------------------------------------------------
 If reduction_status = "Completed" then
-    Do 
-    	Do 
+    Do
+    	Do
     		err_msg = ""
     		Dialog completed_dialog
-    		cancel_confirmation 
+    		cancel_confirmation
     		MAXIS_dialog_navigation
     		IF isdate(within_limit_date) = false THEN err_msg = err_msg & vbNewLine & "* Enter the date case met asset limit."
-    		IF trim(asset_limit) = "" THEN err_msg = err_msg & vbNewLine & "* Enter the asset limit amount(s)." 
+    		IF trim(asset_limit) = "" THEN err_msg = err_msg & vbNewLine & "* Enter the asset limit amount(s)."
     		IF (DWP_checkbox = 0 AND EMER_checkbox = 0 AND GA_checkbox = 0 AND GRH_checkbox = 0 AND MA_checkbox = 0 AND MFIP_checkbox = 0 AND MSP_checkbox = 0 AND MSA_checkbox = 0) then err_msg = err_msg & vbNewLine & "* Enter at least one program."
     		IF trim(income) = "" THEN err_msg = err_msg & vbNewLine & "* Enter income information for the case."
     		IF trim(assets) = "" THEN err_msg = err_msg & vbNewLine & "* Enter asset information."
@@ -239,11 +242,11 @@ If reduction_status = "Completed" then
     		IF trim(how_assets_reduced) = "" THEN err_msg = err_msg & vbNewLine & "* How were assets reduced?"
     		If trim(actions_taken) = "" THEN err_msg = err_msg & vbNewLine & "* Enter the actions taken."
     		IF worker_signature = "" THEN err_msg = err_msg & vbNewLine & "* Please enter your worker signature."
-    		IF err_msg <> "" THEN MsgBox "*** NOTICE!***" & vbNewLine & err_msg & vbNewLine		
-    	Loop until err_msg = ""	
+    		IF err_msg <> "" THEN MsgBox "*** NOTICE!***" & vbNewLine & err_msg & vbNewLine
+    	Loop until err_msg = ""
     	Call check_for_password(are_we_passworded_out)
-    LOOP UNTIL check_for_password(are_we_passworded_out) = False	
-END IF 
+    LOOP UNTIL check_for_password(are_we_passworded_out) = False
+END IF
 
 'Sets TIKL for the pending/reduction option
 IF TIKL_checkbox = 1 then
@@ -252,7 +255,7 @@ IF TIKL_checkbox = 1 then
 	Call write_variable_in_TIKL("Asset reduction verification is due. Please review case and case documents.")
 	transmit
 	PF3
-END IF 
+END IF
 
 'turns program checkboxes into a variable for the case note
 reduction_progs = ""	'establishing variable as ""
@@ -267,10 +270,10 @@ IF MSA_checkbox = 1 THEN reduction_progs = reduction_progs & "MSA" & ", "
 'trims excess spaces of reduction_progs
 reduction_progs = trim(reduction_progs)
 'takes the last comma off of reduction_progs when autofilled into dialog if more more than one app date is found and additional app is selected
-If right(reduction_progs, 1) = "," THEN reduction_progs = left(reduction_progs, len(reduction_progs) - 1) 
+If right(reduction_progs, 1) = "," THEN reduction_progs = left(reduction_progs, len(reduction_progs) - 1)
 
 'The case note----------------------------------------------------------------------------------------------------
-start_a_blank_case_note      'navigates to case/note and puts case/note into edit mode		 
+start_a_blank_case_note      'navigates to case/note and puts case/note into edit mode
 Call write_variable_in_CASE_NOTE("--Asset reduction "& reduction_status & "--")
 call write_bullet_and_variable_in_CASE_NOTE("Asset reduction due date", due_date)
 Call write_bullet_and_variable_in_CASE_NOTE("Within asset limit on", within_limit_date)
@@ -281,12 +284,12 @@ call write_bullet_and_variable_in_CASE_NOTE("Assets", assets)
 Call write_bullet_and_variable_in_CASE_NOTE("Total of all assets", current_asset_total)
 call write_bullet_and_variable_in_CASE_NOTE("Amount to be reduced", amt_to_reduce)
 Call write_bullet_and_variable_in_CASE_NOTE("How assets were reduced", how_assets_reduced)
-Call write_bullet_and_variable_in_CASE_NOTE("Other notes", other_notes) 
+Call write_bullet_and_variable_in_CASE_NOTE("Other notes", other_notes)
 Call write_bullet_and_variable_in_CASE_NOTE("Actions taken", actions_taken)
 If client_3341_checkbox = 1 then Call write_variable_in_CASE_NOTE("* DHS-3341 asset reduction worksheet sent to client.")
 If AREP_3341_checkbox = 1 then Call write_variable_in_CASE_NOTE("* DHS-3341 asset reduction worksheet sent to AREP.")
-If TIKL_checkbox = 1 then Call write_variable_in_CASE_NOTE("* Set TIKL for the asset reduction due date.") 
+If TIKL_checkbox = 1 then Call write_variable_in_CASE_NOTE("* Set TIKL for the asset reduction due date.")
 Call write_variable_in_CASE_NOTE ("---")
-call write_variable_in_CASE_NOTE(worker_signature)	 
+call write_variable_in_CASE_NOTE(worker_signature)
 
 script_end_procedure("")

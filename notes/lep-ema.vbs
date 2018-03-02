@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO - change name and remove 'LEP' name - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2946
 'DIALOGS----------------------------------------------------------------------------------------------------
 BeginDialog EMA_dialog, 0, 0, 311, 305, "EMA "
   EditBox 85, 5, 75, 15, MAXIS_case_number

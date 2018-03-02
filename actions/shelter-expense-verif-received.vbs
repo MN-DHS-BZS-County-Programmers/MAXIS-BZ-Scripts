@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add closing message to remind workers to review budget - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2919'
 'THE DIALOGS----------------------------------------------------------------------------------------------------
 BeginDialog case_number_dialog, 0, 0, 146, 70, "Case number dialog"
   EditBox 80, 5, 60, 15, MAXIS_case_number

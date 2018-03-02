@@ -52,6 +52,9 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO - change phone number to default or worker selected
+' TODO - need fixes to copying BILS
+' TODO brought to you by - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2950'
 'CONSTANTS=============================
 'These are the start rows for each MAXIS panel
 memb_row = 6

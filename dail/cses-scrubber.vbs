@@ -55,6 +55,10 @@ call changelog_update("11/20/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO Add handling for PENDING cases - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2872
+' TODO add handling for updating UNEA for SNAP case and thus updating SNAP budgets - including the PIC - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2885
+' TODO sometimes this misses cases - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2935
+' TODO add handling for MFIP/UHFS cases - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2937
 'FUNCTIONS=================================================================================================================
 FUNCTION create_mainframe_friendly_date(date_variable, screen_row, screen_col, year_type)
 	var_month = datepart("m", date_variable)

@@ -51,6 +51,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+'TODO get rid of this script and make a BIG ELIG Summary script - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/3012'
+
 'VARIABLE REQUIRED TO RESIZE DIALOG BASED ON A GLOBAL VARIABLE IN FUNCTIONS FILE
 If case_noting_intake_dates = False then dialog_shrink_amt = 100
 
