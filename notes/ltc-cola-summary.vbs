@@ -44,6 +44,7 @@ changelog = array()
 
 'INSERT ACTUAL CHANGES HERE, WITH PARAMETERS DATE, DESCRIPTION, AND SCRIPTWRITER. **ENSURE THE MOST RECENT CHANGE GOES ON TOP!!**
 'Example: call changelog_update("01/01/2000", "The script has been updated to fix a typo on the initial dialog.", "Jane Public, Oak County")
+call changelog_update("11/29/2016", "Updated header of case note for eligibility to reflect the MAXIS footer month, not a static month of '01'.", "Ilse Ferris, Hennepin County")
 call changelog_update("11/29/2016", "Added header update for 2017 in case notes, and made this a variable year vs. hard coding this information into the script, and needing yearly updates.", "Ilse Ferris, Hennepin County")
 call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 
@@ -333,7 +334,7 @@ EndDialog
   EMWriteScreen MAXIS_case_number, 18, 43
 
   Call start_a_blank_CASE_NOTE
-  EMSendKey "**Approved COLA updates 01/" & MAXIS_footer_year & ": " & elig_type & "-" & budget_type & " " & recipient_amt
+  EMSendKey "**Approved COLA updates for " & MAXIS_footer_month & "/" & MAXIS_footer_year & ": " & elig_type & "-" & budget_type & " " & recipient_amt
   If budget_type = "L" then EMSendKey " LTC SD**"
   If budget_type = "S" then EMSendKey " SISEW waiver obl**"
   If budget_type = "B" then EMSendKey " Recip amt.**"
