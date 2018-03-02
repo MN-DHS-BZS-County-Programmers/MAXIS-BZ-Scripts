@@ -284,6 +284,7 @@ If EGA_screening_check = 1 then
     	EMER_available_date = "Currently available"
     END IF
 
+	crisis = ""
     'Logic to enter what the "crisis" variable is from the check boxes indicated
     If eviction_check = 1 then crisis = crisis & "eviction, "
     If utility_disconnect_check = 1 then crisis = crisis & "utility disconnect, "
@@ -431,6 +432,7 @@ DO
 	 call check_for_password(are_we_passworded_out)  'Adding functionality for MAXIS v.6 Passworded Out issue'
  LOOP UNTIL are_we_passworded_out = false
 
+crisis = ""
 'Logic to enter what the "crisis" variable is from the checkboxes indicated
 If eviction_check = 1 then crisis = crisis & "eviction, "
 If utility_disconnect_check = 1 then crisis = crisis & "utility disconnect, "
