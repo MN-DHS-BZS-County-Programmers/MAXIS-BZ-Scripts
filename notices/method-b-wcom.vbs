@@ -54,6 +54,7 @@
  changelog_display
  'END CHANGELOG BLOCK =======================================================================================================
 
+'TODO update to include reading all non-dummy bills from STAT/BILS - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2635
  'Dialogs----------------------------------------------------------------------------------------------------
 BeginDialog case_number_dialog, 0, 0, 146, 70, "Case number dialog"
   EditBox 80, 5, 60, 15, MAXIS_case_number

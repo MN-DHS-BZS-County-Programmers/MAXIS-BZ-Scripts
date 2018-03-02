@@ -53,6 +53,8 @@ call changelog_update("11/20/2016", "Initial version.", "Ilse Ferris, Hennepin C
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO include language for the 3727 - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2949'
+
 'logic to autofill the 'last_day_for_recert' field
 next_month = DateAdd("M", 1, date)
 next_month = DatePart("M", next_month) & "/01/" & DatePart("YYYY", next_month)
@@ -138,7 +140,7 @@ If recert_checkbox = 1 then
 	Loop until are_we_passworded_out = false					'loops until user passwords back in
 
 	start_a_new_spec_memo										'navigates to SPEC/MEMO and creates a new MEMO'
-	
+
 	'Writes the info into the MEMO.
 	Call write_variable_in_SPEC_MEMO("************************************************************")
 	If interview_time = "" Then
@@ -243,20 +245,20 @@ Else
 			client_delay_check = 0
 		End if
 	End if
-	
+
 	'date variables for the TIKL
 	day30_date = dateadd("d", 30, application_date)
 
 	'Sets TIKL
 	call navigate_to_MAXIS_screen("DAIL", "WRIT")
-	IF date < day30_date then											'if current date is less than the application date 
+	IF date < day30_date then											'if current date is less than the application date
 		days_pending = "30 days"										'value of variable for case note & TIKL to "30 days"
 		call create_MAXIS_friendly_date(application_date, 31, 5, 18)	'sets a 30 day pending TIKL if the date if at least 10 days exists between the NOMI sent and pending day 30
-	ELSE 
+	ELSE
 		days_pending = "10 additional days"								'value of variable for case note & TIKL to "10 additional days"
-		call create_MAXIS_friendly_date(date, 10, 5, 18)				'sets a 10 day TIKL if the current date is equal to over over the application date 
+		call create_MAXIS_friendly_date(date, 10, 5, 18)				'sets a 10 day TIKL if the current date is equal to over over the application date
 	END IF
-	
+
 	Call write_variable_in_TIKL("A NOMI was sent & case has been pending for " & days_pending & ". Check case notes to see if interview has been completed. Deny the case if the client has not completed the interview.")
 	transmit
 	PF3

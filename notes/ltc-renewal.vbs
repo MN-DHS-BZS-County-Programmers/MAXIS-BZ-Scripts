@@ -50,6 +50,9 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO the SIR MADE link needs to be changed
+' TODO add MA-EPD information
+' TODO brought to you by - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2877'
 'DATE CALCULATIONS----------------------------------------------------------------------------------------------------
 next_month = dateadd("m", + 1, date)
 MAXIS_footer_month = datepart("m", next_month)

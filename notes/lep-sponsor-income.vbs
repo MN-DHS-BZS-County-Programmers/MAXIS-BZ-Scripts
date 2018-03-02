@@ -51,6 +51,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO - change name and remove 'LEP' name - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2946
+
 'DIALOGS--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 BeginDialog sponsor_income_calculation_dialog, 0, 0, 216, 165, "Sponsor income calculation dialog"
   EditBox 65, 10, 70, 15, MAXIS_case_number

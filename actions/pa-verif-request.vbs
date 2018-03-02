@@ -51,6 +51,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO Add date to the word doc for when created - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2879'
 'DATE CALCULATIONS----------------------------------------------------------------------------------------------------
 next_month = dateadd("m", + 1, date)
 MAXIS_footer_month = datepart("m", next_month)
@@ -404,15 +405,15 @@ If no_income_checkbox = unchecked Then 		'Only adding the detail from stat if th
 Else 										'If worker requests income from STAT to be omitted, the script only adds the cash grant size and other notes.
 	objSelection.EndKey end_of_doc
 	objSelection.TypeParagraph()
-	
+
 	objSelection.TypeText "Number of family members on cash grant: "
 	objSelection.TypeText cash_members
 	objSelection.TypeParagraph()
-	
+
 	ObjSelection.TypeText "Other Notes: "
 	objSelection.TypeText other_notes
 	objSelection.TypeParagraph()
-End If 
+End If
 
 'Writing INQX to the doc if selected
 IF inqd_check = checked THEN

@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add ID proof for SOLQ-I/SMI - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2921'
 'DIALOG-------------------------------------------------------------------
 BeginDialog cit_ID_dialog, 0, 0, 346, 222, "CIT-ID dialog"
   Text 5, 10, 50, 10, "Case number:"

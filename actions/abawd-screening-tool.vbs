@@ -53,6 +53,8 @@ IF IsEmpty(FuncLib_URL) = TRUE THEN	'Shouldn't load FuncLib if it already loaded
 END IF
 'END FUNCTIONS LIBRARY BLOCK================================================================================================
 
+'TODO update so this can run for more than one household member and case note it all together - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2595'
+
 'Dialogs===================================================================================================================
 'This dialog is for the WREG exemptions.-----------------------------------------------------------------------
 BeginDialog wreg_exemptions, 0, 0, 311, 250, "ABAWD Screening Tool"

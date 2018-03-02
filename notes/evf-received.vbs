@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO Add another line in the dialog box for additional notes - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2886'
 'main dialog
 BeginDialog EVF_received, 0, 0, 291, 205, "Employment Verification Form Received"
   EditBox 70, 5, 60, 15, MAXIS_case_number
@@ -129,7 +130,7 @@ call write_variable_in_CASE_NOTE(worker_signature)
 
 'Checks if additional info is yes and the TIKL is checked, sets a TIKL for the return of the info
 
-IF Tikl_checkbox = 1 THEN 
+IF Tikl_checkbox = 1 THEN
 	call navigate_to_MAXIS_screen("dail", "writ")
 	call create_MAXIS_friendly_date(date, 10, 5, 18)		'The following will generate a TIKL formatted date for 10 days from now.
 	call write_variable_in_TIKL("Additional info for job at " & employer & " should have been received by now. Signed EVF for this job should be on file. (TIKL auto-generated from EVF Received script).")

@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO look at when MA-EPD changes in middle of budget pd - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2967 '
 'DATE CALCULATIONS----------------------------------------------------------------------------------------------------
 current_month_plus_one = dateadd("m", 1, date)
 

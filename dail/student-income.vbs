@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add MAXIS_case_number variable to script for stats - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2891
 '<<DELETE REDUNDANCIES!
 
 EMConnect ""

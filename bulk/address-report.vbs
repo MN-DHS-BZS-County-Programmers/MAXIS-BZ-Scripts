@@ -51,6 +51,8 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add option to collect phone numbershttps://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2964
+
 'Checks for county info from global variables, or asks if it is not already defined.
 get_county_code
 

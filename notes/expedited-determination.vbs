@@ -50,6 +50,7 @@ call changelog_update("11/28/2016", "Initial version.", "Charles Potter, DHS")
 changelog_display
 'END CHANGELOG BLOCK =======================================================================================================
 
+' TODO add help button for common error prone scenarios - https://github.com/MN-Script-Team/DHS-MAXIS-Scripts/issues/2893'
 'DIALOGS--------------------------------------------------------------------------------------------------------------------
 
 BeginDialog Case_Number_Dialog, 0, 0, 171, 85, "Case Information"
