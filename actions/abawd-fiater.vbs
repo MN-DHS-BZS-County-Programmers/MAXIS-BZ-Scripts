@@ -790,5 +790,4 @@ For i = 0 to ubound(footer_month_array)
 	END IF
 next
 
-script_end_procedure("Success, the FIAT results have been generated. Please review before approving." & vbcr & vbcr & _
-"Please use 'NOTICES - ABAWD WITH CHILD IN HH WCOM' after approving the case to add the required worker comments to the notice.")
+script_end_procedure("Success, the FIAT results have been generated. Please review before approving the case.")
